@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- App -->
+    <string name="app_name">Nurtlina</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Bienvenida a Nurtlina</string>
+    <string name="onboarding_welcome_body">Registra los temporizadores de biberones y los registros de alimentación, todo en un solo lugar. Simple, tranquilo y sin conexión.</string>
+    <string name="onboarding_get_started">Comenzar</string>
+    <string name="onboarding_create_baby_title">Agrega a tu bebé</string>
+    <string name="onboarding_create_baby_body">Dale un apodo a tu pequeño para comenzar. Puedes cambiarlo más adelante.</string>
+    <string name="onboarding_baby_name_hint">Apodo (ej. Sol, Lunita)</string>
+    <string name="onboarding_select_guideline_title">Elige una guía</string>
+    <string name="onboarding_select_guideline_body">Selecciona la guía pública utilizada para los recordatorios del temporizador. Según la guía seleccionada — no es consejo médico.</string>
+    <string name="onboarding_notification_title">Mantente al día</string>
+    <string name="onboarding_notification_body">Permite las notificaciones para que Nurtlina pueda recordarte antes de que expire el temporizador de un biberón.</string>
+    <string name="onboarding_notification_allow">Permitir notificaciones</string>
+    <string name="onboarding_notification_skip">Quizás más tarde</string>
+    <string name="onboarding_finish">Empezar a registrar</string>
+    <string name="onboarding_step_of">Paso %1$d de %2$d</string>
+
+    <!-- Bottle Statuses -->
+    <string name="status_not_started">No iniciado</string>
+    <string name="status_feeding_started">Alimentación iniciada</string>
+    <string name="status_refrigerated">Refrigerado</string>
+    <string name="status_expired">Vencido</string>
+    <string name="status_fed">Alimentado</string>
+    <string name="status_discarded">Descartado</string>
+    <string name="status_canceled">Cancelado</string>
+
+    <!-- Bottle Actions -->
+    <string name="action_start_feeding">Iniciar alimentación</string>
+    <string name="action_refrigerate">Refrigerar</string>
+    <string name="action_mark_fed">Marcar como alimentado</string>
+    <string name="action_discard">Descartar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_new_bottle">Nuevo biberón</string>
+    <string name="action_edit">Editar</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_done">Listo</string>
+    <string name="action_confirm">Confirmar</string>
+    <string name="action_close">Cerrar</string>
+    <string name="action_back">Atrás</string>
+
+    <!-- Timer Strings -->
+    <string name="timer_expires_in">Vence en %1$s</string>
+    <string name="timer_expired_label">Temporizador vencido</string>
+    <string name="timer_minutes">%1$d min</string>
+    <string name="timer_hours">%1$d h %2$d min</string>
+    <string name="timer_preparing">Preparando…</string>
+    <string name="timer_prepared_at">Preparado a las %1$s</string>
+    <string name="timer_feeding_started_at">Alimentación iniciada a las %1$s</string>
+    <string name="timer_refrigerated_at">Refrigerado a las %1$s</string>
+    <string name="timer_expired_at">Venció a las %1$s</string>
+
+    <!-- Notification Channels -->
+    <string name="notif_channel_bottle_name">Recordatorios de biberón</string>
+    <string name="notif_channel_bottle_desc">Recordatorios antes y en el vencimiento del temporizador del biberón</string>
+    <string name="notif_channel_feeding_name">Recordatorios de alimentación</string>
+    <string name="notif_channel_feeding_desc">Recordatorios durante las sesiones de alimentación activas</string>
+
+    <!-- Notification Content -->
+    <string name="notif_before_expiry_title">El temporizador del biberón vence pronto</string>
+    <string name="notif_before_expiry_body">El biberón de %1$s vence en aproximadamente 15 minutos. Según la guía seleccionada.</string>
+    <string name="notif_expired_title">Temporizador del biberón vencido</string>
+    <string name="notif_expired_body">El temporizador del biberón de %1$s ha vencido. En caso de duda, descarta la leche.</string>
+    <string name="notif_feeding_45_title">Recordatorio de alimentación</string>
+    <string name="notif_feeding_45_body">La alimentación de %1$s lleva 45 minutos.</string>
+    <string name="notif_feeding_60_title">Límite de tiempo de alimentación alcanzado</string>
+    <string name="notif_feeding_60_body">El temporizador del biberón de %1$s vence pronto. Según la guía seleccionada.</string>
+
+    <!-- Disclaimer and Safety -->
+    <string name="disclaimer_full">Esta aplicación proporciona recordatorios y herramientas de seguimiento basadas en guías públicas seleccionadas. No proporciona consejo médico y no puede determinar si la leche es segura. Sigue siempre las instrucciones de la etiqueta de la leche de fórmula, las pautas de salud locales y los consejos de tu pediatra. En caso de duda, descarta la leche.</string>
+    <string name="disclaimer_short">Esta aplicación es una herramienta de recordatorio, no un consejo médico.</string>
+    <string name="safety_note_guideline">Según la guía seleccionada</string>
+    <string name="safety_when_in_doubt">En caso de duda, descarta la leche.</string>
+    <string name="safety_not_medical_advice">No es consejo médico. Sigue las instrucciones de la etiqueta de la fórmula y las indicaciones del pediatra.</string>
+
+    <!-- Milk Types -->
+    <string name="milk_formula">Fórmula</string>
+    <string name="milk_breast_milk">Leche materna</string>
+    <string name="milk_custom">Personalizado</string>
+
+    <!-- Feed Types -->
+    <string name="feed_formula">Fórmula</string>
+    <string name="feed_breast_milk">Leche materna</string>
+    <string name="feed_mixed">Mixta</string>
+    <string name="feed_nursing">Lactancia</string>
+    <string name="feed_other">Otra</string>
+
+    <!-- Diaper Types -->
+    <string name="diaper_wet">Mojado</string>
+    <string name="diaper_dirty">Sucio</string>
+    <string name="diaper_mixed">Mixto</string>
+    <string name="diaper_dry">Seco</string>
+
+    <!-- Quick Log Labels -->
+    <string name="quick_feed">Registro rápido de alimentación</string>
+    <string name="quick_diaper">Registro rápido de pañal</string>
+    <string name="quick_sleep">Registro rápido de sueño</string>
+
+    <!-- Today Summary -->
+    <string name="summary_feeds">Alimentaciones</string>
+    <string name="summary_amount">Cantidad</string>
+    <string name="summary_diapers">Pañales</string>
+    <string name="summary_sleep">Sueño</string>
+    <string name="summary_feed_count">%1$d alimentación(es) hoy</string>
+    <string name="summary_diaper_count">%1$d pañal(es) hoy</string>
+    <string name="summary_sleep_duration">%1$s de sueño hoy</string>
+    <string name="summary_no_activity">Aún no hay actividad registrada hoy.</string>
+
+    <!-- Navigation -->
+    <string name="nav_today">Hoy</string>
+    <string name="nav_logs">Registros</string>
+    <string name="nav_insights">Estadísticas</string>
+    <string name="nav_settings">Ajustes</string>
+
+    <!-- Paywall -->
+    <string name="paywall_title">Actualizar a Pro</string>
+    <string name="paywall_subtitle">Apoya a Nurtlina y desbloquea todo</string>
+    <string name="paywall_no_ads">Sin anuncios</string>
+    <string name="paywall_multi_baby">Seguimiento de varios bebés</string>
+    <string name="paywall_full_history">Acceso al historial completo</string>
+    <string name="paywall_export">Exportar tus datos</string>
+    <string name="paywall_backup">Copia de seguridad en la nube</string>
+    <string name="paywall_custom_reminders">Recordatorios personalizados</string>
+    <string name="paywall_custom_rules">Reglas de temporizador personalizadas</string>
+    <string name="paywall_widget_themes">Temas de widget</string>
+    <string name="paywall_monthly_price">$2,99 / mes</string>
+    <string name="paywall_yearly_price">$19,99 / año</string>
+    <string name="paywall_lifetime_price">$29,99 pago único</string>
+    <string name="paywall_monthly_label">Mensual</string>
+    <string name="paywall_yearly_label">Anual</string>
+    <string name="paywall_lifetime_label">De por vida</string>
+    <string name="paywall_disclaimer">La suscripción se renueva automáticamente. Cancela cuando quieras en Google Play.</string>
+    <string name="paywall_restore">Restaurar compra</string>
+    <string name="paywall_terms">Términos de servicio</string>
+    <string name="paywall_privacy">Política de privacidad</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_baby_profile">Perfil del bebé</string>
+    <string name="settings_units">Unidades</string>
+    <string name="settings_guideline_region">Región de la guía</string>
+    <string name="settings_language">Idioma</string>
+    <string name="settings_notifications">Notificaciones</string>
+    <string name="settings_night_mode">Modo nocturno</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_pro">Suscripción Pro</string>
+    <string name="settings_data">Datos y copia de seguridad</string>
+    <string name="settings_about">Acerca de</string>
+    <string name="settings_faq">Preguntas frecuentes</string>
+    <string name="settings_safety_sources">Fuentes de seguridad</string>
+    <string name="settings_privacy">Política de privacidad</string>
+    <string name="settings_terms">Términos de servicio</string>
+    <string name="settings_contact">Contacto y comentarios</string>
+    <string name="settings_version">Versión %1$s</string>
+    <string name="settings_export">Exportar datos</string>
+    <string name="settings_delete_data">Eliminar todos los datos</string>
+    <string name="settings_delete_data_confirm">¿Estás seguro de que quieres eliminar todos los datos? Esta acción no se puede deshacer.</string>
+
+    <!-- Guideline Regions -->
+    <string name="region_us">Estados Unidos (CDC)</string>
+    <string name="region_uk">Reino Unido (NHS)</string>
+    <string name="region_custom">Personalizado</string>
+
+    <!-- Safety Sources -->
+    <string name="source_cdc_formula">CDC: Preparación y almacenamiento de fórmula infantil</string>
+    <string name="source_cdc_breast_milk">CDC: Almacenamiento y preparación de leche materna</string>
+    <string name="source_nhs_formula">NHS: Leche de fórmula — preguntas frecuentes</string>
+    <string name="source_nhs_formula_make">NHS: Cómo preparar la leche de fórmula para bebés</string>
+    <string name="source_aap_formula">AAP / HealthyChildren: Guía de preparación segura de fórmula</string>
+    <string name="source_disclaimer">Estas fuentes se mencionan solo con fines informativos. Nurtlina no está respaldada ni afiliada con CDC, AAP, NHS ni ninguna autoridad sanitaria.</string>
+
+    <!-- Empty States -->
+    <string name="empty_no_bottle">Sin biberón activo.\nToca \'Nuevo biberón\' para iniciar un temporizador.</string>
+    <string name="empty_no_logs">Aún no hay registros.\nRegistra rápidamente una alimentación, un pañal o el sueño arriba.</string>
+    <string name="empty_insights">Aún no hay suficientes datos.\nSigue registrando para ver estadísticas.</string>
+
+    <!-- Errors -->
+    <string name="error_transition">No se pudo actualizar el estado del biberón. Inténtalo de nuevo.</string>
+    <string name="error_generic">Algo salió mal. Inténtalo de nuevo.</string>
+    <string name="error_load_failed">No se pudieron cargar los datos. Reinicia la aplicación.</string>
+
+    <!-- Logs Screen -->
+    <string name="logs_title">Registros</string>
+    <string name="logs_filter_all">Todos</string>
+    <string name="logs_filter_bottles">Biberones</string>
+    <string name="logs_filter_feeds">Alimentaciones</string>
+    <string name="logs_filter_diapers">Pañales</string>
+    <string name="logs_filter_sleep">Sueño</string>
+    <string name="logs_today">Hoy</string>
+    <string name="logs_yesterday">Ayer</string>
+
+    <!-- Insights Screen -->
+    <string name="insights_title">Estadísticas</string>
+    <string name="insights_avg_feeds_per_day">Prom. de alimentaciones por día</string>
+    <string name="insights_avg_sleep_per_day">Prom. de sueño por día</string>
+    <string name="insights_avg_amount_per_feed">Prom. de cantidad por alimentación</string>
+
+    <!-- Baby Profile -->
+    <string name="baby_name_label">Apodo</string>
+    <string name="baby_dob_label">Fecha de nacimiento (opcional)</string>
+    <string name="baby_add">Agregar bebé</string>
+    <string name="baby_edit">Editar bebé</string>
+    <string name="baby_select">Seleccionar bebé</string>
+
+    <!-- Units -->
+    <string name="unit_ml">mL</string>
+    <string name="unit_oz">oz</string>
+    <string name="unit_ml_label">Mililitros (mL)</string>
+    <string name="unit_oz_label">Onzas (oz)</string>
+
+    <!-- Accessibility -->
+    <string name="cd_bottle_status_icon">Estado del biberón: %1$s</string>
+    <string name="cd_timer_countdown">Tiempo restante: %1$s</string>
+    <string name="cd_new_bottle_button">Crear un nuevo temporizador de biberón</string>
+    <string name="cd_quick_feed_button">Registrar una alimentación rápida</string>
+    <string name="cd_quick_diaper_button">Registrar un cambio de pañal rápido</string>
+    <string name="cd_quick_sleep_button">Iniciar o detener el registro de sueño</string>
+
+</resources>

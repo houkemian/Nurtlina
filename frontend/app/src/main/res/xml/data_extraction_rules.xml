@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="nurtlina.db-wal"/>
+        <exclude domain="file" path="nurtlina.db-shm"/>
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="nurtlina.db-wal"/>
+        <exclude domain="file" path="nurtlina.db-shm"/>
+    </device-transfer>
+</data-extraction-rules>

@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- App -->
+    <string name="app_name">Nurtlina</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">欢迎使用 Nurtlina</string>
+    <string name="onboarding_welcome_body">在一处追踪奶瓶计时器和喂奶记录，简单、平静，支持离线使用。</string>
+    <string name="onboarding_get_started">开始使用</string>
+    <string name="onboarding_create_baby_title">添加宝宝</string>
+    <string name="onboarding_create_baby_body">为您的小宝贝起个昵称即可开始使用，之后可随时更改。</string>
+    <string name="onboarding_baby_name_hint">昵称（如：小豆、宝贝）</string>
+    <string name="onboarding_select_guideline_title">选择参考指南</string>
+    <string name="onboarding_select_guideline_body">请选择用于奶瓶计时提醒的公共卫生指南。仅供参考，不构成医疗建议。</string>
+    <string name="onboarding_notification_title">及时提醒</string>
+    <string name="onboarding_notification_body">允许通知，以便 Nurtlina 在奶瓶计时器即将到期时提醒您。</string>
+    <string name="onboarding_notification_allow">允许通知</string>
+    <string name="onboarding_notification_skip">稍后再说</string>
+    <string name="onboarding_finish">开始记录</string>
+    <string name="onboarding_step_of">第 %1$d 步，共 %2$d 步</string>
+
+    <!-- Bottle Statuses -->
+    <string name="status_not_started">未开始</string>
+    <string name="status_feeding_started">已开始喂奶</string>
+    <string name="status_refrigerated">已冷藏</string>
+    <string name="status_expired">已过期</string>
+    <string name="status_fed">已喂完</string>
+    <string name="status_discarded">已丢弃</string>
+    <string name="status_canceled">已取消</string>
+
+    <!-- Bottle Actions -->
+    <string name="action_start_feeding">开始喂奶</string>
+    <string name="action_refrigerate">放入冰箱</string>
+    <string name="action_mark_fed">标记为已喂完</string>
+    <string name="action_discard">丢弃</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_new_bottle">新建奶瓶</string>
+    <string name="action_edit">编辑</string>
+    <string name="action_save">保存</string>
+    <string name="action_done">完成</string>
+    <string name="action_confirm">确认</string>
+    <string name="action_close">关闭</string>
+    <string name="action_back">返回</string>
+
+    <!-- Timer Strings -->
+    <string name="timer_expires_in">剩余 %1$s</string>
+    <string name="timer_expired_label">计时器已过期</string>
+    <string name="timer_minutes">%1$d 分钟</string>
+    <string name="timer_hours">%1$d 小时 %2$d 分钟</string>
+    <string name="timer_preparing">准备中…</string>
+    <string name="timer_prepared_at">配制于 %1$s</string>
+    <string name="timer_feeding_started_at">喂奶开始于 %1$s</string>
+    <string name="timer_refrigerated_at">冷藏于 %1$s</string>
+    <string name="timer_expired_at">过期于 %1$s</string>
+
+    <!-- Notification Channels -->
+    <string name="notif_channel_bottle_name">奶瓶提醒</string>
+    <string name="notif_channel_bottle_desc">奶瓶计时器到期前及到期时的提醒</string>
+    <string name="notif_channel_feeding_name">喂奶提醒</string>
+    <string name="notif_channel_feeding_desc">喂奶过程中的提醒</string>
+
+    <!-- Notification Content -->
+    <string name="notif_before_expiry_title">奶瓶计时器即将到期</string>
+    <string name="notif_before_expiry_body">%1$s 的奶瓶将在约 15 分钟后到期。依据您所选的参考指南。</string>
+    <string name="notif_expired_title">奶瓶计时器已到期</string>
+    <string name="notif_expired_body">%1$s 的奶瓶计时器已到期。如有疑虑，请丢弃该奶液。</string>
+    <string name="notif_feeding_45_title">喂奶提醒</string>
+    <string name="notif_feeding_45_body">%1$s 的喂奶时间已持续 45 分钟。</string>
+    <string name="notif_feeding_60_title">喂奶时间已达上限</string>
+    <string name="notif_feeding_60_body">%1$s 的奶瓶计时器即将到期。依据您所选的参考指南。</string>
+
+    <!-- Disclaimer and Safety -->
+    <string name="disclaimer_full">本应用提供基于所选公共卫生指南的提醒和记录工具，不提供医疗建议，也无法判断奶液是否安全。请始终遵照奶粉标签、当地卫生指南及儿科医生的建议。如有疑虑，请丢弃奶液。</string>
+    <string name="disclaimer_short">本应用是提醒工具，不构成医疗建议。</string>
+    <string name="safety_note_guideline">依据您所选的参考指南</string>
+    <string name="safety_when_in_doubt">如有疑虑，请丢弃奶液。</string>
+    <string name="safety_not_medical_advice">不构成医疗建议。请遵照奶粉标签及儿科医生的指导。</string>
+
+    <!-- Milk Types -->
+    <string name="milk_formula">配方奶</string>
+    <string name="milk_breast_milk">母乳</string>
+    <string name="milk_custom">自定义</string>
+
+    <!-- Feed Types -->
+    <string name="feed_formula">配方奶</string>
+    <string name="feed_breast_milk">母乳</string>
+    <string name="feed_mixed">混合</string>
+    <string name="feed_nursing">亲喂</string>
+    <string name="feed_other">其他</string>
+
+    <!-- Diaper Types -->
+    <string name="diaper_wet">湿尿裤</string>
+    <string name="diaper_dirty">脏尿裤</string>
+    <string name="diaper_mixed">混合</string>
+    <string name="diaper_dry">干爽</string>
+
+    <!-- Quick Log Labels -->
+    <string name="quick_feed">快速记录喂奶</string>
+    <string name="quick_diaper">快速记录尿裤</string>
+    <string name="quick_sleep">快速记录睡眠</string>
+
+    <!-- Today Summary -->
+    <string name="summary_feeds">喂奶</string>
+    <string name="summary_amount">喂量</string>
+    <string name="summary_diapers">尿裤</string>
+    <string name="summary_sleep">睡眠</string>
+    <string name="summary_feed_count">今日喂奶 %1$d 次</string>
+    <string name="summary_diaper_count">今日换尿裤 %1$d 次</string>
+    <string name="summary_sleep_duration">今日睡眠 %1$s</string>
+    <string name="summary_no_activity">今日暂无活动记录。</string>
+
+    <!-- Navigation -->
+    <string name="nav_today">今日</string>
+    <string name="nav_logs">记录</string>
+    <string name="nav_insights">统计</string>
+    <string name="nav_settings">设置</string>
+
+    <!-- Paywall -->
+    <string name="paywall_title">升级至 Pro</string>
+    <string name="paywall_subtitle">支持 Nurtlina，解锁全部功能</string>
+    <string name="paywall_no_ads">无广告</string>
+    <string name="paywall_multi_baby">追踪多个宝宝</string>
+    <string name="paywall_full_history">完整历史记录</string>
+    <string name="paywall_export">导出数据</string>
+    <string name="paywall_backup">云端备份</string>
+    <string name="paywall_custom_reminders">自定义提醒</string>
+    <string name="paywall_custom_rules">自定义计时器规则</string>
+    <string name="paywall_widget_themes">小组件主题</string>
+    <string name="paywall_monthly_price">¥21.99 / 月</string>
+    <string name="paywall_yearly_price">¥139.99 / 年</string>
+    <string name="paywall_lifetime_price">¥209.99 一次性付款</string>
+    <string name="paywall_monthly_label">每月</string>
+    <string name="paywall_yearly_label">每年</string>
+    <string name="paywall_lifetime_label">永久</string>
+    <string name="paywall_disclaimer">订阅将自动续订。可随时在 Google Play 取消。</string>
+    <string name="paywall_restore">恢复购买</string>
+    <string name="paywall_terms">服务条款</string>
+    <string name="paywall_privacy">隐私政策</string>
+
+    <!-- Settings -->
+    <string name="settings_title">设置</string>
+    <string name="settings_baby_profile">宝宝资料</string>
+    <string name="settings_units">单位</string>
+    <string name="settings_guideline_region">指南地区</string>
+    <string name="settings_language">语言</string>
+    <string name="settings_notifications">通知</string>
+    <string name="settings_night_mode">夜间模式</string>
+    <string name="settings_theme">主题</string>
+    <string name="settings_pro">Pro 订阅</string>
+    <string name="settings_data">数据与备份</string>
+    <string name="settings_about">关于</string>
+    <string name="settings_faq">常见问题</string>
+    <string name="settings_safety_sources">安全参考来源</string>
+    <string name="settings_privacy">隐私政策</string>
+    <string name="settings_terms">服务条款</string>
+    <string name="settings_contact">联系与反馈</string>
+    <string name="settings_version">版本 %1$s</string>
+    <string name="settings_export">导出数据</string>
+    <string name="settings_delete_data">删除所有数据</string>
+    <string name="settings_delete_data_confirm">确定要删除所有数据吗？此操作无法撤销。</string>
+
+    <!-- Guideline Regions -->
+    <string name="region_us">美国（CDC）</string>
+    <string name="region_uk">英国（NHS）</string>
+    <string name="region_custom">自定义</string>
+
+    <!-- Safety Sources -->
+    <string name="source_cdc_formula">CDC：婴儿配方奶粉的准备和储存</string>
+    <string name="source_cdc_breast_milk">CDC：母乳的储存和准备</string>
+    <string name="source_nhs_formula">NHS：配方奶——常见问题</string>
+    <string name="source_nhs_formula_make">NHS：如何冲调婴儿配方奶粉</string>
+    <string name="source_aap_formula">AAP / HealthyChildren：安全冲调配方奶指南</string>
+    <string name="source_disclaimer">以上来源仅供参考。Nurtlina 未获 CDC、AAP、NHS 或任何卫生机构的认可或授权。</string>
+
+    <!-- Empty States -->
+    <string name="empty_no_bottle">没有活跃的奶瓶。\n点击"新建奶瓶"以启动计时器。</string>
+    <string name="empty_no_logs">暂无记录。\n在上方快速记录喂奶、尿裤或睡眠。</string>
+    <string name="empty_insights">数据不足。\n继续记录以查看统计信息。</string>
+
+    <!-- Errors -->
+    <string name="error_transition">无法更新奶瓶状态，请重试。</string>
+    <string name="error_generic">出现问题，请重试。</string>
+    <string name="error_load_failed">数据加载失败，请重启应用。</string>
+
+    <!-- Logs Screen -->
+    <string name="logs_title">记录</string>
+    <string name="logs_filter_all">全部</string>
+    <string name="logs_filter_bottles">奶瓶</string>
+    <string name="logs_filter_feeds">喂奶</string>
+    <string name="logs_filter_diapers">尿裤</string>
+    <string name="logs_filter_sleep">睡眠</string>
+    <string name="logs_today">今日</string>
+    <string name="logs_yesterday">昨日</string>
+
+    <!-- Insights Screen -->
+    <string name="insights_title">统计</string>
+    <string name="insights_avg_feeds_per_day">平均每日喂奶次数</string>
+    <string name="insights_avg_sleep_per_day">平均每日睡眠时长</string>
+    <string name="insights_avg_amount_per_feed">平均每次喂奶量</string>
+
+    <!-- Baby Profile -->
+    <string name="baby_name_label">昵称</string>
+    <string name="baby_dob_label">出生日期（可选）</string>
+    <string name="baby_add">添加宝宝</string>
+    <string name="baby_edit">编辑宝宝信息</string>
+    <string name="baby_select">选择宝宝</string>
+
+    <!-- Units -->
+    <string name="unit_ml">毫升</string>
+    <string name="unit_oz">盎司</string>
+    <string name="unit_ml_label">毫升 (mL)</string>
+    <string name="unit_oz_label">盎司 (oz)</string>
+
+    <!-- Accessibility -->
+    <string name="cd_bottle_status_icon">奶瓶状态：%1$s</string>
+    <string name="cd_timer_countdown">剩余时间：%1$s</string>
+    <string name="cd_new_bottle_button">新建奶瓶计时器</string>
+    <string name="cd_quick_feed_button">快速记录喂奶</string>
+    <string name="cd_quick_diaper_button">快速记录换尿裤</string>
+    <string name="cd_quick_sleep_button">开始或停止睡眠记录</string>
+
+</resources>

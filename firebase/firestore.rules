@@ -1,0 +1,127 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────
+    // Helper functions
+    // ─────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isFamilyMember(familyId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid));
+    }
+
+    function isValidSyncRecord() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['id', 'ownerUserId', 'familyId', 'createdAt', 'updatedAt', 'schemaVersion'])
+        && data.ownerUserId == request.auth.uid;
+    }
+
+    function isNotStale() {
+      // Reject remote updates that are older than the current local record.
+      let existing = resource.data;
+      return !existing.keys().hasAll(['updatedAt'])
+        || request.resource.data.updatedAt >= existing.updatedAt;
+    }
+
+    // ─────────────────────────────────────────────
+    // users/{userId}
+    // ─────────────────────────────────────────────
+    match /users/{userId} {
+      allow read, write: if isUser(userId);
+    }
+
+    // ─────────────────────────────────────────────
+    // entitlements/{userId}
+    // Only backend (Cloud Functions) can write.
+    // The owning user can read their own entitlement.
+    // ─────────────────────────────────────────────
+    match /entitlements/{userId} {
+      allow read: if isUser(userId);
+      allow write: if false; // Written only by Cloud Functions
+    }
+
+    // ─────────────────────────────────────────────
+    // families/{familyId}
+    // ─────────────────────────────────────────────
+    match /families/{familyId} {
+      allow read: if isFamilyMember(familyId);
+      allow create: if isSignedIn()
+        && request.resource.data.ownerUserId == request.auth.uid;
+      allow update: if isFamilyMember(familyId);
+      allow delete: if isSignedIn()
+        && resource.data.ownerUserId == request.auth.uid;
+
+      // ── members ──────────────────────────────
+      match /members/{memberId} {
+        allow read: if isFamilyMember(familyId);
+        allow write: if isSignedIn()
+          && get(/databases/$(database)/documents/families/$(familyId)).data.ownerUserId == request.auth.uid;
+      }
+
+      // ── babies ───────────────────────────────
+      match /babies/{babyId} {
+        allow read: if isFamilyMember(familyId);
+        allow create: if isFamilyMember(familyId) && isValidSyncRecord();
+        allow update: if isFamilyMember(familyId) && isValidSyncRecord() && isNotStale();
+        allow delete: if isFamilyMember(familyId);
+      }
+
+      // ── bottles ──────────────────────────────
+      match /bottles/{bottleId} {
+        allow read: if isFamilyMember(familyId);
+        allow create: if isFamilyMember(familyId) && isValidSyncRecord();
+        allow update: if isFamilyMember(familyId) && isValidSyncRecord() && isNotStale();
+        allow delete: if isFamilyMember(familyId);
+      }
+
+      // ── feedLogs ─────────────────────────────
+      match /feedLogs/{feedLogId} {
+        allow read: if isFamilyMember(familyId);
+        allow create: if isFamilyMember(familyId) && isValidSyncRecord();
+        allow update: if isFamilyMember(familyId) && isValidSyncRecord() && isNotStale();
+        allow delete: if isFamilyMember(familyId);
+      }
+
+      // ── diaperLogs ───────────────────────────
+      match /diaperLogs/{diaperLogId} {
+        allow read: if isFamilyMember(familyId);
+        allow create: if isFamilyMember(familyId) && isValidSyncRecord();
+        allow update: if isFamilyMember(familyId) && isValidSyncRecord() && isNotStale();
+        allow delete: if isFamilyMember(familyId);
+      }
+
+      // ── sleepLogs ────────────────────────────
+      match /sleepLogs/{sleepLogId} {
+        allow read: if isFamilyMember(familyId);
+        allow create: if isFamilyMember(familyId) && isValidSyncRecord();
+        allow update: if isFamilyMember(familyId) && isValidSyncRecord() && isNotStale();
+        allow delete: if isFamilyMember(familyId);
+      }
+
+      // ── settings ─────────────────────────────
+      match /settings/{settingsId} {
+        allow read: if isFamilyMember(familyId);
+        allow write: if isFamilyMember(familyId);
+      }
+    }
+
+    // ─────────────────────────────────────────────
+    // supportMessages/{messageId}
+    // Users can create; only backend reads/updates.
+    // ─────────────────────────────────────────────
+    match /supportMessages/{messageId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if false;
+    }
+  }
+}

@@ -1,0 +1,457 @@
+# .cursorrules
+
+You are working on Nurtlina: Baby Feeding Timer.
+
+This is an Android-only baby bottle timer and baby care tracking app for overseas parents and caregivers.
+
+The app tracks:
+
+- Baby bottle freshness timers.
+- Formula and breast milk feeding logs.
+- Diapers.
+- Sleep.
+- Simple daily summaries.
+- Notifications.
+- Widgets.
+- Pro subscription and ads.
+
+The app must remain simple, trustworthy, offline-first, and compliant.
+
+---
+
+## Core Compliance Rule
+
+This app is not a medical device and does not provide medical advice.
+
+Never generate or add user-facing copy that says or implies:
+
+- safe to drink
+- guaranteed safe
+- this milk is safe
+- this milk is unsafe as a direct app determination
+- medically approved
+- doctor recommended
+- CDC approved
+- AAP approved
+- NHS approved
+- diagnosis
+- health assessment
+
+Use this style instead:
+
+- "Bottle timer expired"
+- "Based on your selected guideline"
+- "This app provides reminders and tracking only."
+- "This app does not provide medical advice."
+- "Always follow your formula label, local health guidance, and pediatrician's advice."
+- "When in doubt, discard the milk."
+
+Never imply endorsement by CDC, AAP, NHS, WHO, hospitals, pediatricians, or other health authorities.
+
+Public health sources may be cited as references, not endorsements.
+
+---
+
+## Product Name
+
+Working brand:
+
+- Nurtlina
+
+Google Play display name:
+
+- Nurtlina: Baby Feeding Timer
+
+Future expansion:
+
+- Nurtlina: Baby Tracker
+
+Do not rename the app unless explicitly asked.
+
+---
+
+## Tech Stack
+
+Use:
+
+- Kotlin
+- Jetpack Compose
+- Material 3
+- Room
+- DataStore
+- Coroutines
+- Flow
+- Hilt
+- Navigation Compose
+- WorkManager
+- AlarmManager only where justified
+- Firebase Analytics
+- Firebase Crashlytics
+- Google Play Billing or RevenueCat
+- AdMob
+
+Avoid adding a backend for MVP.
+
+Core timer and logs must work offline.
+
+---
+
+## Architecture
+
+Keep business logic out of Composables.
+
+Suggested structure:
+
+```text
+core/
+  design/
+  localization/
+  analytics/
+  notification/
+  time/
+
+domain/
+  model/
+  usecase/
+  guideline/
+  reminder/
+
+data/
+  local/
+  repository/
+  billing/
+  ads/
+  backup/
+
+ui/
+  onboarding/
+  today/
+  bottle/
+  logs/
+  insights/
+  settings/
+  paywall/
+  widget/
+```
+
+Use repositories and use cases.
+
+Use immutable domain models where practical.
+
+Use sealed classes or sealed interfaces for state machines.
+
+---
+
+## Bottle Timer Rules
+
+MVP default formula rules:
+
+- Prepared formula, not started, room temperature: expires after 2 hours.
+- Formula after feeding starts: expires after 1 hour.
+- Prepared formula refrigerated before feeding starts: expires after 24 hours.
+
+MVP default breast milk rules:
+
+- Fresh expressed breast milk at room temperature: expires after 4 hours.
+- Refrigerated fresh breast milk: expires after 4 days.
+
+All rule durations must live in guideline/rule classes, not scattered through UI code.
+
+Rules must be testable and versioned.
+
+Do not silently modify timer rules without updating tests.
+
+---
+
+## Bottle Statuses
+
+Use these statuses:
+
+- NotStarted
+- FeedingStarted
+- Refrigerated
+- Expired
+- Fed
+- Discarded
+- Canceled
+
+Allowed transitions:
+
+```text
+NotStarted -> FeedingStarted
+NotStarted -> Refrigerated
+NotStarted -> Discarded
+NotStarted -> Canceled
+NotStarted -> Expired
+
+Refrigerated -> FeedingStarted
+Refrigerated -> Discarded
+Refrigerated -> Expired
+
+FeedingStarted -> Fed
+FeedingStarted -> Discarded
+FeedingStarted -> Expired
+
+Expired -> Discarded
+
+Fed -> terminal
+Discarded -> terminal
+Canceled -> terminal
+```
+
+Rules:
+
+- Do not silently move FeedingStarted back to NotStarted.
+- Fed, Discarded, and Canceled cancel all bottle notifications.
+- Expired should not become Fed without explicit user confirmation.
+- Editing bottle time must recalculate expiry.
+- UI countdown must be based on persisted expiresAt, not in-memory timers.
+
+---
+
+## Notifications
+
+When bottle state changes:
+
+1. Cancel old bottle notifications.
+2. Recalculate expiresAt.
+3. Schedule new reminders if relevant.
+
+Default reminders:
+
+- 15 minutes before expiry.
+- At expiry.
+
+Optional feeding reminders:
+
+- Around 45 minutes after feeding starts.
+- Around 60 minutes after feeding starts.
+
+Notification copy must be calm and non-medical.
+
+Use "timer expired", not "milk is unsafe".
+
+After device reboot, active bottle reminders must be restored.
+
+If notification permission is denied, the app must still work.
+
+---
+
+## UI and UX
+
+Primary tabs:
+
+1. Today
+2. Logs
+3. Insights
+4. Settings
+
+Today must prioritize:
+
+- Baby selector.
+- Active bottle card.
+- New Bottle.
+- Quick Feed.
+- Quick Diaper.
+- Quick Sleep.
+- Today summary.
+
+Night mode:
+
+- Large buttons.
+- Minimal text.
+- Low-stimulation UI.
+- No disruptive ads.
+- No complex forms.
+- Single-hand usage should be easy.
+
+Accessibility:
+
+- Support large font.
+- Support TalkBack labels.
+- Do not communicate status by color alone.
+- Use clear text labels for states.
+
+Compose rules:
+
+- Hoist state.
+- Keep Composables small.
+- Avoid business logic in UI.
+- Add previews for important screens.
+- Support light and dark themes.
+
+---
+
+## Monetization
+
+Free:
+
+- 1 baby.
+- Basic bottle timer.
+- Basic logs.
+- Today summary.
+- Ads.
+- Default widget.
+
+Pro:
+
+- No ads.
+- Multiple babies.
+- Full history.
+- Advanced stats.
+- Export.
+- Backup.
+- Custom reminders.
+- Custom timer rules.
+- Widget themes.
+
+Suggested pricing:
+
+- Monthly: USD 2.99
+- Yearly: USD 19.99
+- Lifetime: USD 29.99
+
+Ads:
+
+- Prefer banner/native only in MVP.
+- Do not show disruptive ads in night mode.
+- Do not show disruptive ads during active feeding.
+- Do not show disruptive ads immediately after a bottle-expiry notification.
+- Pro users must see no ads.
+
+---
+
+## Localization
+
+Initial languages:
+
+- English
+- Spanish
+- Simplified Chinese
+- German
+- French
+
+Never hardcode user-facing strings in Kotlin.
+
+All user-facing copy must use string resources.
+
+Safety and disclaimer text must preserve the same meaning across languages.
+
+Do not auto-switch guideline region based only on language.
+
+---
+
+## Privacy
+
+Do not request unnecessary permissions.
+
+Do not request:
+
+- Location
+- Contacts
+- Camera
+- Microphone
+
+Do not collect:
+
+- Baby real names as required data.
+- Medical diagnosis.
+- Notes content in analytics.
+- Detailed health concerns.
+
+Encourage baby nicknames.
+
+MVP data should be local-first.
+
+Cloud backup must be opt-in if added.
+
+---
+
+## Analytics
+
+Allowed analytics events include:
+
+- onboarding_started
+- baby_created
+- guideline_selected
+- notification_permission_shown
+- notification_permission_granted
+- bottle_created
+- bottle_started_feeding
+- bottle_refrigerated
+- bottle_expired
+- bottle_discarded
+- feed_logged
+- diaper_logged
+- sleep_started
+- sleep_ended
+- widget_added
+- paywall_viewed
+- purchase_started
+- purchase_completed
+- purchase_failed
+- export_clicked
+- backup_enabled
+- language_changed
+
+Do not log baby names, notes, or sensitive health content.
+
+---
+
+## Testing
+
+Add or maintain tests for:
+
+- Formula room-temperature expiry.
+- Formula feeding-started expiry.
+- Formula refrigerated expiry.
+- Breast milk room-temperature expiry.
+- Breast milk refrigerated expiry.
+- Bottle state transitions.
+- Notification scheduling and cancellation.
+- Unit conversion.
+- Today summary.
+- Cross-day logs.
+
+When changing bottle timer logic, update tests.
+
+When changing user-facing safety copy, check compliance wording.
+
+When changing notifications, test app restart and device reboot behavior.
+
+---
+
+## Definition of Done
+
+A change is complete only if:
+
+- Code compiles.
+- Relevant tests pass.
+- User-facing strings are localized.
+- No medical or safety guarantee is introduced.
+- Bottle timer behavior is not broken.
+- Notifications are handled correctly.
+- Accessibility is not worsened.
+- Light and dark themes still work.
+- Pro users do not see ads.
+- Night mode is not interrupted by ads.
+
+---
+
+## Non-Goals for MVP
+
+Do not add:
+
+- AI doctor
+- Medical diagnosis
+- Community feed
+- Online pediatric consultation
+- Baby photo analysis
+- Growth abnormality detection
+- Vaccine medical advice
+- Real-time family sharing
+- Complex account system
+- Hardware integration
+- Formula brand recommendations
+
+Unless explicitly requested by the product owner.
