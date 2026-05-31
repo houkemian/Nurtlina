@@ -1,5 +1,10 @@
 package com.nurtlina.app.ui.navigation
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -21,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -37,10 +43,13 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.nurtlina.app.R
+import com.nurtlina.app.core.notification.FeedReminderConfig
+import com.nurtlina.app.data.billing.EntitlementManager
+import com.nurtlina.app.data.billing.ProStatus
 import com.nurtlina.app.domain.model.BottleTransition
 import com.nurtlina.app.domain.model.DiaperType
+import com.nurtlina.app.domain.model.FeedLog
 import com.nurtlina.app.domain.model.GuidelineRegion
-import com.nurtlina.app.domain.model.MilkType
 import com.nurtlina.app.domain.model.TodaySummary
 import com.nurtlina.app.domain.model.UnitType
 import com.nurtlina.app.domain.model.UserSettings
@@ -59,34 +68,43 @@ import com.nurtlina.app.ui.logs.LogsScreen
 import com.nurtlina.app.ui.logs.LogsViewModel
 import com.nurtlina.app.ui.onboarding.OnboardingScreen
 import com.nurtlina.app.ui.onboarding.OnboardingViewModel
+import com.nurtlina.app.ui.auth.SignInScreen
 import com.nurtlina.app.ui.paywall.PaywallScreen
+import com.nurtlina.app.ui.paywall.PaywallViewModel
 import com.nurtlina.app.ui.settings.SettingsScreen
 import com.nurtlina.app.ui.settings.SettingsViewModel
+import com.nurtlina.app.ui.today.FeedingStatusUiState
 import com.nurtlina.app.ui.today.TodayScreen
 import com.nurtlina.app.ui.today.TodayUiState
 import com.nurtlina.app.ui.today.TodayViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.time.Duration
 import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import javax.inject.Inject
 
 // ── App-level ViewModel ──────────────────────────────────────────────────────
 
 /**
  * Lightweight ViewModel scoped to the activity that resolves the start
- * destination before the NavHost is first composed.
+ * destination and exposes app-wide Pro / sync state before the NavHost
+ * is first composed.
  *
- * Emits `null` while the settings DataStore is still loading, which causes
- * [NurtlinaNavHost] to render an empty placeholder rather than flash the wrong
- * screen.
+ * Emits `null` for [onboardingComplete] while the settings DataStore is
+ * still loading, which causes [NurtlinaNavHost] to render an empty
+ * placeholder rather than flash the wrong screen.
  */
 @HiltViewModel
 internal class AppViewModel @Inject constructor(
     settingsRepository: SettingsRepository,
+    entitlementManager: EntitlementManager,
 ) : ViewModel() {
 
     /** `null` = loading, `true` = completed, `false` = not yet completed. */
@@ -98,9 +116,23 @@ internal class AppViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000L),
             initialValue = null,
         )
+
+    /** `true` when the user holds an active Pro subscription or lifetime purchase. */
+    val isPro: StateFlow<Boolean> = entitlementManager.proStatus
+        .map { it != ProStatus.FREE && it != ProStatus.UNKNOWN }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = false,
+        )
 }
 
 // ── Navigation host ──────────────────────────────────────────────────────────
+
+private const val PRIVACY_URL = "https://nurtlina.app/privacy"
+private const val TERMS_URL = "https://nurtlina.app/terms"
+private const val PLAY_STORE_SUBS_URL =
+    "https://play.google.com/store/account/subscriptions?package=com.nurtlina.app"
 
 /**
  * Root composable that owns the [NavHostController] and the app-level
@@ -117,6 +149,7 @@ fun NurtlinaNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val appViewModel: AppViewModel = hiltViewModel()
     val onboardingComplete by appViewModel.onboardingComplete.collectAsStateWithLifecycle()
+    val isPro by appViewModel.isPro.collectAsStateWithLifecycle()
 
     // Hold off rendering until settings are loaded to avoid a destination flash.
     if (onboardingComplete == null) {
@@ -178,7 +211,7 @@ fun NurtlinaNavHost(modifier: Modifier = Modifier) {
             // ── Main tabs ────────────────────────────────────────────────
 
             composable(NavRoutes.Today.route) {
-                TodayRoute(navController)
+                TodayRoute(navController, isPro)
             }
 
             composable(NavRoutes.Logs.route) {
@@ -186,11 +219,11 @@ fun NurtlinaNavHost(modifier: Modifier = Modifier) {
             }
 
             composable(NavRoutes.Insights.route) {
-                InsightsRoute(navController)
+                InsightsRoute(navController, isPro)
             }
 
             composable(NavRoutes.Settings.route) {
-                SettingsRoute(navController)
+                SettingsRoute(navController, isPro)
             }
 
             // ── Bottle screens ───────────────────────────────────────────
@@ -211,16 +244,15 @@ fun NurtlinaNavHost(modifier: Modifier = Modifier) {
             }
 
             // ── Paywall ──────────────────────────────────────────────────
-
             composable(NavRoutes.Paywall.route) {
-                PaywallScreen(
-                    onClose = { navController.popBackStack() },
-                    onSubscribeMonthly = {},
-                    onSubscribeYearly = {},
-                    onBuyLifetime = {},
-                    onRestorePurchases = {},
-                    onPrivacyPolicy = {},
-                    onTerms = {},
+                PaywallRoute(navController)
+            }
+
+            // ── Sign-in ──────────────────────────────────────────────────
+            composable(NavRoutes.SignIn.route) {
+                SignInScreen(
+                    onBack = { navController.popBackStack() },
+                    onSignInSuccess = { navController.popBackStack() },
                 )
             }
         }
@@ -251,34 +283,63 @@ private fun OnboardingRoute(navController: NavController) {
 }
 
 @Composable
-private fun TodayRoute(navController: NavController) {
+private fun TodayRoute(navController: NavController, isPro: Boolean) {
     val viewModel: TodayViewModel = hiltViewModel()
     val babies by viewModel.babies.collectAsStateWithLifecycle()
     val selectedBaby by viewModel.selectedBaby.collectAsStateWithLifecycle()
     val activeBottles by viewModel.activeBottles.collectAsStateWithLifecycle()
+    val latestFeed by viewModel.latestFeed.collectAsStateWithLifecycle()
     val todaySummary by viewModel.todaySummary.collectAsStateWithLifecycle()
+    var now by remember { mutableStateOf(Instant.now()) }
     val activeBottle = activeBottles.firstOrNull()
+    val summary = todaySummary ?: emptyTodaySummary()
+    val unitType = UnitType.ML
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(if (FeedReminderConfig.DEBUG_NEXT_FEED_REMINDER_ENABLED) 1_000L else 60_000L)
+            now = Instant.now()
+        }
+    }
+
+    LaunchedEffect(latestFeed?.id, latestFeed?.startedAt) {
+        latestFeed?.let(viewModel::scheduleNextFeedReminder)
+    }
 
     TodayScreen(
         state = TodayUiState(
             babies = babies,
             selectedBaby = selectedBaby,
+            feedingStatus = buildFeedingStatus(
+                babyName = selectedBaby?.name,
+                latestFeed = latestFeed,
+                summary = summary,
+                unitType = unitType,
+                now = now,
+            ),
             activeBottle = activeBottle,
             countdownText = formatRemaining(activeBottle?.expiresAt),
             isExpiringSoon = isExpiringSoon(activeBottle?.expiresAt),
-            todaySummary = todaySummary ?: emptyTodaySummary(),
-            showAds = true,
+            todaySummary = summary,
+            showAds = !isPro,
             nightModeEnabled = false,
-            unitType = UnitType.ML,
+            unitType = unitType,
         ),
         onSelectBaby = { viewModel.selectBaby(it.id) },
-        onAddBaby = { navController.navigate(NavRoutes.Paywall.route) },
+        onAddBaby = {
+            if (isPro) {
+                // Pro: navigate directly to baby creation (future screen)
+            } else {
+                navController.navigate(NavRoutes.Paywall.route)
+            }
+        },
         onNewBottle = { navController.navigate(NavRoutes.NewBottle.route) },
         onStartFeeding = { viewModel.transitionBottle(it, BottleTransition.StartFeeding) },
         onRefrigerate = { viewModel.transitionBottle(it, BottleTransition.Refrigerate) },
         onDiscard = { viewModel.transitionBottle(it, BottleTransition.Discard) },
+        onMarkFed = { viewModel.transitionBottle(it, BottleTransition.MarkFed) },
         onBottleDetail = { navController.navigate(NavRoutes.BottleDetail.createRoute(it.id)) },
-        onQuickFeed = {},
+        onQuickFeed = { amountMl -> viewModel.quickLogFeed(amountMl) },
         onQuickDiaper = { viewModel.quickLogDiaper(DiaperType.WET) },
         onQuickSleep = {
             if (todaySummary?.activeSleepStartedAt == null) {
@@ -393,14 +454,14 @@ private fun LogsRoute() {
 }
 
 @Composable
-private fun InsightsRoute(navController: NavController) {
+private fun InsightsRoute(navController: NavController, isPro: Boolean) {
     val todayViewModel: TodayViewModel = hiltViewModel()
     val todaySummary by todayViewModel.todaySummary.collectAsStateWithLifecycle()
     var selectedRange by remember { mutableStateOf(InsightsDateRange.SEVEN) }
 
     InsightsScreen(
         todaySummary = todaySummary ?: emptyTodaySummary(),
-        isPro = false,
+        isPro = isPro,
         useOz = false,
         selectedRange = selectedRange,
         proData = null,
@@ -410,17 +471,22 @@ private fun InsightsRoute(navController: NavController) {
 }
 
 @Composable
-private fun SettingsRoute(navController: NavController) {
+private fun SettingsRoute(navController: NavController, isPro: Boolean) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val babies by viewModel.babies.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
     val currentSettings = settings ?: UserSettings()
-    val selectedBaby = babies.firstOrNull { it.id == currentSettings.selectedBabyId } ?: babies.firstOrNull()
+    val selectedBaby = babies.firstOrNull { it.id == currentSettings.selectedBabyId }
+        ?: babies.firstOrNull()
 
     SettingsScreen(
         baby = selectedBaby,
         settings = currentSettings,
-        isPro = false,
+        isPro = isPro,
+        currentUser = currentUser,
         appVersion = "1.0.0",
         onEditBaby = {},
         onUnitChanged = viewModel::updateUnitType,
@@ -430,15 +496,52 @@ private fun SettingsRoute(navController: NavController) {
         onReminderTimingChanged = {},
         onNightModeToggled = {},
         onThemeChanged = viewModel::updateTheme,
-        onManageSubscription = {},
-        onRestorePurchases = {},
+        onManageSubscription = {
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_SUBS_URL))
+            )
+        },
+        onRestorePurchases = { viewModel.restorePurchases() },
         onUpgradeTapped = { navController.navigate(NavRoutes.Paywall.route) },
         onExportCsv = {},
-        onBackupClick = {},
+        onBackupClick = { viewModel.requestFullSync() },
+        onSignInClick = { navController.navigate(NavRoutes.SignIn.route) },
+        onSignOutClick = { viewModel.signOut() },
         onFaqClick = {},
-        onPrivacyPolicyClick = {},
-        onTermsClick = {},
-        onContactSupportClick = {},
+        onPrivacyPolicyClick = {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_URL)))
+        },
+        onTermsClick = {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(TERMS_URL)))
+        },
+        onContactSupportClick = {
+            context.startActivity(
+                Intent(Intent.ACTION_SENDTO).apply {
+                    data = Uri.parse("mailto:support@nurtlina.app")
+                }
+            )
+        },
+    )
+}
+
+@Composable
+private fun PaywallRoute(navController: NavController) {
+    val viewModel: PaywallViewModel = hiltViewModel()
+    val context = LocalContext.current
+    val activity: Activity? = context.findActivity()
+
+    PaywallScreen(
+        onClose = { navController.popBackStack() },
+        onSubscribeMonthly = { activity?.let { act: Activity -> viewModel.subscribe(act, "monthly") } },
+        onSubscribeYearly = { activity?.let { act: Activity -> viewModel.subscribe(act, "yearly") } },
+        onBuyLifetime = { activity?.let { act: Activity -> viewModel.subscribe(act, "lifetime") } },
+        onRestorePurchases = { viewModel.restorePurchases() },
+        onPrivacyPolicy = {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_URL)))
+        },
+        onTerms = {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(TERMS_URL)))
+        },
     )
 }
 
@@ -456,6 +559,53 @@ private fun emptyTodaySummary(): TodaySummary = TodaySummary(
     sleepDurationMillis = 0L,
     activeSleepStartedAt = null,
 )
+
+// Soft home-screen prompt for interval awareness; this is not a safety or medical rule.
+private val feedAttentionInterval: Duration
+    get() = FeedReminderConfig.nextFeedAttentionInterval
+
+private fun buildFeedingStatus(
+    babyName: String?,
+    latestFeed: FeedLog?,
+    summary: TodaySummary,
+    unitType: UnitType,
+    now: Instant,
+): FeedingStatusUiState {
+    val elapsedSinceLastFeed = latestFeed?.startedAt?.let { startedAt ->
+        val elapsed = Duration.between(startedAt, now)
+        if (elapsed.isNegative) Duration.ZERO else elapsed
+    }
+    val nextFeedRemaining = elapsedSinceLastFeed
+        ?.takeIf { it < feedAttentionInterval }
+        ?.let { feedAttentionInterval.minus(it) }
+
+    return FeedingStatusUiState(
+        babyName = babyName.orEmpty(),
+        lastFeedTimeText = latestFeed?.startedAt?.let(::formatTime),
+        lastFeedAgoText = elapsedSinceLastFeed?.let(::formatCompactDuration),
+        lastFeedAmountText = latestFeed?.amountMl?.let { formatAmount(it, unitType) },
+        todayFeedCount = summary.totalFeedCount,
+        todayAmountText = formatAmount(summary.totalAmountMl, unitType),
+        nextFeedInMillis = nextFeedRemaining?.toMillis(),
+        isNextFeedDue = elapsedSinceLastFeed?.let { it >= feedAttentionInterval } == true,
+    )
+}
+
+private fun formatTime(instant: Instant): String =
+    DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
+        .withZone(ZoneId.systemDefault())
+        .format(instant)
+
+private fun formatCompactDuration(duration: Duration): String {
+    val hours = duration.toHours()
+    val minutes = duration.minusHours(hours).toMinutes().coerceAtLeast(if (hours > 0) 0L else 1L)
+    return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
+}
+
+private fun formatAmount(amountMl: Double, unitType: UnitType): String = when (unitType) {
+    UnitType.ML -> "%.0f ml".format(amountMl)
+    UnitType.OZ -> "%.1f oz".format(amountMl / 29.5735)
+}
 
 private fun formatRemaining(expiresAt: Instant?): String {
     if (expiresAt == null) return ""
@@ -477,6 +627,12 @@ private fun guidelineSourceName(region: GuidelineRegion?): String = when (region
     GuidelineRegion.UK -> "NHS"
     GuidelineRegion.CUSTOM -> "Custom"
     null -> ""
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
 
 // ── Bottom navigation bar ────────────────────────────────────────────────────
@@ -545,17 +701,5 @@ private fun NurtlinaBottomBar(
                 label = { Text(stringResource(item.labelResId)) },
             )
         }
-    }
-}
-
-// ── Development placeholder ──────────────────────────────────────────────────
-
-@Composable
-private fun PlaceholderScreen(route: String) {
-    Box(Modifier.fillMaxSize()) {
-        Text(
-            text = route,
-            modifier = Modifier.align(androidx.compose.ui.Alignment.Center),
-        )
     }
 }

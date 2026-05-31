@@ -59,6 +59,8 @@
     <string name="notif_channel_bottle_desc">奶瓶计时器到期前及到期时的提醒</string>
     <string name="notif_channel_feeding_name">喂奶提醒</string>
     <string name="notif_channel_feeding_desc">喂奶过程中的提醒</string>
+    <string name="notif_channel_next_feed_name">柔和的下一次喂奶提醒</string>
+    <string name="notif_channel_next_feed_desc">下一次喂奶倒计时结束时的轻柔提醒</string>
 
     <!-- Notification Content -->
     <string name="notif_before_expiry_title">奶瓶计时器即将到期</string>
@@ -69,6 +71,8 @@
     <string name="notif_feeding_45_body">%1$s 的喂奶时间已持续 45 分钟。</string>
     <string name="notif_feeding_60_title">喂奶时间已达上限</string>
     <string name="notif_feeding_60_body">%1$s 的奶瓶计时器即将到期。依据您所选的参考指南。</string>
+    <string name="notif_next_feed_title">下一次喂奶提醒</string>
+    <string name="notif_next_feed_body">倒计时结束了，可以看看宝宝是否准备好喂奶。</string>
 
     <!-- Disclaimer and Safety -->
     <string name="disclaimer_full">本应用提供基于所选公共卫生指南的提醒和记录工具，不提供医疗建议，也无法判断奶液是否安全。请始终遵照奶粉标签、当地卫生指南及儿科医生的建议。如有疑虑，请丢弃奶液。</string>
@@ -99,6 +103,42 @@
     <string name="quick_feed">快速记录喂奶</string>
     <string name="quick_diaper">快速记录尿裤</string>
     <string name="quick_sleep">快速记录睡眠</string>
+    <string name="today_no_baby_selected">宝宝</string>
+    <string name="today_last_feed_label">上次喂奶</string>
+    <string name="today_last_feed_value">%1$s 前 · %2$s</string>
+    <string name="today_last_feed_time">%1$s</string>
+    <string name="today_no_feed_logged">还没有喂奶记录</string>
+    <string name="today_feed_amount_not_recorded">未记录奶量</string>
+    <string name="today_feed_today_label">今日</string>
+    <string name="today_feed_today_value">%1$d 次喂奶 · %2$s</string>
+    <string name="today_next_feed_label">下一次喂奶</string>
+    <string name="today_next_feed_watch_later">约 %1$s 后开始关注</string>
+    <string name="today_next_feed_now">现在可以关注喂奶</string>
+    <string name="today_next_feed_after_first">记录一次喂奶后开始追踪间隔</string>
+    <string name="today_active_bottle_timer_title">活跃奶瓶计时器</string>
+    <string name="today_quick_actions_title">快捷操作</string>
+    <string name="today_summary_section_title">今日摘要</string>
+    <string name="today_quick_feed">喂奶</string>
+    <string name="today_quick_diaper">尿裤</string>
+    <string name="today_quick_sleep">睡眠</string>
+    <string name="today_stop_sleep">停止睡眠</string>
+    <string name="today_feedback_feed_logged">已记录喂奶</string>
+    <string name="today_feedback_feed_body">今天的喂奶奶量已保存。</string>
+    <string name="today_quick_feed_dialog_title">记录奶量</string>
+    <string name="today_quick_feed_dialog_body">保存喂奶前，请输入宝宝这次喝了多少。</string>
+    <string name="today_quick_feed_amount_label">奶量</string>
+    <string name="today_quick_feed_amount_error">请输入大于 0 的奶量。</string>
+    <string name="today_feedback_diaper_logged">已记录尿裤</string>
+    <string name="today_feedback_diaper_body">今天的小变化已经收好。</string>
+    <string name="today_feedback_sleep_started">已开始睡眠</string>
+    <string name="today_feedback_sleep_started_body">小梦乡计时开始啦。</string>
+    <string name="today_feedback_sleep_stopped">已结束睡眠</string>
+    <string name="today_feedback_sleep_stopped_body">醒来时间已记到今天。</string>
+    <string name="today_feedback_next_feed_due">下一次喂奶提醒</string>
+    <string name="today_feedback_next_feed_due_body">倒计时结束了，可以看看宝宝是否准备好喂奶。</string>
+    <string name="today_sleep_active_title">睡眠中</string>
+    <string name="today_sleep_elapsed_label">已睡</string>
+    <string name="today_sleep_stop_hint">宝宝醒来时点击停止。</string>
 
     <!-- Today Summary -->
     <string name="summary_feeds">喂奶</string>
@@ -219,5 +259,31 @@
     <string name="cd_quick_feed_button">快速记录喂奶</string>
     <string name="cd_quick_diaper_button">快速记录换尿裤</string>
     <string name="cd_quick_sleep_button">开始或停止睡眠记录</string>
+
+    <!-- Account / Sign-In -->
+    <string name="settings_section_account">账号</string>
+    <string name="settings_account_sign_in">登录以同步</string>
+    <string name="settings_account_sign_in_desc">启用云端备份，并可在任意设备恢复数据</string>
+    <string name="settings_account_signed_in">已登录</string>
+    <string name="settings_account_signed_in_label">账号</string>
+    <string name="settings_account_sign_out">退出登录</string>
+
+    <!-- Sign-In Screen -->
+    <string name="signin_title">登录</string>
+    <string name="signin_header_title">同步与备份</string>
+    <string name="signin_subtitle">登录后可启用云端备份，并在任意设备恢复数据。</string>
+    <string name="signin_google">使用 Google 继续</string>
+    <string name="signin_microsoft">使用 Microsoft 继续</string>
+    <string name="signin_or_divider">或</string>
+    <string name="signin_email_label">电子邮箱</string>
+    <string name="signin_password_label">密码</string>
+    <string name="signin_submit">登录</string>
+    <string name="signin_create_account">创建账号</string>
+    <string name="signin_toggle_create">还没有账号？创建一个</string>
+    <string name="signin_toggle_signin">已有账号？登录</string>
+    <string name="signin_forgot_password">忘记密码？</string>
+    <string name="signin_show_password_cd">显示密码</string>
+    <string name="signin_hide_password_cd">隐藏密码</string>
+    <string name="signin_disclaimer">您的奶瓶计时数据始终会保存在本地。登录后可启用可选的云端备份。</string>
 
 </resources>

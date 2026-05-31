@@ -3,15 +3,18 @@ package com.nurtlina.app.ui.bottle
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nurtlina.app.core.notification.NextFeedNotificationScheduler
 import com.nurtlina.app.domain.model.Bottle
 import com.nurtlina.app.domain.model.BottleStatus
 import com.nurtlina.app.domain.model.BottleTransition
 import com.nurtlina.app.domain.model.BottleTransitionResult
+import com.nurtlina.app.domain.model.FeedType
 import com.nurtlina.app.domain.model.GuidelineRegion
 import com.nurtlina.app.domain.model.MilkType
 import com.nurtlina.app.domain.repository.BottleRepository
 import com.nurtlina.app.domain.usecase.bottle.CreateBottleUseCase
 import com.nurtlina.app.domain.usecase.bottle.TransitionBottleUseCase
+import com.nurtlina.app.domain.usecase.feed.LogFeedUseCase
 import com.nurtlina.app.ui.navigation.NavRoutes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,7 +56,9 @@ class BottleViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val createBottleUseCase: CreateBottleUseCase,
     private val transitionBottleUseCase: TransitionBottleUseCase,
+    private val logFeedUseCase: LogFeedUseCase,
     private val bottleRepository: BottleRepository,
+    private val nextFeedNotificationScheduler: NextFeedNotificationScheduler,
 ) : ViewModel() {
 
     private val bottleId: String? = savedStateHandle[NavRoutes.BottleDetail.ARG_BOTTLE_ID]
@@ -127,11 +132,41 @@ class BottleViewModel @Inject constructor(
     fun transitionBottle(transition: BottleTransition) {
         val current = bottle.value ?: return
         viewModelScope.launch {
-            val result = transitionBottleUseCase(current, transition)
-            if (result is BottleTransitionResult.Error) {
-                _uiEvents.send(BottleUiEvent.ShowError(RuntimeException(result.reason)))
+            val result = runCatching {
+                transitionBottleUseCase(current, transition)
+            }.getOrElse { error ->
+                _uiEvents.send(BottleUiEvent.ShowError(error))
+                return@launch
+            }
+
+            when (result) {
+                is BottleTransitionResult.Error -> {
+                    _uiEvents.send(BottleUiEvent.ShowError(RuntimeException(result.reason)))
+                }
+                is BottleTransitionResult.Success -> {
+                    if (transition is BottleTransition.MarkFed) {
+                        runCatching {
+                            logFeedFromBottle(result.bottle)
+                        }.onFailure { error ->
+                            _uiEvents.send(BottleUiEvent.ShowError(error))
+                        }
+                    }
+                }
             }
         }
+    }
+
+    private suspend fun logFeedFromBottle(bottle: Bottle) {
+        val fedAt = bottle.fedAt ?: Instant.now()
+        val log = logFeedUseCase(
+            babyId = bottle.babyId,
+            feedType = bottle.milkType.toFeedType(),
+            amountMl = bottle.amountMl,
+            startedAt = bottle.feedingStartedAt ?: fedAt,
+            endedAt = fedAt,
+            bottleId = bottle.id,
+        )
+        nextFeedNotificationScheduler.schedule(log.babyId, log.startedAt)
     }
 }
 
@@ -149,4 +184,10 @@ private fun secondTicker(expiresAt: Instant?): Flow<Duration> = flow {
         emit(remaining)
         delay(1_000L)
     }
+}
+
+private fun MilkType.toFeedType(): FeedType = when (this) {
+    MilkType.FORMULA -> FeedType.FORMULA
+    MilkType.BREAST_MILK -> FeedType.BREAST_MILK
+    MilkType.CUSTOM -> FeedType.OTHER
 }

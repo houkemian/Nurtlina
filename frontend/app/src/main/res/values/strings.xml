@@ -63,10 +63,42 @@
     <string name="today_expires_in">Expires in</string>
     <string name="today_time_expired">EXPIRED</string>
     <string name="today_add_baby_pro">Add Baby (Pro)</string>
+    <string name="today_no_baby_selected">Baby</string>
+    <string name="today_last_feed_label">Last feed</string>
+    <string name="today_last_feed_value">%1$s ago · %2$s</string>
+    <string name="today_last_feed_time">At %1$s</string>
+    <string name="today_no_feed_logged">No feed logged yet</string>
+    <string name="today_feed_amount_not_recorded">Amount not recorded</string>
+    <string name="today_feed_today_label">Today</string>
+    <string name="today_feed_today_value">%1$d feeds · %2$s</string>
+    <string name="today_next_feed_label">Next feed</string>
+    <string name="today_next_feed_watch_later">Watch from around %1$s later</string>
+    <string name="today_next_feed_now">Watch feeding now</string>
+    <string name="today_next_feed_after_first">Log a feed to start interval tracking</string>
+    <string name="today_active_bottle_timer_title">Active Bottle Timer</string>
+    <string name="today_quick_actions_title">Quick Actions</string>
+    <string name="today_summary_section_title">Today Summary</string>
     <string name="today_quick_feed">Feed</string>
     <string name="today_quick_diaper">Diaper</string>
     <string name="today_quick_sleep">Sleep</string>
     <string name="today_stop_sleep">Stop Sleep</string>
+    <string name="today_feedback_feed_logged">Feed logged</string>
+    <string name="today_feedback_feed_body">Feed amount saved for today.</string>
+    <string name="today_quick_feed_dialog_title">Log feed amount</string>
+    <string name="today_quick_feed_dialog_body">Enter how much baby had before saving this feed.</string>
+    <string name="today_quick_feed_amount_label">Amount</string>
+    <string name="today_quick_feed_amount_error">Enter an amount greater than 0.</string>
+    <string name="today_feedback_diaper_logged">Diaper logged</string>
+    <string name="today_feedback_diaper_body">Tiny change saved for today.</string>
+    <string name="today_feedback_sleep_started">Sleep started</string>
+    <string name="today_feedback_sleep_started_body">Sweet dreams timer is running.</string>
+    <string name="today_feedback_sleep_stopped">Sleep stopped</string>
+    <string name="today_feedback_sleep_stopped_body">Wake-up noted in today\'s log.</string>
+    <string name="today_feedback_next_feed_due">Next feed reminder</string>
+    <string name="today_feedback_next_feed_due_body">The countdown ended. Check whether baby is ready to feed.</string>
+    <string name="today_sleep_active_title">Sleep in progress</string>
+    <string name="today_sleep_elapsed_label">Sleeping for</string>
+    <string name="today_sleep_stop_hint">Tap stop when baby wakes.</string>
     <string name="today_summary_feeds">Feeds</string>
     <string name="today_summary_diapers">Diapers</string>
     <string name="today_summary_sleep">Sleep</string>
@@ -173,6 +205,8 @@
     <string name="notif_channel_bottle_desc">Reminders when your bottle timer is about to expire or has expired</string>
     <string name="notif_channel_feeding_name">Feeding Reminder</string>
     <string name="notif_channel_feeding_desc">Reminders during active feeding sessions</string>
+    <string name="notif_channel_next_feed_name">Gentle next feed reminder</string>
+    <string name="notif_channel_next_feed_desc">A soft reminder when the next feed countdown ends</string>
     <string name="notif_before_expiry_title">Bottle expires soon</string>
     <string name="notif_before_expiry_body">Use it soon or discard it based on your selected guideline.</string>
     <string name="notif_expired_title">Bottle timer expired</string>
@@ -181,6 +215,8 @@
     <string name="notif_feeding_45_body">Used formula should be discarded after the selected timer ends.</string>
     <string name="notif_feeding_60_title">Feeding started 60 minutes ago</string>
     <string name="notif_feeding_60_body">When in doubt, discard the milk. This app is a reminder, not medical advice.</string>
+    <string name="notif_next_feed_title">Next feed reminder</string>
+    <string name="notif_next_feed_body">The countdown ended. Check whether baby is ready to feed.</string>
 
     <!-- ===== Paywall ===== -->
     <string name="paywall_title">Track with less stress</string>
@@ -497,5 +533,32 @@
     <string name="settings_source_cdc_bm_label">CDC: Breast Milk Storage and Preparation</string>
     <string name="settings_source_cdc_bm_url" translatable="false">https://www.cdc.gov/breastfeeding/recommendations/handling_breastmilk.htm</string>
     <string name="settings_source_open_link_cd">Open %1$s</string>
+
+    <!-- ===== Account / Sign-In ===== -->
+    <string name="settings_section_account">Account</string>
+    <string name="settings_account_sign_in">Sign in to sync</string>
+    <string name="settings_account_sign_in_desc">Enable cloud backup and restore on any device</string>
+    <string name="settings_account_signed_in">Signed in</string>
+    <string name="settings_account_signed_in_label">Account</string>
+    <string name="settings_account_sign_out">Sign out</string>
+
+    <!-- ===== Sign-In Screen ===== -->
+    <string name="signin_title">Sign In</string>
+    <string name="signin_header_title">Sync and backup</string>
+    <string name="signin_subtitle">Sign in to enable cloud backup and restore your data on any device.</string>
+    <string name="signin_google">Continue with Google</string>
+    <string name="signin_microsoft">Continue with Microsoft</string>
+    <string name="signin_or_divider">or</string>
+    <string name="signin_email_label">Email address</string>
+    <string name="signin_password_label">Password</string>
+    <string name="signin_submit">Sign In</string>
+    <string name="signin_create_account">Create Account</string>
+    <string name="signin_toggle_create">Don\'t have an account? Create one</string>
+    <string name="signin_toggle_signin">Already have an account? Sign in</string>
+    <string name="signin_forgot_password">Forgot password?</string>
+    <string name="signin_show_password_cd">Show password</string>
+    <string name="signin_hide_password_cd">Hide password</string>
+    <string name="signin_disclaimer">Your bottle timer data is always saved locally. Signing in enables optional cloud backup.</string>
+    <string name="firebase_web_client_id" translatable="false">225993962515-8pn0agaia8r04kqatkksmgan4n2jmppu.apps.googleusercontent.com</string>
 
 </resources>

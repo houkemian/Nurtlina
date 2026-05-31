@@ -59,6 +59,8 @@
     <string name="notif_channel_bottle_desc">Recordatorios antes y en el vencimiento del temporizador del biberón</string>
     <string name="notif_channel_feeding_name">Recordatorios de alimentación</string>
     <string name="notif_channel_feeding_desc">Recordatorios durante las sesiones de alimentación activas</string>
+    <string name="notif_channel_next_feed_name">Recordatorio suave de próxima alimentación</string>
+    <string name="notif_channel_next_feed_desc">Un recordatorio suave cuando termina la cuenta atrás de la próxima alimentación</string>
 
     <!-- Notification Content -->
     <string name="notif_before_expiry_title">El temporizador del biberón vence pronto</string>
@@ -69,6 +71,8 @@
     <string name="notif_feeding_45_body">La alimentación de %1$s lleva 45 minutos.</string>
     <string name="notif_feeding_60_title">Límite de tiempo de alimentación alcanzado</string>
     <string name="notif_feeding_60_body">El temporizador del biberón de %1$s vence pronto. Según la guía seleccionada.</string>
+    <string name="notif_next_feed_title">Recordatorio de próxima alimentación</string>
+    <string name="notif_next_feed_body">La cuenta atrás terminó. Revisa si el bebé está listo para alimentarse.</string>
 
     <!-- Disclaimer and Safety -->
     <string name="disclaimer_full">Esta aplicación proporciona recordatorios y herramientas de seguimiento basadas en guías públicas seleccionadas. No proporciona consejo médico y no puede determinar si la leche es segura. Sigue siempre las instrucciones de la etiqueta de la leche de fórmula, las pautas de salud locales y los consejos de tu pediatra. En caso de duda, descarta la leche.</string>
@@ -99,6 +103,42 @@
     <string name="quick_feed">Registro rápido de alimentación</string>
     <string name="quick_diaper">Registro rápido de pañal</string>
     <string name="quick_sleep">Registro rápido de sueño</string>
+    <string name="today_no_baby_selected">Bebé</string>
+    <string name="today_last_feed_label">Última alimentación</string>
+    <string name="today_last_feed_value">hace %1$s · %2$s</string>
+    <string name="today_last_feed_time">A las %1$s</string>
+    <string name="today_no_feed_logged">Aún no hay alimentaciones registradas</string>
+    <string name="today_feed_amount_not_recorded">Cantidad no registrada</string>
+    <string name="today_feed_today_label">Hoy</string>
+    <string name="today_feed_today_value">%1$d alimentaciones · %2$s</string>
+    <string name="today_next_feed_label">Próxima alimentación</string>
+    <string name="today_next_feed_watch_later">Observa alrededor de %1$s más tarde</string>
+    <string name="today_next_feed_now">Observa la alimentación ahora</string>
+    <string name="today_next_feed_after_first">Registra una alimentación para iniciar el seguimiento del intervalo</string>
+    <string name="today_active_bottle_timer_title">Temporizador de biberón activo</string>
+    <string name="today_quick_actions_title">Acciones rápidas</string>
+    <string name="today_summary_section_title">Resumen de hoy</string>
+    <string name="today_quick_feed">Alimentar</string>
+    <string name="today_quick_diaper">Pañal</string>
+    <string name="today_quick_sleep">Sueño</string>
+    <string name="today_stop_sleep">Detener sueño</string>
+    <string name="today_feedback_feed_logged">Alimentación registrada</string>
+    <string name="today_feedback_feed_body">La cantidad de la alimentación de hoy quedó guardada.</string>
+    <string name="today_quick_feed_dialog_title">Registrar cantidad</string>
+    <string name="today_quick_feed_dialog_body">Ingresa cuánto tomó el bebé antes de guardar esta alimentación.</string>
+    <string name="today_quick_feed_amount_label">Cantidad</string>
+    <string name="today_quick_feed_amount_error">Ingresa una cantidad mayor que 0.</string>
+    <string name="today_feedback_diaper_logged">Pañal registrado</string>
+    <string name="today_feedback_diaper_body">El pequeño cambio de hoy quedó guardado.</string>
+    <string name="today_feedback_sleep_started">Sueño iniciado</string>
+    <string name="today_feedback_sleep_started_body">El temporizador de dulces sueños está en marcha.</string>
+    <string name="today_feedback_sleep_stopped">Sueño detenido</string>
+    <string name="today_feedback_sleep_stopped_body">El despertar quedó anotado en el registro de hoy.</string>
+    <string name="today_feedback_next_feed_due">Recordatorio de próxima alimentación</string>
+    <string name="today_feedback_next_feed_due_body">La cuenta atrás terminó. Revisa si el bebé está listo para alimentarse.</string>
+    <string name="today_sleep_active_title">Sueño en curso</string>
+    <string name="today_sleep_elapsed_label">Durmiendo desde hace</string>
+    <string name="today_sleep_stop_hint">Toca detener cuando el bebé despierte.</string>
 
     <!-- Today Summary -->
     <string name="summary_feeds">Alimentaciones</string>
@@ -219,5 +259,31 @@
     <string name="cd_quick_feed_button">Registrar una alimentación rápida</string>
     <string name="cd_quick_diaper_button">Registrar un cambio de pañal rápido</string>
     <string name="cd_quick_sleep_button">Iniciar o detener el registro de sueño</string>
+
+    <!-- Account / Sign-In -->
+    <string name="settings_section_account">Cuenta</string>
+    <string name="settings_account_sign_in">Iniciar sesión para sincronizar</string>
+    <string name="settings_account_sign_in_desc">Activa la copia de seguridad en la nube y restaura tus datos en cualquier dispositivo</string>
+    <string name="settings_account_signed_in">Sesión iniciada</string>
+    <string name="settings_account_signed_in_label">Cuenta</string>
+    <string name="settings_account_sign_out">Cerrar sesión</string>
+
+    <!-- Sign-In Screen -->
+    <string name="signin_title">Iniciar sesión</string>
+    <string name="signin_header_title">Sincronización y copia de seguridad</string>
+    <string name="signin_subtitle">Inicia sesión para activar la copia de seguridad en la nube y restaurar tus datos en cualquier dispositivo.</string>
+    <string name="signin_google">Continuar con Google</string>
+    <string name="signin_microsoft">Continuar con Microsoft</string>
+    <string name="signin_or_divider">o</string>
+    <string name="signin_email_label">Correo electrónico</string>
+    <string name="signin_password_label">Contraseña</string>
+    <string name="signin_submit">Iniciar sesión</string>
+    <string name="signin_create_account">Crear cuenta</string>
+    <string name="signin_toggle_create">¿No tienes cuenta? Crea una</string>
+    <string name="signin_toggle_signin">¿Ya tienes cuenta? Inicia sesión</string>
+    <string name="signin_forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="signin_show_password_cd">Mostrar contraseña</string>
+    <string name="signin_hide_password_cd">Ocultar contraseña</string>
+    <string name="signin_disclaimer">Tus datos del temporizador de biberones siempre se guardan localmente. Iniciar sesión activa una copia de seguridad opcional en la nube.</string>
 
 </resources>

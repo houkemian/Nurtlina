@@ -1,9 +1,17 @@
 package com.nurtlina.app.ui.today
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +24,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -23,6 +34,7 @@ import androidx.compose.material.icons.filled.BabyChangingStation
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.LocalDrink
 import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ButtonDefaults
@@ -30,29 +42,40 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.zIndex
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -65,8 +88,14 @@ import com.nurtlina.app.domain.model.TodaySummary
 import com.nurtlina.app.domain.model.UnitType
 import com.nurtlina.app.ui.theme.BottleStatusColors
 import com.nurtlina.app.ui.theme.NurtlinaTheme
+import kotlinx.coroutines.delay
 import java.time.Instant
 import java.util.concurrent.TimeUnit
+
+private const val KEEP_QUICK_LOG_FEEDBACK_VISIBLE_FOR_DEBUG = false
+private const val ML_PER_OUNCE = 29.5735
+private val QUICK_FEED_ML_PRESETS = listOf(60.0, 90.0, 120.0, 150.0, 180.0)
+private val QUICK_FEED_OZ_PRESETS_ML = listOf(2.0, 3.0, 4.0, 5.0, 6.0).map { it * ML_PER_OUNCE }
 
 // --------------------------------------------------------------------------
 // UI state
@@ -75,12 +104,13 @@ import java.util.concurrent.TimeUnit
 /**
  * Snapshot of data the Today screen needs to render.
  *
- * All time-sensitive values (e.g. countdown) must be pre-formatted by the
- * ViewModel so the composable remains stateless.
+ * Most time-sensitive values are pre-formatted by the route layer. The active
+ * sleep timer is the exception so only that card recomposes every second.
  */
 data class TodayUiState(
     val babies: List<Baby> = emptyList(),
     val selectedBaby: Baby? = null,
+    val feedingStatus: FeedingStatusUiState = FeedingStatusUiState(),
     val activeBottle: Bottle? = null,
     /** Human-readable countdown, e.g. "1h 24m", "45m", or use R.string.today_time_expired. */
     val countdownText: String = "",
@@ -95,6 +125,17 @@ data class TodayUiState(
     val showAds: Boolean = true,
     val nightModeEnabled: Boolean = false,
     val unitType: UnitType = UnitType.ML,
+)
+
+data class FeedingStatusUiState(
+    val babyName: String = "",
+    val lastFeedTimeText: String? = null,
+    val lastFeedAgoText: String? = null,
+    val lastFeedAmountText: String? = null,
+    val todayFeedCount: Int = 0,
+    val todayAmountText: String = "",
+    val nextFeedInMillis: Long? = null,
+    val isNextFeedDue: Boolean = false,
 )
 
 // --------------------------------------------------------------------------
@@ -116,124 +157,433 @@ fun TodayScreen(
     onStartFeeding: (Bottle) -> Unit,
     onRefrigerate: (Bottle) -> Unit,
     onDiscard: (Bottle) -> Unit,
+    onMarkFed: (Bottle) -> Unit,
     onBottleDetail: (Bottle) -> Unit,
-    onQuickFeed: () -> Unit,
+    onQuickFeed: (Double) -> Unit,
     onQuickDiaper: () -> Unit,
     onQuickSleep: () -> Unit,
     modifier: Modifier = Modifier,
     adUnitId: String = "ca-app-pub-3940256099942544/6300978111", // AdMob test banner ID
 ) {
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.today_title),
-                        style = if (state.nightModeEnabled)
-                            MaterialTheme.typography.headlineMedium
-                        else
-                            MaterialTheme.typography.headlineSmall,
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                ),
-            )
-        },
-        floatingActionButton = {
-            val cdNewBottle = stringResource(R.string.cd_new_bottle_fab)
-            FloatingActionButton(
-                onClick = onNewBottle,
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .semantics { contentDescription = cdNewBottle },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                )
-            }
-        },
-        bottomBar = {
-            if (state.showAds) {
-                AdBannerView(
-                    adUnitId = adUnitId,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding(),
-                )
-            }
-        },
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState()),
-        ) {
-            BabySwitcher(
-                babies = state.babies,
-                selectedBaby = state.selectedBaby,
-                onSelectBaby = onSelectBaby,
-                onAddBaby = onAddBaby,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-            )
-            Spacer(Modifier.height(16.dp))
+    var quickLogFeedback by remember { mutableStateOf<QuickLogFeedback?>(null) }
+    var isQuickLogFeedbackVisible by remember { mutableStateOf(false) }
+    var showQuickFeedDialog by remember { mutableStateOf(false) }
+    var quickFeedInitialAmountMl by remember { mutableStateOf<Double?>(null) }
+    val showFeedback: (QuickLogFeedbackType) -> Unit = { type ->
+        quickLogFeedback = QuickLogFeedback(type = type, token = System.nanoTime())
+        isQuickLogFeedbackVisible = true
+    }
 
-            if (state.activeBottle != null) {
-                ActiveBottleCard(
-                    bottle = state.activeBottle,
-                    countdownText = state.countdownText,
-                    isExpiringSoon = state.isExpiringSoon,
-                    unitType = state.unitType,
-                    nightModeEnabled = state.nightModeEnabled,
-                    onStartFeeding = onStartFeeding,
-                    onRefrigerate = onRefrigerate,
-                    onDiscard = onDiscard,
-                    onMarkFed = { bottle -> onBottleDetail(bottle) },
-                    onCardClick = onBottleDetail,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                )
-            } else {
-                EmptyBottleCard(
-                    onNewBottle = onNewBottle,
-                    nightModeEnabled = state.nightModeEnabled,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
-            QuickLogRow(
-                nightModeEnabled = state.nightModeEnabled,
-                onQuickFeed = onQuickFeed,
-                onQuickDiaper = onQuickDiaper,
-                onQuickSleep = onQuickSleep,
-                isSleepActive = state.todaySummary.activeSleepStartedAt != null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-            )
-
-            Spacer(Modifier.height(24.dp))
-            TodaySummarySection(
-                summary = state.todaySummary,
-                unitType = state.unitType,
-                nightModeEnabled = state.nightModeEnabled,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-            )
-            Spacer(Modifier.height(80.dp))
+    LaunchedEffect(quickLogFeedback) {
+        if (quickLogFeedback != null && !KEEP_QUICK_LOG_FEEDBACK_VISIBLE_FOR_DEBUG) {
+            delay(2_400)
+            isQuickLogFeedbackVisible = false
         }
     }
+
+    LaunchedEffect(
+        state.feedingStatus.isNextFeedDue,
+        state.feedingStatus.lastFeedTimeText,
+    ) {
+        if (state.feedingStatus.isNextFeedDue) {
+            showFeedback(QuickLogFeedbackType.NEXT_FEED_DUE)
+        }
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(R.string.today_title),
+                            style = if (state.nightModeEnabled)
+                                MaterialTheme.typography.headlineMedium
+                            else
+                                MaterialTheme.typography.headlineSmall,
+                        )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                    ),
+                )
+            },
+            bottomBar = {
+                if (state.showAds) {
+                    AdBannerView(
+                        adUnitId = adUnitId,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding(),
+                    )
+                }
+            },
+        ) { innerPadding ->
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                BabySwitcher(
+                    babies = state.babies,
+                    selectedBaby = state.selectedBaby,
+                    onSelectBaby = onSelectBaby,
+                    onAddBaby = onAddBaby,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                )
+                Spacer(Modifier.height(16.dp))
+
+                FeedingStatusCard(
+                    state = state.feedingStatus,
+                    nightModeEnabled = state.nightModeEnabled,
+                    onNewBottle = onNewBottle,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                )
+
+                if (state.activeBottle != null) {
+                    Spacer(Modifier.height(16.dp))
+                    SectionHeader(
+                        title = stringResource(R.string.today_active_bottle_timer_title),
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    ActiveBottleCard(
+                        bottle = state.activeBottle,
+                        countdownText = state.countdownText,
+                        isExpiringSoon = state.isExpiringSoon,
+                        unitType = state.unitType,
+                        nightModeEnabled = state.nightModeEnabled,
+                        onStartFeeding = onStartFeeding,
+                        onRefrigerate = onRefrigerate,
+                        onDiscard = onDiscard,
+                        onMarkFed = onMarkFed,
+                        onCardClick = onBottleDetail,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                    )
+                }
+
+                if (state.todaySummary.activeSleepStartedAt != null) {
+                    Spacer(Modifier.height(16.dp))
+                    ActiveSleepCard(
+                        startedAtMillis = state.todaySummary.activeSleepStartedAt,
+                        nightModeEnabled = state.nightModeEnabled,
+                        onStopSleep = {
+                            onQuickSleep()
+                            showFeedback(QuickLogFeedbackType.SLEEP_STOPPED)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
+                SectionHeader(
+                    title = stringResource(R.string.today_quick_actions_title),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                Spacer(Modifier.height(8.dp))
+                QuickLogRow(
+                    nightModeEnabled = state.nightModeEnabled,
+                    onQuickFeed = {
+                        quickFeedInitialAmountMl = state.activeBottle?.amountMl
+                        showQuickFeedDialog = true
+                    },
+                    onQuickDiaper = {
+                        onQuickDiaper()
+                        showFeedback(QuickLogFeedbackType.DIAPER)
+                    },
+                    onQuickSleep = {
+                        val wasSleepActive = state.todaySummary.activeSleepStartedAt != null
+                        onQuickSleep()
+                        showFeedback(
+                            if (wasSleepActive)
+                                QuickLogFeedbackType.SLEEP_STOPPED
+                            else
+                                QuickLogFeedbackType.SLEEP_STARTED,
+                        )
+                    },
+                    isSleepActive = state.todaySummary.activeSleepStartedAt != null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                )
+
+                Spacer(Modifier.height(24.dp))
+                SectionHeader(
+                    title = stringResource(R.string.today_summary_section_title),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                Spacer(Modifier.height(8.dp))
+                TodaySummarySection(
+                    summary = state.todaySummary,
+                    unitType = state.unitType,
+                    nightModeEnabled = state.nightModeEnabled,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                )
+                Spacer(Modifier.height(80.dp))
+                }
+            }
+        }
+
+        if (showQuickFeedDialog) {
+            QuickFeedDialog(
+                unitType = state.unitType,
+                initialAmountMl = quickFeedInitialAmountMl,
+                onDismiss = { showQuickFeedDialog = false },
+                onSave = { amountMl ->
+                    showQuickFeedDialog = false
+                    onQuickFeed(amountMl)
+                    showFeedback(QuickLogFeedbackType.FEED)
+                },
+            )
+        }
+
+        PlayfulQuickLogFeedback(
+            feedback = quickLogFeedback,
+            visible = isQuickLogFeedbackVisible,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .zIndex(1f)
+                .padding(horizontal = 16.dp),
+        )
+    }
+}
+
+private data class QuickLogFeedback(
+    val type: QuickLogFeedbackType,
+    val token: Long,
+)
+
+private enum class QuickLogFeedbackType {
+    FEED,
+    DIAPER,
+    SLEEP_STARTED,
+    SLEEP_STOPPED,
+    NEXT_FEED_DUE,
+}
+
+@Composable
+private fun PlayfulQuickLogFeedback(
+    feedback: QuickLogFeedback?,
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedVisibility(
+        visible = visible && feedback != null,
+        enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
+        exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
+        modifier = modifier,
+    ) {
+        feedback?.let { visibleFeedback ->
+            val title = when (visibleFeedback.type) {
+                QuickLogFeedbackType.FEED -> stringResource(R.string.today_feedback_feed_logged)
+                QuickLogFeedbackType.DIAPER -> stringResource(R.string.today_feedback_diaper_logged)
+                QuickLogFeedbackType.SLEEP_STARTED -> stringResource(R.string.today_feedback_sleep_started)
+                QuickLogFeedbackType.SLEEP_STOPPED -> stringResource(R.string.today_feedback_sleep_stopped)
+                QuickLogFeedbackType.NEXT_FEED_DUE -> stringResource(R.string.today_feedback_next_feed_due)
+            }
+            val body = when (visibleFeedback.type) {
+                QuickLogFeedbackType.FEED -> stringResource(R.string.today_feedback_feed_body)
+                QuickLogFeedbackType.DIAPER -> stringResource(R.string.today_feedback_diaper_body)
+                QuickLogFeedbackType.SLEEP_STARTED -> stringResource(R.string.today_feedback_sleep_started_body)
+                QuickLogFeedbackType.SLEEP_STOPPED -> stringResource(R.string.today_feedback_sleep_stopped_body)
+                QuickLogFeedbackType.NEXT_FEED_DUE -> stringResource(R.string.today_feedback_next_feed_due_body)
+            }
+            val icon = when (visibleFeedback.type) {
+                QuickLogFeedbackType.FEED -> Icons.Default.LocalDrink
+                QuickLogFeedbackType.DIAPER -> Icons.Default.BabyChangingStation
+                QuickLogFeedbackType.SLEEP_STARTED,
+                QuickLogFeedbackType.SLEEP_STOPPED -> Icons.Default.Bedtime
+                QuickLogFeedbackType.NEXT_FEED_DUE -> Icons.Default.LocalDrink
+            }
+            val containerColor = when (visibleFeedback.type) {
+                QuickLogFeedbackType.FEED,
+                QuickLogFeedbackType.NEXT_FEED_DUE -> MaterialTheme.colorScheme.primaryContainer
+                QuickLogFeedbackType.DIAPER -> MaterialTheme.colorScheme.tertiaryContainer
+                QuickLogFeedbackType.SLEEP_STARTED,
+                QuickLogFeedbackType.SLEEP_STOPPED -> MaterialTheme.colorScheme.secondaryContainer
+            }
+            val contentColor = when (visibleFeedback.type) {
+                QuickLogFeedbackType.FEED,
+                QuickLogFeedbackType.NEXT_FEED_DUE -> MaterialTheme.colorScheme.onPrimaryContainer
+                QuickLogFeedbackType.DIAPER -> MaterialTheme.colorScheme.onTertiaryContainer
+                QuickLogFeedbackType.SLEEP_STARTED,
+                QuickLogFeedbackType.SLEEP_STOPPED -> MaterialTheme.colorScheme.onSecondaryContainer
+            }
+            val cdFeedback = "$title. $body"
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { contentDescription = cdFeedback },
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(containerColor = containerColor),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = contentColor.copy(alpha = 0.12f),
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = contentColor,
+                            modifier = Modifier
+                                .padding(10.dp)
+                                .size(24.dp),
+                        )
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = contentColor,
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = body,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = contentColor.copy(alpha = 0.82f),
+                        )
+                    }
+                    PlayfulDots(color = contentColor)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlayfulDots(
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        repeat(3) { index ->
+            val dotSize = if (index == 1) 8.dp else 6.dp
+            Box(
+                modifier = Modifier
+                    .size(dotSize)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = 0.32f)),
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuickFeedDialog(
+    unitType: UnitType,
+    initialAmountMl: Double?,
+    onDismiss: () -> Unit,
+    onSave: (Double) -> Unit,
+) {
+    var amountText by remember(initialAmountMl, unitType) {
+        mutableStateOf(initialAmountMl?.formatQuickFeedInput(unitType).orEmpty())
+    }
+    val amountMl = remember(amountText, unitType) {
+        parseQuickFeedAmount(amountText, unitType)
+    }
+    val validAmountMl = amountMl?.takeIf { it > 0.0 }
+    val presets = if (unitType == UnitType.ML) QUICK_FEED_ML_PRESETS else QUICK_FEED_OZ_PRESETS_ML
+    val unitLabel = if (unitType == UnitType.ML) {
+        stringResource(R.string.unit_ml)
+    } else {
+        stringResource(R.string.unit_oz)
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.today_quick_feed_dialog_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = stringResource(R.string.today_quick_feed_dialog_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(presets) { presetMl ->
+                        FilterChip(
+                            selected = validAmountMl != null &&
+                                kotlin.math.abs(validAmountMl - presetMl) < 1.0,
+                            onClick = {
+                                amountText = presetMl.formatQuickFeedInput(unitType)
+                            },
+                            label = {
+                                Text(presetMl.formatQuickFeedPresetLabel(unitType))
+                            },
+                        )
+                    }
+                }
+                OutlinedTextField(
+                    value = amountText,
+                    onValueChange = { amountText = it },
+                    label = { Text(stringResource(R.string.today_quick_feed_amount_label)) },
+                    suffix = { Text(unitLabel) },
+                    isError = amountText.isNotBlank() && validAmountMl == null,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (amountText.isNotBlank() && validAmountMl == null) {
+                    Text(
+                        text = stringResource(R.string.today_quick_feed_amount_error),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = validAmountMl != null,
+                onClick = { validAmountMl?.let(onSave) },
+            ) {
+                Text(stringResource(R.string.action_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun SectionHeader(
+    title: String,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+        color = MaterialTheme.colorScheme.onBackground,
+        modifier = modifier.fillMaxWidth(),
+    )
 }
 
 // --------------------------------------------------------------------------
@@ -294,6 +644,247 @@ private fun BabySwitcher(
             )
         }
     }
+}
+
+// --------------------------------------------------------------------------
+// Feeding status card
+// --------------------------------------------------------------------------
+
+@Composable
+private fun FeedingStatusCard(
+    state: FeedingStatusUiState,
+    nightModeEnabled: Boolean,
+    onNewBottle: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    ElevatedCard(
+        modifier = modifier,
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = state.babyName.ifBlank { stringResource(R.string.today_no_baby_selected) },
+                    style = if (nightModeEnabled)
+                        MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                    else
+                        MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(Modifier.width(12.dp))
+                val cdNewBottle = stringResource(R.string.cd_new_bottle_fab)
+                FilledTonalButton(
+                    onClick = onNewBottle,
+                    modifier = Modifier
+                        .height(if (nightModeEnabled) 48.dp else 40.dp)
+                        .semantics { contentDescription = cdNewBottle },
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    contentPadding = PaddingValues(horizontal = 12.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.today_new_bottle),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            FeedingStatusBlock(
+                label = stringResource(R.string.today_last_feed_label),
+                value = if (state.lastFeedAgoText != null) {
+                    val amount = state.lastFeedAmountText
+                        ?: stringResource(R.string.today_feed_amount_not_recorded)
+                    stringResource(R.string.today_last_feed_value, state.lastFeedAgoText, amount)
+                } else {
+                    stringResource(R.string.today_no_feed_logged)
+                },
+                detail = state.lastFeedTimeText?.let {
+                    stringResource(R.string.today_last_feed_time, it)
+                },
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            FeedingStatusBlock(
+                label = stringResource(R.string.today_feed_today_label),
+                value = stringResource(
+                    R.string.today_feed_today_value,
+                    state.todayFeedCount,
+                    state.todayAmountText,
+                ),
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            FeedingStatusBlock(
+                label = stringResource(R.string.today_next_feed_label),
+                value = when {
+                    state.isNextFeedDue -> stringResource(R.string.today_next_feed_now)
+                    state.nextFeedInMillis != null -> stringResource(
+                        R.string.today_next_feed_watch_later,
+                        state.nextFeedInMillis.formatNextFeedCountdown(),
+                    )
+                    else -> stringResource(R.string.today_next_feed_after_first)
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun FeedingStatusBlock(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    detail: String? = null,
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.72f),
+        )
+        Spacer(Modifier.height(2.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+        )
+        if (detail != null) {
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = detail,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.76f),
+            )
+        }
+    }
+}
+
+// --------------------------------------------------------------------------
+// Active sleep card
+// --------------------------------------------------------------------------
+
+@Composable
+private fun ActiveSleepCard(
+    startedAtMillis: Long,
+    nightModeEnabled: Boolean,
+    onStopSleep: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var elapsedText by remember(startedAtMillis) {
+        mutableStateOf(formatSleepElapsedClock(startedAtMillis))
+    }
+
+    LaunchedEffect(startedAtMillis) {
+        while (true) {
+            elapsedText = formatSleepElapsedClock(startedAtMillis)
+            delay(1_000L)
+        }
+    }
+
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        ),
+        shape = RoundedCornerShape(28.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.12f),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Bedtime,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .size(28.dp),
+                )
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.today_sleep_active_title),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.today_sleep_elapsed_label),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.76f),
+                )
+                Text(
+                    text = elapsedText,
+                    style = if (nightModeEnabled)
+                        MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold)
+                    else
+                        MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+                Text(
+                    text = stringResource(R.string.today_sleep_stop_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.76f),
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            FilledTonalButton(
+                onClick = onStopSleep,
+                modifier = Modifier.height(if (nightModeEnabled) 52.dp else 44.dp),
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                ),
+            ) {
+                Text(
+                    text = stringResource(R.string.today_stop_sleep),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+private fun formatSleepElapsedClock(startedAtMillis: Long): String {
+    val elapsedMillis = (System.currentTimeMillis() - startedAtMillis).coerceAtLeast(0L)
+    val totalSeconds = TimeUnit.MILLISECONDS.toSeconds(elapsedMillis)
+    val hours = totalSeconds / 3_600
+    val minutes = (totalSeconds % 3_600) / 60
+    val seconds = totalSeconds % 60
+    return "%02d:%02d:%02d".format(hours, minutes, seconds)
 }
 
 // --------------------------------------------------------------------------
@@ -681,10 +1272,18 @@ private fun QuickLogButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val actionContentColor = MaterialTheme.colorScheme.primary
     OutlinedButton(
         onClick = onClick,
         modifier = modifier,
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp),
+        contentPadding = PaddingValues(horizontal = 8.dp),
+        border = BorderStroke(
+            width = 1.dp,
+            color = actionContentColor.copy(alpha = 0.72f),
+        ),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = actionContentColor,
+        ),
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
@@ -694,7 +1293,7 @@ private fun QuickLogButton(
             )
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -847,7 +1446,33 @@ private fun BottleStatus.label(): String = when (this) {
 
 internal fun Double.formatAmount(unit: UnitType): String = when (unit) {
     UnitType.ML -> "%.0f ml".format(this)
-    UnitType.OZ -> "%.1f oz".format(this / 29.5735)
+    UnitType.OZ -> "%.1f oz".format(this / ML_PER_OUNCE)
+}
+
+private fun Double.formatQuickFeedInput(unit: UnitType): String = when (unit) {
+    UnitType.ML -> "%.0f".format(this)
+    UnitType.OZ -> "%.1f".format(this / ML_PER_OUNCE)
+}
+
+private fun Double.formatQuickFeedPresetLabel(unit: UnitType): String = when (unit) {
+    UnitType.ML -> "%.0f".format(this)
+    UnitType.OZ -> "%.0f".format(this / ML_PER_OUNCE)
+}
+
+private fun parseQuickFeedAmount(text: String, unit: UnitType): Double? {
+    val parsed = text.trim().replace(',', '.').toDoubleOrNull() ?: return null
+    return when (unit) {
+        UnitType.ML -> parsed
+        UnitType.OZ -> parsed * ML_PER_OUNCE
+    }
+}
+
+private fun Long.formatNextFeedCountdown(): String {
+    if (this <= 0) return "0s"
+    val seconds = TimeUnit.MILLISECONDS.toSeconds(this)
+    if (seconds <= 60) return "${seconds}s"
+    val minutes = TimeUnit.MILLISECONDS.toMinutes(this)
+    return if (minutes < 60) "${minutes}m" else formatDuration()
 }
 
 internal fun Long.formatDuration(): String {
@@ -869,6 +1494,21 @@ private fun previewBaby() = Baby(
     createdAt = Instant.now(),
     updatedAt = Instant.now(),
     archivedAt = null,
+)
+
+private fun previewFeedingStatus(
+    lastFeedAgoText: String? = "2h 10m",
+    lastFeedAmountText: String? = "120 ml",
+    lastFeedTimeText: String? = "8:20 AM",
+    nextFeedInMillis: Long? = 30 * 60 * 1000L,
+) = FeedingStatusUiState(
+    babyName = "Sunshine",
+    lastFeedTimeText = lastFeedTimeText,
+    lastFeedAgoText = lastFeedAgoText,
+    lastFeedAmountText = lastFeedAmountText,
+    todayFeedCount = 5,
+    todayAmountText = "480 ml",
+    nextFeedInMillis = nextFeedInMillis,
 )
 
 private fun previewBottle(status: BottleStatus = BottleStatus.NOT_STARTED) = Bottle(
@@ -897,6 +1537,7 @@ private fun PreviewTodayWithBottle() {
             state = TodayUiState(
                 babies = listOf(previewBaby()),
                 selectedBaby = previewBaby(),
+                feedingStatus = previewFeedingStatus(),
                 activeBottle = previewBottle(),
                 countdownText = "1h 30m",
                 todaySummary = TodaySummary(3, 360.0, 5, 12_600_000L, null),
@@ -908,6 +1549,7 @@ private fun PreviewTodayWithBottle() {
             onStartFeeding = {},
             onRefrigerate = {},
             onDiscard = {},
+            onMarkFed = {},
             onBottleDetail = {},
             onQuickFeed = {},
             onQuickDiaper = {},
@@ -925,6 +1567,12 @@ private fun PreviewTodayEmptyDark() {
             state = TodayUiState(
                 babies = listOf(previewBaby()),
                 selectedBaby = previewBaby(),
+                feedingStatus = previewFeedingStatus(
+                    lastFeedAgoText = null,
+                    lastFeedAmountText = null,
+                    lastFeedTimeText = null,
+                    nextFeedInMillis = null,
+                ),
                 showAds = false,
             ),
             onSelectBaby = {},
@@ -933,6 +1581,7 @@ private fun PreviewTodayEmptyDark() {
             onStartFeeding = {},
             onRefrigerate = {},
             onDiscard = {},
+            onMarkFed = {},
             onBottleDetail = {},
             onQuickFeed = {},
             onQuickDiaper = {},
@@ -949,8 +1598,10 @@ private fun PreviewTodayNightMode() {
             state = TodayUiState(
                 babies = listOf(previewBaby()),
                 selectedBaby = previewBaby(),
+                feedingStatus = previewFeedingStatus(),
                 activeBottle = previewBottle(BottleStatus.FEEDING_STARTED),
                 countdownText = "45m",
+                todaySummary = TodaySummary(3, 360.0, 5, 12_600_000L, Instant.now().toEpochMilli()),
                 nightModeEnabled = true,
                 showAds = false,
             ),
@@ -960,6 +1611,7 @@ private fun PreviewTodayNightMode() {
             onStartFeeding = {},
             onRefrigerate = {},
             onDiscard = {},
+            onMarkFed = {},
             onBottleDetail = {},
             onQuickFeed = {},
             onQuickDiaper = {},

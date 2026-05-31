@@ -59,6 +59,8 @@
     <string name="notif_channel_bottle_desc">Erinnerungen vor und beim Ablauf des Flaschentimers</string>
     <string name="notif_channel_feeding_name">Fütterungserinnerungen</string>
     <string name="notif_channel_feeding_desc">Erinnerungen während aktiver Fütterungssitzungen</string>
+    <string name="notif_channel_next_feed_name">Sanfte Erinnerung an die nächste Fütterung</string>
+    <string name="notif_channel_next_feed_desc">Eine sanfte Erinnerung, wenn der Countdown zur nächsten Fütterung endet</string>
 
     <!-- Notification Content -->
     <string name="notif_before_expiry_title">Flaschentimer läuft bald ab</string>
@@ -69,6 +71,8 @@
     <string name="notif_feeding_45_body">Die Fütterung von %1$s dauert bereits 45 Minuten.</string>
     <string name="notif_feeding_60_title">Fütterungszeitlimit erreicht</string>
     <string name="notif_feeding_60_body">Der Flaschentimer von %1$s läuft bald ab. Basierend auf der gewählten Richtlinie.</string>
+    <string name="notif_next_feed_title">Erinnerung an die nächste Fütterung</string>
+    <string name="notif_next_feed_body">Der Countdown ist beendet. Schau, ob das Baby bereit zum Füttern ist.</string>
 
     <!-- Disclaimer and Safety -->
     <string name="disclaimer_full">Diese App stellt Erinnerungs- und Tracking-Werkzeuge bereit, die auf ausgewählten öffentlichen Richtlinien basieren. Sie bietet keine medizinischen Ratschläge und kann nicht feststellen, ob Milch sicher ist. Bitte folge immer den Anweisungen auf der Verpackung der Säuglingsnahrung, den örtlichen Gesundheitsempfehlungen und dem Rat deines Kinderarztes. Im Zweifelsfall die Milch wegschütten.</string>
@@ -99,6 +103,42 @@
     <string name="quick_feed">Schnell erfassen: Fütterung</string>
     <string name="quick_diaper">Schnell erfassen: Windel</string>
     <string name="quick_sleep">Schnell erfassen: Schlaf</string>
+    <string name="today_no_baby_selected">Baby</string>
+    <string name="today_last_feed_label">Letzte Fütterung</string>
+    <string name="today_last_feed_value">vor %1$s · %2$s</string>
+    <string name="today_last_feed_time">Um %1$s</string>
+    <string name="today_no_feed_logged">Noch keine Fütterung erfasst</string>
+    <string name="today_feed_amount_not_recorded">Menge nicht erfasst</string>
+    <string name="today_feed_today_label">Heute</string>
+    <string name="today_feed_today_value">%1$d Fütterungen · %2$s</string>
+    <string name="today_next_feed_label">Nächste Fütterung</string>
+    <string name="today_next_feed_watch_later">Ab etwa %1$s später beobachten</string>
+    <string name="today_next_feed_now">Fütterung jetzt im Blick behalten</string>
+    <string name="today_next_feed_after_first">Erfasse eine Fütterung, um Intervalle zu verfolgen</string>
+    <string name="today_active_bottle_timer_title">Aktiver Flaschentimer</string>
+    <string name="today_quick_actions_title">Schnellaktionen</string>
+    <string name="today_summary_section_title">Heutige Übersicht</string>
+    <string name="today_quick_feed">Füttern</string>
+    <string name="today_quick_diaper">Windel</string>
+    <string name="today_quick_sleep">Schlaf</string>
+    <string name="today_stop_sleep">Schlaf stoppen</string>
+    <string name="today_feedback_feed_logged">Fütterung erfasst</string>
+    <string name="today_feedback_feed_body">Die Trinkmenge für heute ist gespeichert.</string>
+    <string name="today_quick_feed_dialog_title">Trinkmenge erfassen</string>
+    <string name="today_quick_feed_dialog_body">Gib ein, wie viel das Baby getrunken hat, bevor du die Fütterung speicherst.</string>
+    <string name="today_quick_feed_amount_label">Menge</string>
+    <string name="today_quick_feed_amount_error">Gib eine Menge größer als 0 ein.</string>
+    <string name="today_feedback_diaper_logged">Windel erfasst</string>
+    <string name="today_feedback_diaper_body">Die kleine Änderung für heute ist gespeichert.</string>
+    <string name="today_feedback_sleep_started">Schlaf gestartet</string>
+    <string name="today_feedback_sleep_started_body">Der süße Träume-Timer läuft.</string>
+    <string name="today_feedback_sleep_stopped">Schlaf gestoppt</string>
+    <string name="today_feedback_sleep_stopped_body">Das Aufwachen ist im heutigen Protokoll notiert.</string>
+    <string name="today_feedback_next_feed_due">Erinnerung an die nächste Fütterung</string>
+    <string name="today_feedback_next_feed_due_body">Der Countdown ist beendet. Schau, ob das Baby bereit zum Füttern ist.</string>
+    <string name="today_sleep_active_title">Schlaf läuft</string>
+    <string name="today_sleep_elapsed_label">Schläft seit</string>
+    <string name="today_sleep_stop_hint">Tippe auf Stopp, wenn das Baby aufwacht.</string>
 
     <!-- Today Summary -->
     <string name="summary_feeds">Fütterungen</string>
@@ -219,5 +259,31 @@
     <string name="cd_quick_feed_button">Schnelle Fütterung erfassen</string>
     <string name="cd_quick_diaper_button">Schnellen Windelwechsel erfassen</string>
     <string name="cd_quick_sleep_button">Schlaftracking starten oder stoppen</string>
+
+    <!-- Account / Sign-In -->
+    <string name="settings_section_account">Konto</string>
+    <string name="settings_account_sign_in">Zum Synchronisieren anmelden</string>
+    <string name="settings_account_sign_in_desc">Cloud-Backup aktivieren und Daten auf jedem Gerät wiederherstellen</string>
+    <string name="settings_account_signed_in">Angemeldet</string>
+    <string name="settings_account_signed_in_label">Konto</string>
+    <string name="settings_account_sign_out">Abmelden</string>
+
+    <!-- Sign-In Screen -->
+    <string name="signin_title">Anmelden</string>
+    <string name="signin_header_title">Synchronisierung und Backup</string>
+    <string name="signin_subtitle">Melde dich an, um Cloud-Backup zu aktivieren und deine Daten auf jedem Gerät wiederherzustellen.</string>
+    <string name="signin_google">Mit Google fortfahren</string>
+    <string name="signin_microsoft">Mit Microsoft fortfahren</string>
+    <string name="signin_or_divider">oder</string>
+    <string name="signin_email_label">E-Mail-Adresse</string>
+    <string name="signin_password_label">Passwort</string>
+    <string name="signin_submit">Anmelden</string>
+    <string name="signin_create_account">Konto erstellen</string>
+    <string name="signin_toggle_create">Noch kein Konto? Erstelle eins</string>
+    <string name="signin_toggle_signin">Du hast bereits ein Konto? Anmelden</string>
+    <string name="signin_forgot_password">Passwort vergessen?</string>
+    <string name="signin_show_password_cd">Passwort anzeigen</string>
+    <string name="signin_hide_password_cd">Passwort ausblenden</string>
+    <string name="signin_disclaimer">Deine Flaschentimer-Daten werden immer lokal gespeichert. Durch die Anmeldung wird ein optionales Cloud-Backup aktiviert.</string>
 
 </resources>
