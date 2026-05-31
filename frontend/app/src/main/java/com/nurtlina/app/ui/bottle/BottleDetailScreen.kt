@@ -619,6 +619,7 @@ private fun TimelineRow(
         MaterialTheme.colorScheme.error
     else
         MaterialTheme.colorScheme.primary
+    val timelineLineColor = MaterialTheme.colorScheme.outlineVariant
 
     val formattedTime = remember(time) {
         time?.let {
@@ -647,7 +648,7 @@ private fun TimelineRow(
                         .height(28.dp),
                 ) {
                     drawLine(
-                        color = androidx.compose.ui.graphics.Color.Gray.copy(alpha = 0.4f),
+                        color = timelineLineColor,
                         start = androidx.compose.ui.geometry.Offset(size.width / 2f, 0f),
                         end = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height),
                         strokeWidth = size.width,

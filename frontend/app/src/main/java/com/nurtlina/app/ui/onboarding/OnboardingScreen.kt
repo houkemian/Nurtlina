@@ -67,17 +67,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.nurtlina.app.R
 import com.nurtlina.app.domain.model.GuidelineRegion
+import com.nurtlina.app.ui.theme.MistBlue
 import com.nurtlina.app.ui.theme.NurtlinaTheme
+import com.nurtlina.app.ui.theme.SoftSage
+import com.nurtlina.app.ui.theme.WarmGreigeDark
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
 private val AvatarColorOptions = listOf(
-    "TEAL" to Color(0xFF009FA6),
-    "PEACH" to Color(0xFFDB5189),
-    "LAVENDER" to Color(0xFF9C7EC4),
-    "AMBER" to Color(0xFFE8A020),
-    "SAGE" to Color(0xFF4D9664),
+    "TEAL" to MistBlue,
+    "PEACH" to WarmGreigeDark,
+    "LAVENDER" to Color(0xFFC8BCE0),
+    "AMBER" to Color(0xFFE6C98F),
+    "SAGE" to SoftSage,
 )
 
 private enum class OnboardingStep { WELCOME, CREATE_BABY, GUIDELINE, DISCLAIMER, NOTIFICATIONS }

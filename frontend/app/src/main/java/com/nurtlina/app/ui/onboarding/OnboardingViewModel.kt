@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nurtlina.app.core.analytics.Analytics
 import com.nurtlina.app.domain.model.GuidelineRegion
+import com.nurtlina.app.domain.repository.AuthRepository
 import com.nurtlina.app.domain.repository.SettingsRepository
 import com.nurtlina.app.domain.usecase.baby.ManageBabyUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +18,7 @@ import javax.inject.Inject
 class OnboardingViewModel @Inject constructor(
     private val manageBabyUseCase: ManageBabyUseCase,
     private val settingsRepository: SettingsRepository,
+    private val authRepository: AuthRepository,
     private val analytics: Analytics,
 ) : ViewModel() {
 
@@ -67,6 +69,21 @@ class OnboardingViewModel @Inject constructor(
                     selectedBabyId = baby.id,
                 )
             )
+
+            // Sign in anonymously if needed, then provision the family document.
+            // Failures are non-fatal — the app works offline without a cloud identity.
+            if (!authRepository.isSignedIn()) {
+                authRepository.signInAnonymously()
+                    .onSuccess { user ->
+                        if (user.familyId == null) {
+                            authRepository.provisionFamily()
+                        }
+                    }
+            } else if (authRepository.currentUserId() != null) {
+                // Already signed in from app startup; ensure family is provisioned.
+                authRepository.provisionFamily()
+            }
+
             onComplete()
         }
     }

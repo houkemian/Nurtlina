@@ -7,13 +7,21 @@ import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
+import com.nurtlina.app.data.billing.EntitlementManager
+import com.nurtlina.app.data.billing.ProStatus
+import com.nurtlina.app.data.sync.SyncWorker
 import com.nurtlina.app.domain.model.Baby
 import com.nurtlina.app.domain.model.GuidelineRegion
+import com.nurtlina.app.domain.model.SyncState
 import com.nurtlina.app.domain.model.ThemeType
 import com.nurtlina.app.domain.model.UnitType
+import com.nurtlina.app.domain.model.UserAccount
 import com.nurtlina.app.domain.model.UserSettings
+import com.nurtlina.app.domain.repository.AuthRepository
 import com.nurtlina.app.domain.repository.BabyRepository
 import com.nurtlina.app.domain.repository.SettingsRepository
+import com.nurtlina.app.domain.repository.SyncRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +37,10 @@ class SettingsViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
     private val settingsRepository: SettingsRepository,
     private val babyRepository: BabyRepository,
+    private val authRepository: AuthRepository,
+    private val syncRepository: SyncRepository,
+    private val entitlementManager: EntitlementManager,
+    private val workManager: WorkManager,
 ) : ViewModel() {
 
     // ── Settings state ───────────────────────────────────────────────────────
@@ -51,6 +63,35 @@ class SettingsViewModel @Inject constructor(
             initialValue = emptyList(),
         )
 
+    // ── Auth / account state ─────────────────────────────────────────────────
+
+    val currentUser: StateFlow<UserAccount?> = authRepository
+        .observeCurrentUser()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = null,
+        )
+
+    // ── Pro / entitlement status ─────────────────────────────────────────────
+
+    val proStatus: StateFlow<ProStatus> = entitlementManager.proStatus
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = ProStatus.UNKNOWN,
+        )
+
+    // ── Sync state ───────────────────────────────────────────────────────────
+
+    val syncState: StateFlow<SyncState> = syncRepository
+        .observeSyncState()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = SyncState(null, false, null),
+        )
+
     // ── Notification permission ──────────────────────────────────────────────
 
     private val _notificationPermissionGranted = MutableStateFlow(false)
@@ -66,6 +107,50 @@ class SettingsViewModel @Inject constructor(
         } else {
             true
         }
+    }
+
+    // ── Auth actions ──────────────────────────────────────────────────────────
+
+    fun signOut() {
+        viewModelScope.launch {
+            SyncWorker.cancel(workManager)
+            authRepository.signOut()
+        }
+    }
+
+    fun signInWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            authRepository.signInWithGoogle(idToken)
+                .onSuccess { user ->
+                    if (user.familyId == null) {
+                        authRepository.provisionFamily()
+                    }
+                    syncRepository.requestFullSync()
+                    SyncWorker.enqueue(workManager)
+                }
+        }
+    }
+
+    // ── Sync / backup actions ──────────────────────────────────────────────────
+
+    /** Immediately triggers an incremental sync push/pull via WorkManager one-time request. */
+    fun triggerSync() {
+        viewModelScope.launch {
+            syncRepository.syncAll()
+        }
+    }
+
+    /** Forces a full re-sync on the next sync cycle (downloads all cloud data). */
+    fun requestFullSync() {
+        viewModelScope.launch {
+            syncRepository.requestFullSync()
+            SyncWorker.enqueue(workManager)
+        }
+    }
+
+    /** Re-queries the Play Store to restore entitlements after sign-in on a new device. */
+    fun restorePurchases() {
+        entitlementManager.restorePurchases()
     }
 
     // ── Settings update helpers ───────────────────────────────────────────────

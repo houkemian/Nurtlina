@@ -22,56 +22,56 @@ import com.nurtlina.app.domain.model.BottleStatus
 // Light color scheme
 // --------------------------------------------------------------------------
 private val LightColorScheme = lightColorScheme(
-    primary = Teal40,
+    primary = MistBlueDarkContainer,
     onPrimary = Color.White,
-    primaryContainer = Teal90,
-    onPrimaryContainer = Teal10,
+    primaryContainer = MistBlueLight,
+    onPrimaryContainer = DeepGray,
 
-    secondary = Peach40,
-    onSecondary = Color.White,
-    secondaryContainer = Peach90,
-    onSecondaryContainer = Peach10,
+    secondary = SoftSage,
+    onSecondary = DeepGray,
+    secondaryContainer = SoftSageLight,
+    onSecondaryContainer = DeepGray,
 
-    tertiary = StatusFedLight,
+    tertiary = SoftSageDark,
     onTertiary = Color.White,
     tertiaryContainer = StatusFedContainerLight,
-    onTertiaryContainer = Color(0xFF0A3C0D),
+    onTertiaryContainer = DeepGray,
 
     error = Error40,
     onError = Color.White,
     errorContainer = Error90,
     onErrorContainer = Error10,
 
-    background = Neutral99,
-    onBackground = Neutral10,
-    surface = Neutral99,
-    onSurface = Neutral10,
+    background = WarmGreige,
+    onBackground = DeepGray,
+    surface = WarmGreigeLight,
+    onSurface = DeepGray,
     surfaceVariant = NeutralVariant90,
-    onSurfaceVariant = NeutralVariant30,
-    outline = NeutralVariant50,
+    onSurfaceVariant = DeepGray,
+    outline = DeepGray,
     outlineVariant = NeutralVariant80,
-    scrim = Color.Black,
+    scrim = DeepGray,
     inverseSurface = Neutral20,
     inverseOnSurface = Neutral95,
-    inversePrimary = Teal80,
+    inversePrimary = MistBlueDark,
 )
 
 // --------------------------------------------------------------------------
 // Dark color scheme
 // --------------------------------------------------------------------------
 private val DarkColorScheme = darkColorScheme(
-    primary = Teal80,
-    onPrimary = Teal20,
-    primaryContainer = Teal30,
-    onPrimaryContainer = Teal90,
+    primary = MistBlue,
+    onPrimary = DeepGray,
+    primaryContainer = MistBlueDarkContainer,
+    onPrimaryContainer = MistBlueLight,
 
-    secondary = Peach80,
-    onSecondary = Peach20,
-    secondaryContainer = Peach30,
-    onSecondaryContainer = Peach90,
+    secondary = SoftSage,
+    onSecondary = DeepGray,
+    secondaryContainer = SoftSageDarkContainer,
+    onSecondaryContainer = SoftSageLight,
 
-    tertiary = StatusFedDark,
-    onTertiary = Color(0xFF0A3C0D),
+    tertiary = SoftSage,
+    onTertiary = DeepGray,
     tertiaryContainer = StatusFedContainerDark,
     onTertiaryContainer = StatusFedDark,
 
@@ -80,18 +80,18 @@ private val DarkColorScheme = darkColorScheme(
     errorContainer = Error30,
     onErrorContainer = Error90,
 
-    background = Neutral10,
+    background = Color(0xFF172229),
     onBackground = Neutral90,
-    surface = Neutral10,
+    surface = Color(0xFF1F2C33),
     onSurface = Neutral90,
-    surfaceVariant = NeutralVariant30,
+    surfaceVariant = NeutralVariant20,
     onSurfaceVariant = NeutralVariant80,
     outline = NeutralVariant60,
     outlineVariant = NeutralVariant30,
-    scrim = Color.Black,
+    scrim = DeepGray,
     inverseSurface = Neutral90,
     inverseOnSurface = Neutral20,
-    inversePrimary = Teal40,
+    inversePrimary = MistBlueDark,
 )
 
 // --------------------------------------------------------------------------

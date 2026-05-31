@@ -40,4 +40,7 @@ interface BottleDao {
 
     @Query("SELECT * FROM bottles WHERE updatedAt >= :sinceMillis")
     suspend fun getBottlesUpdatedSince(sinceMillis: Long): List<BottleEntity>
+
+    @Query("UPDATE bottles SET syncStatus = :status, lastSyncedAt = :lastSyncedAt WHERE id = :id")
+    suspend fun updateSyncState(id: String, status: String, lastSyncedAt: Long?)
 }

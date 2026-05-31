@@ -1,6 +1,7 @@
 package com.nurtlina.app.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.ColumnInfo
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -33,6 +34,12 @@ data class FeedLogEntity(
     val note: String?,
     val createdAt: Long,
     val updatedAt: Long,
+    val familyId: String? = null,
+    val deletedAt: Long? = null,
+    @ColumnInfo(defaultValue = "'PENDING'") val syncStatus: String = SyncStatus.PENDING.name,
+    @ColumnInfo(defaultValue = "1") val syncVersion: Int = 1,
+    val clientId: String? = null,
+    val lastSyncedAt: Long? = null,
 ) {
     fun toDomain() = FeedLog(
         id = id,

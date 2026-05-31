@@ -32,4 +32,7 @@ interface BabyDao {
 
     @Query("SELECT * FROM babies WHERE updatedAt >= :sinceMillis")
     suspend fun getBabiesUpdatedSince(sinceMillis: Long): List<BabyEntity>
+
+    @Query("UPDATE babies SET syncStatus = :status, lastSyncedAt = :lastSyncedAt WHERE id = :id")
+    suspend fun updateSyncState(id: String, status: String, lastSyncedAt: Long?)
 }

@@ -24,8 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.nurtlina.app.R
-import com.nurtlina.app.domain.model.*
-import com.nurtlina.app.ui.theme.NurtlinaTheme
+import com.nurtlina.app.domain.model.*import com.nurtlina.app.ui.theme.NurtlinaTheme
 
 // ---------------------------------------------------------------------------
 // Screen
@@ -37,6 +36,7 @@ import com.nurtlina.app.ui.theme.NurtlinaTheme
  * @param baby              Currently selected baby. Null if none added yet.
  * @param settings          Current [UserSettings] values.
  * @param isPro             Whether the user has an active Pro subscription.
+ * @param currentUser       Currently signed-in account. Null while loading.
  * @param appVersion        Displayed in the About section.
  * @param onEditBaby        Navigate to baby profile edit.
  * @param onUnitChanged     User changed volume unit.
@@ -51,6 +51,8 @@ import com.nurtlina.app.ui.theme.NurtlinaTheme
  * @param onUpgradeTapped   Navigate to paywall.
  * @param onExportCsv       Trigger CSV export.
  * @param onBackupClick     Navigate to backup settings.
+ * @param onSignInClick     Navigate to sign-in screen.
+ * @param onSignOutClick    Sign out the current user.
  * @param onFaqClick        Navigate to FAQ.
  * @param onPrivacyPolicyClick Open privacy policy URL.
  * @param onTermsClick      Open terms URL.
@@ -62,6 +64,7 @@ fun SettingsScreen(
     baby: Baby?,
     settings: UserSettings,
     isPro: Boolean,
+    currentUser: UserAccount?,
     appVersion: String,
     onEditBaby: () -> Unit,
     onUnitChanged: (UnitType) -> Unit,
@@ -76,6 +79,8 @@ fun SettingsScreen(
     onUpgradeTapped: () -> Unit,
     onExportCsv: () -> Unit,
     onBackupClick: () -> Unit,
+    onSignInClick: () -> Unit,
+    onSignOutClick: () -> Unit,
     onFaqClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
     onTermsClick: () -> Unit,
@@ -191,6 +196,16 @@ fun SettingsScreen(
 
             SettingsDivider()
 
+            // ---- Account ----
+            SettingsSectionHeader(stringResource(R.string.settings_section_account))
+            AccountRow(
+                currentUser = currentUser,
+                onSignInClick = onSignInClick,
+                onSignOutClick = onSignOutClick,
+            )
+
+            SettingsDivider()
+
             // ---- Data ----
             SettingsSectionHeader(stringResource(R.string.settings_section_data))
             SettingsClickRow(
@@ -242,6 +257,46 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(24.dp))
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Account row
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun AccountRow(
+    currentUser: UserAccount?,
+    onSignInClick: () -> Unit,
+    onSignOutClick: () -> Unit,
+) {
+    val isSignedIn = currentUser != null && !currentUser.isAnonymous
+
+    if (isSignedIn && currentUser != null) {
+        // Show signed-in account info
+        val displayLabel = currentUser.displayName
+            ?: currentUser.email
+            ?: stringResource(R.string.settings_account_signed_in)
+
+        SettingsInfoRow(
+            icon = Icons.Outlined.AccountCircle,
+            label = stringResource(R.string.settings_account_signed_in_label),
+            value = displayLabel,
+        )
+        SettingsClickRow(
+            icon = Icons.Outlined.Logout,
+            label = stringResource(R.string.settings_account_sign_out),
+            labelColor = MaterialTheme.colorScheme.error,
+            onClick = onSignOutClick,
+        )
+    } else {
+        // Show sign-in prompt
+        SettingsClickRow(
+            icon = Icons.Outlined.AccountCircle,
+            label = stringResource(R.string.settings_account_sign_in),
+            subtitle = stringResource(R.string.settings_account_sign_in_desc),
+            onClick = onSignInClick,
+        )
     }
 }
 
@@ -730,12 +785,14 @@ private fun SettingsScreenLightPreview() {
             baby = null,
             settings = fakeSettings(),
             isPro = false,
+            currentUser = null,
             appVersion = "1.0.0",
             onEditBaby = {}, onUnitChanged = {}, onGuidelineRegionChanged = {},
             onLanguageClick = {}, onNotificationsToggled = {}, onReminderTimingChanged = {},
             onNightModeToggled = {}, onThemeChanged = {}, onManageSubscription = {},
             onRestorePurchases = {}, onUpgradeTapped = {}, onExportCsv = {},
-            onBackupClick = {}, onFaqClick = {}, onPrivacyPolicyClick = {},
+            onBackupClick = {}, onSignInClick = {}, onSignOutClick = {},
+            onFaqClick = {}, onPrivacyPolicyClick = {},
             onTermsClick = {}, onContactSupportClick = {},
         )
     }
@@ -749,12 +806,14 @@ private fun SettingsScreenProDarkPreview() {
             baby = null,
             settings = fakeSettings().copy(theme = ThemeType.DARK, notificationEnabled = true),
             isPro = true,
+            currentUser = UserAccount(uid = "uid1", email = "parent@example.com", isAnonymous = false, familyId = "fam1", isProActive = true),
             appVersion = "1.0.0",
             onEditBaby = {}, onUnitChanged = {}, onGuidelineRegionChanged = {},
             onLanguageClick = {}, onNotificationsToggled = {}, onReminderTimingChanged = {},
             onNightModeToggled = {}, onThemeChanged = {}, onManageSubscription = {},
             onRestorePurchases = {}, onUpgradeTapped = {}, onExportCsv = {},
-            onBackupClick = {}, onFaqClick = {}, onPrivacyPolicyClick = {},
+            onBackupClick = {}, onSignInClick = {}, onSignOutClick = {},
+            onFaqClick = {}, onPrivacyPolicyClick = {},
             onTermsClick = {}, onContactSupportClick = {},
         )
     }

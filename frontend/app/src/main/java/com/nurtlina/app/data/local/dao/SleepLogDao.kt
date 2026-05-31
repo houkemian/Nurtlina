@@ -35,4 +35,7 @@ interface SleepLogDao {
 
     @Query("SELECT * FROM sleep_logs WHERE updatedAt >= :sinceMillis")
     suspend fun getSleepLogsUpdatedSince(sinceMillis: Long): List<SleepLogEntity>
+
+    @Query("UPDATE sleep_logs SET syncStatus = :status, lastSyncedAt = :lastSyncedAt WHERE id = :id")
+    suspend fun updateSyncState(id: String, status: String, lastSyncedAt: Long?)
 }

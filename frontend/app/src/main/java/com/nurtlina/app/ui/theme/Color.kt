@@ -3,61 +3,50 @@ package com.nurtlina.app.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // --------------------------------------------------------------------------
-// Primary palette – soft teal/blue-green (nurturing, calm)
+// Brand palette - mist blue, warm greige, soft sage, gentle deep gray
 // --------------------------------------------------------------------------
-val Teal10 = Color(0xFF002022)
-val Teal20 = Color(0xFF003739)
-val Teal30 = Color(0xFF004F53)
-val Teal40 = Color(0xFF00696F)
-val Teal50 = Color(0xFF008489)
-val Teal60 = Color(0xFF009FA6)
-val Teal70 = Color(0xFF25BBBE)
-val Teal80 = Color(0xFF4ED7D9)
-val Teal90 = Color(0xFF9FEFEF)
-val Teal95 = Color(0xFFCEF8F8)
-val Teal99 = Color(0xFFF3FDFD)
+val MistBlue = Color(0xFFB8D4E3)
+val MistBlueLight = Color(0xFFE6F1F6)
+val MistBlueDark = Color(0xFF5E7F90)
+val MistBlueDarkContainer = Color(0xFF29424F)
 
-// --------------------------------------------------------------------------
-// Secondary palette – warm peach/rose
-// --------------------------------------------------------------------------
-val Peach10 = Color(0xFF3A0820)
-val Peach20 = Color(0xFF5C1234)
-val Peach30 = Color(0xFF7E1D48)
-val Peach40 = Color(0xFF9E2B5C)
-val Peach50 = Color(0xFFBE3A71)
-val Peach60 = Color(0xFFDB5189)
-val Peach70 = Color(0xFFF26FA3)
-val Peach80 = Color(0xFFFFB1C8)
-val Peach90 = Color(0xFFFFD9E3)
-val Peach95 = Color(0xFFFFECF0)
-val Peach99 = Color(0xFFFFF8F8)
+val WarmGreige = Color(0xFFF2E8CF)
+val WarmGreigeLight = Color(0xFFFFF8EA)
+val WarmGreigeDark = Color(0xFFC8B991)
+
+val SoftSage = Color(0xFFA7C7B5)
+val SoftSageLight = Color(0xFFE4F0EA)
+val SoftSageDark = Color(0xFF5E7F6D)
+val SoftSageDarkContainer = Color(0xFF274236)
+
+val DeepGray = Color(0xFF2F3E46)
 
 // --------------------------------------------------------------------------
 // Neutral / surface tones
 // --------------------------------------------------------------------------
-val Neutral10 = Color(0xFF191C1C)
-val Neutral20 = Color(0xFF2D3131)
-val Neutral30 = Color(0xFF444748)
-val Neutral40 = Color(0xFF5C5F5F)
-val Neutral50 = Color(0xFF747777)
-val Neutral60 = Color(0xFF8E9192)
-val Neutral70 = Color(0xFFA9ABAB)
-val Neutral80 = Color(0xFFC4C7C7)
-val Neutral90 = Color(0xFFE0E3E3)
-val Neutral95 = Color(0xFFEFF1F1)
-val Neutral99 = Color(0xFFF7FAFA)
+val Neutral10 = DeepGray
+val Neutral20 = Color(0xFF3D4C54)
+val Neutral30 = Color(0xFF536269)
+val Neutral40 = Color(0xFF68777F)
+val Neutral50 = Color(0xFF7F8E96)
+val Neutral60 = Color(0xFF98A5AB)
+val Neutral70 = Color(0xFFB1BCC1)
+val Neutral80 = Color(0xFFCBD5D9)
+val Neutral90 = Color(0xFFE5EDF0)
+val Neutral95 = Color(0xFFF1F6F8)
+val Neutral99 = WarmGreigeLight
 
-val NeutralVariant10 = Color(0xFF151D1E)
-val NeutralVariant20 = Color(0xFF293233)
-val NeutralVariant30 = Color(0xFF3F4849)
-val NeutralVariant40 = Color(0xFF566061)
-val NeutralVariant50 = Color(0xFF6E7879)
-val NeutralVariant60 = Color(0xFF889293)
-val NeutralVariant70 = Color(0xFFA2ACAD)
-val NeutralVariant80 = Color(0xFFBEC7C8)
-val NeutralVariant90 = Color(0xFFDAE4E5)
-val NeutralVariant95 = Color(0xFFE8F2F3)
-val NeutralVariant99 = Color(0xFFF5FEFF)
+val NeutralVariant10 = DeepGray
+val NeutralVariant20 = Color(0xFF405159)
+val NeutralVariant30 = Color(0xFF58686F)
+val NeutralVariant40 = Color(0xFF708086)
+val NeutralVariant50 = Color(0xFF89979D)
+val NeutralVariant60 = Color(0xFFA2AFB4)
+val NeutralVariant70 = Color(0xFFBCC8CC)
+val NeutralVariant80 = Color(0xFFD5E1E5)
+val NeutralVariant90 = MistBlueLight
+val NeutralVariant95 = Color(0xFFF0F7FA)
+val NeutralVariant99 = Color(0xFFFBFEFF)
 
 // --------------------------------------------------------------------------
 // Error tones (Material 3 standard)
@@ -73,11 +62,11 @@ val Error90 = Color(0xFFFFDAD6)
 // Bottle status semantic colors
 // --------------------------------------------------------------------------
 
-// NOT_STARTED – neutral blue-gray (fresh, untouched)
-val StatusNotStartedLight = Color(0xFF4A90D9)
-val StatusNotStartedDark = Color(0xFF90C4F5)
-val StatusNotStartedContainerLight = Color(0xFFDDEEFC)
-val StatusNotStartedContainerDark = Color(0xFF1D3A56)
+// NOT_STARTED - mist blue, calm and untouched
+val StatusNotStartedLight = MistBlueDark
+val StatusNotStartedDark = MistBlue
+val StatusNotStartedContainerLight = MistBlueLight
+val StatusNotStartedContainerDark = MistBlueDarkContainer
 
 // FEEDING_STARTED – warm amber/orange (active, in progress)
 val StatusFeedingStartedLight = Color(0xFFD07A00)
@@ -97,17 +86,17 @@ val StatusExpiredDark = Color(0xFFFFB4AB)
 val StatusExpiredContainerLight = Color(0xFFFFDAD6)
 val StatusExpiredContainerDark = Color(0xFF690005)
 
-// FED – calming green (completed successfully)
-val StatusFedLight = Color(0xFF2E7D32)
-val StatusFedDark = Color(0xFF81C784)
-val StatusFedContainerLight = Color(0xFFD8F5D8)
-val StatusFedContainerDark = Color(0xFF0A3C0D)
+// FED - soft sage accent
+val StatusFedLight = SoftSageDark
+val StatusFedDark = SoftSage
+val StatusFedContainerLight = SoftSageLight
+val StatusFedContainerDark = SoftSageDarkContainer
 
 // DISCARDED – neutral gray (removed/thrown away)
-val StatusDiscardedLight = Color(0xFF5C5F5F)
-val StatusDiscardedDark = Color(0xFFA9ABAB)
-val StatusDiscardedContainerLight = Color(0xFFE0E3E3)
-val StatusDiscardedContainerDark = Color(0xFF2D3131)
+val StatusDiscardedLight = Neutral40
+val StatusDiscardedDark = Neutral70
+val StatusDiscardedContainerLight = Neutral90
+val StatusDiscardedContainerDark = Neutral20
 
 // CANCELED – muted purple-gray (voided)
 val StatusCanceledLight = Color(0xFF6B6176)

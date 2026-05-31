@@ -45,6 +45,10 @@ sealed class NavRoutes(val route: String) {
     // ── Paywall ─────────────────────────────────────────────────────────────
 
     object Paywall : NavRoutes("paywall")
+
+    // ── Sign-in ──────────────────────────────────────────────────────────────
+
+    object SignIn : NavRoutes("auth/sign_in")
 }
 
 /** Routes that render with the bottom navigation bar visible. */

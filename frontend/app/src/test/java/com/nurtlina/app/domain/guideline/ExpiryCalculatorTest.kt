@@ -204,4 +204,13 @@ class ExpiryCalculatorTest {
         val minutes = ExpiryCalculator.minutesUntilExpiry(expiresAt, now)
         assertTrue(minutes < 0)
     }
+
+    @Test
+    fun `expiresAt calculation uses only local bottle and rule inputs`() {
+        val bottle = baseFormulaBottle(status = BottleStatus.NOT_STARTED)
+
+        val result = ExpiryCalculator.calculate(bottle, DefaultGuidelineRules.US_FORMULA)
+
+        assertEquals(now.plus(120, ChronoUnit.MINUTES), result)
+    }
 }

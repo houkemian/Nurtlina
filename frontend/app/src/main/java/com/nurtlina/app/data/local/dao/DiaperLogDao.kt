@@ -29,4 +29,7 @@ interface DiaperLogDao {
 
     @Query("SELECT * FROM diaper_logs WHERE updatedAt >= :sinceMillis")
     suspend fun getDiaperLogsUpdatedSince(sinceMillis: Long): List<DiaperLogEntity>
+
+    @Query("UPDATE diaper_logs SET syncStatus = :status, lastSyncedAt = :lastSyncedAt WHERE id = :id")
+    suspend fun updateSyncState(id: String, status: String, lastSyncedAt: Long?)
 }

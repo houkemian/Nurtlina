@@ -29,4 +29,7 @@ interface FeedLogDao {
 
     @Query("SELECT * FROM feed_logs WHERE updatedAt >= :sinceMillis")
     suspend fun getFeedLogsUpdatedSince(sinceMillis: Long): List<FeedLogEntity>
+
+    @Query("UPDATE feed_logs SET syncStatus = :status, lastSyncedAt = :lastSyncedAt WHERE id = :id")
+    suspend fun updateSyncState(id: String, status: String, lastSyncedAt: Long?)
 }
