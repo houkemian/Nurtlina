@@ -226,7 +226,6 @@
     <!-- Logs Screen -->
     <string name="logs_title">Protokoll</string>
     <string name="logs_filter_all">Alle</string>
-    <string name="logs_filter_bottles">Flaschen</string>
     <string name="logs_filter_feeds">Fütterungen</string>
     <string name="logs_filter_diapers">Windeln</string>
     <string name="logs_filter_sleep">Schlaf</string>

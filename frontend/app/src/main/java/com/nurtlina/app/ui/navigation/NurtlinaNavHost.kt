@@ -444,7 +444,6 @@ private fun LogsRoute() {
         onEntryClick = {},
         onEntryDelete = { entry ->
             when (entry) {
-                is LogEntry.Bottle -> viewModel.deleteBottle(entry.id)
                 is LogEntry.Feed -> viewModel.deleteFeedLog(entry.id)
                 is LogEntry.Diaper -> viewModel.deleteDiaperLog(entry.id)
                 is LogEntry.Sleep -> viewModel.deleteSleepLog(entry.id)
@@ -546,7 +545,6 @@ private fun PaywallRoute(navController: NavController) {
 }
 
 private fun LogItem.toLogEntry(): LogEntry = when (this) {
-    is LogItem.BottleLog -> LogEntry.Bottle(bottle)
     is LogItem.FeedLogItem -> LogEntry.Feed(feedLog)
     is LogItem.DiaperLogItem -> LogEntry.Diaper(diaperLog)
     is LogItem.SleepLogItem -> LogEntry.Sleep(sleepLog)

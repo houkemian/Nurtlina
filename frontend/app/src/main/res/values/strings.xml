@@ -260,7 +260,6 @@
 
     <!-- ===== Logs ===== -->
     <string name="logs_filter_all">All</string>
-    <string name="logs_filter_bottles">Bottles</string>
     <string name="logs_filter_feeds">Feeds</string>
     <string name="logs_filter_diapers">Diapers</string>
     <string name="logs_filter_sleep">Sleep</string>

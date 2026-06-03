@@ -226,7 +226,6 @@
     <!-- Logs Screen -->
     <string name="logs_title">Registros</string>
     <string name="logs_filter_all">Todos</string>
-    <string name="logs_filter_bottles">Biberones</string>
     <string name="logs_filter_feeds">Alimentaciones</string>
     <string name="logs_filter_diapers">Pañales</string>
     <string name="logs_filter_sleep">Sueño</string>

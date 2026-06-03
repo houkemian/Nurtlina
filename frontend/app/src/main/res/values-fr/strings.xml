@@ -226,7 +226,6 @@
     <!-- Logs Screen -->
     <string name="logs_title">Journal</string>
     <string name="logs_filter_all">Tout</string>
-    <string name="logs_filter_bottles">Biberons</string>
     <string name="logs_filter_feeds">Alimentations</string>
     <string name="logs_filter_diapers">Couches</string>
     <string name="logs_filter_sleep">Sommeil</string>

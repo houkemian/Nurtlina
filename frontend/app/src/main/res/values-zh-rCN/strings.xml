@@ -226,7 +226,6 @@
     <!-- Logs Screen -->
     <string name="logs_title">记录</string>
     <string name="logs_filter_all">全部</string>
-    <string name="logs_filter_bottles">奶瓶</string>
     <string name="logs_filter_feeds">喂奶</string>
     <string name="logs_filter_diapers">尿裤</string>
     <string name="logs_filter_sleep">睡眠</string>
