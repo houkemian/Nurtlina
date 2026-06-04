@@ -1,14 +1,12 @@
 """FastAPI dependency factories for auth and DB."""
 
-from dataclasses import dataclass
-
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import repositories as repo
 from app.core.errors import ForbiddenError
 from app.core.security import CurrentUser, verify_firebase_token
 from app.db.session import get_db
-from app import repositories as repo
 
 
 async def get_current_user(
@@ -17,7 +15,7 @@ async def get_current_user(
 ) -> CurrentUser:
     """
     Resolve Firebase token → internal User record.
-    Never trusts client-supplied userId – always derived from token.
+    Never trusts client-supplied userId - always derived from token.
     """
     firebase_uid: str = decoded["uid"]
     email: str | None = decoded.get("email")

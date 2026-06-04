@@ -41,4 +41,3 @@ async def rtdn_webhook(
     V1.1: verify Pub/Sub JWT, decode message, update entitlement.
     MVP: endpoint exists and returns 204 to avoid Pub/Sub retry storms.
     """
-    pass

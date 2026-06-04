@@ -6,8 +6,8 @@ from app.repositories import (
 )
 
 __all__ = [
-    "user_repository",
+    "entitlement_repository",
     "family_repository",
     "sync_repository",
-    "entitlement_repository",
+    "user_repository",
 ]

@@ -4,8 +4,8 @@ import threading
 from typing import Any
 
 import httpx
-from google.oauth2 import service_account
 from google.auth.transport.requests import Request as GoogleAuthRequest
+from google.oauth2 import service_account
 
 _SCOPE = "https://www.googleapis.com/auth/androidpublisher"
 _BASE = "https://androidpublisher.googleapis.com/androidpublisher/v3/applications"
@@ -49,17 +49,12 @@ async def verify_subscription_purchase(
     purchase_token: str,
 ) -> dict[str, Any]:
     """Verify a subscription purchase via Google Play Developer API v3."""
-    url = (
-        f"{_BASE}/{package_name}/purchases/subscriptionsv2"
-        f"/tokens/{purchase_token}"
-    )
+    url = f"{_BASE}/{package_name}/purchases/subscriptionsv2/tokens/{purchase_token}"
     token = _get_access_token()
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.get(url, headers={"Authorization": f"Bearer {token}"})
     if resp.status_code != 200:
-        raise GooglePlayError(
-            f"Google Play API returned {resp.status_code}: {resp.text}"
-        )
+        raise GooglePlayError(f"Google Play API returned {resp.status_code}: {resp.text}")
     return resp.json()
 
 
@@ -69,15 +64,10 @@ async def verify_one_time_purchase(
     purchase_token: str,
 ) -> dict[str, Any]:
     """Verify a one-time product purchase (e.g. lifetime) via Google Play Developer API."""
-    url = (
-        f"{_BASE}/{package_name}/purchases/products"
-        f"/{product_id}/tokens/{purchase_token}"
-    )
+    url = f"{_BASE}/{package_name}/purchases/products/{product_id}/tokens/{purchase_token}"
     token = _get_access_token()
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.get(url, headers={"Authorization": f"Bearer {token}"})
     if resp.status_code != 200:
-        raise GooglePlayError(
-            f"Google Play API returned {resp.status_code}: {resp.text}"
-        )
+        raise GooglePlayError(f"Google Play API returned {resp.status_code}: {resp.text}")
     return resp.json()

@@ -1,15 +1,14 @@
 """Unit tests for sync conflict resolution rules.
 
 Tests the BOTTLE_STATUS_PRIORITY table and the upsert logic in sync_repository.
-No DB connection required – tests the pure priority logic directly.
+No DB connection required - tests the pure priority logic directly.
 """
 
 import datetime
-import pytest
-
-UTC = datetime.timezone.utc
 
 from app.repositories.sync_repository import BOTTLE_STATUS_PRIORITY
+
+UTC = datetime.UTC
 
 
 class TestBottleStatusPriority:
@@ -81,10 +80,10 @@ class TestConflictResolutionLogic:
         t = datetime.datetime(2026, 1, 1, 10, 0, 0, tzinfo=UTC)
         assert self._should_accept(t, t, "FEEDING_STARTED", "FEEDING_STARTED") == "rejected"
 
-    def test_terminal_fed_wins_over_stale_not_started(self) -> None:
+    def test_terminal_fed_wins_over_same_timestamp_not_started(self) -> None:
         older = datetime.datetime(2026, 1, 1, 9, 0, 0, tzinfo=UTC)
         same = datetime.datetime(2026, 1, 1, 9, 0, 0, tzinfo=UTC)
-        assert self._should_accept(same, older, "FED", "NOT_STARTED") == "rejected"
+        assert self._should_accept(same, older, "FED", "NOT_STARTED") == "conflict"
         # but newer timestamp wins unconditionally:
         newer = datetime.datetime(2026, 1, 1, 9, 0, 1, tzinfo=UTC)
         assert self._should_accept(newer, older, "FED", "NOT_STARTED") == "accepted"

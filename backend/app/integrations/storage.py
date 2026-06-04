@@ -1,4 +1,4 @@
-"""Object storage helpers (Google Cloud Storage). MVP stub – not required at launch."""
+"""Object storage helpers (Google Cloud Storage). MVP stub - not required at launch."""
 
 import datetime
 from typing import Any
@@ -19,9 +19,7 @@ def _get_bucket() -> Any:
         client = storage.Client()
         return client.bucket(settings.gcs_bucket_name)
     except ImportError as exc:
-        raise StorageNotConfiguredError(
-            "google-cloud-storage is not installed."
-        ) from exc
+        raise StorageNotConfiguredError("google-cloud-storage is not installed.") from exc
 
 
 def generate_signed_url(blob_name: str, expiry_seconds: int = 3600) -> str:

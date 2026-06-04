@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.router import api_router, public_router
 from app.core.config import settings
-from app.core.errors import AppError, register_exception_handlers
+from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 
 configure_logging(debug=settings.debug)
@@ -33,6 +33,7 @@ app.add_middleware(
 
 # ─── Request ID middleware ────────────────────────────────────────────────────
 
+
 @app.middleware("http")
 async def attach_request_id(request: Request, call_next):  # type: ignore[no-untyped-def]
     request_id = str(uuid.uuid4())
@@ -41,9 +42,11 @@ async def attach_request_id(request: Request, call_next):  # type: ignore[no-unt
     response.headers["X-Request-Id"] = request_id
     return response
 
+
 # ─── Exception handlers ──────────────────────────────────────────────────────
 
 register_exception_handlers(app)
+
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
@@ -61,6 +64,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
             }
         },
     )
+
 
 # ─── Routers ─────────────────────────────────────────────────────────────────
 
