@@ -2,11 +2,9 @@ package com.nurtlina.app.ui.logs
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.nurtlina.app.domain.model.Bottle
 import com.nurtlina.app.domain.model.DiaperLog
 import com.nurtlina.app.domain.model.FeedLog
 import com.nurtlina.app.domain.model.SleepLog
-import com.nurtlina.app.domain.repository.BottleRepository
 import com.nurtlina.app.domain.repository.DiaperLogRepository
 import com.nurtlina.app.domain.repository.FeedLogRepository
 import com.nurtlina.app.domain.repository.SettingsRepository
@@ -34,10 +32,6 @@ import javax.inject.Inject
 sealed interface LogItem {
     val timestamp: Instant
 
-    data class BottleLog(val bottle: Bottle) : LogItem {
-        override val timestamp: Instant get() = bottle.preparedAt
-    }
-
     data class FeedLogItem(val feedLog: FeedLog) : LogItem {
         override val timestamp: Instant get() = feedLog.startedAt
     }
@@ -54,14 +48,13 @@ sealed interface LogItem {
 // ── Log filter ────────────────────────────────────────────────────────────────
 
 enum class LogFilter {
-    ALL, BOTTLE, FEED, DIAPER, SLEEP;
+    ALL, FEED, DIAPER, SLEEP;
 }
 
 // ── ViewModel ─────────────────────────────────────────────────────────────────
 
 @HiltViewModel
 class LogsViewModel @Inject constructor(
-    private val bottleRepository: BottleRepository,
     private val feedLogRepository: FeedLogRepository,
     private val diaperLogRepository: DiaperLogRepository,
     private val sleepLogRepository: SleepLogRepository,
@@ -119,15 +112,11 @@ class LogsViewModel @Inject constructor(
         val to: Instant = date.plusDays(1).atStartOfDay(zone).toInstant()
 
         combine(
-            bottleRepository.observeAll(babyId).map { bottles ->
-                bottles.filter { b -> b.preparedAt >= from && b.preparedAt < to }
-            },
             feedLogRepository.observeByBabyAndRange(babyId, from, to),
             diaperLogRepository.observeByBabyAndRange(babyId, from, to),
             sleepLogRepository.observeByBabyAndRange(babyId, from, to),
-        ) { bottles, feeds, diapers, sleeps ->
+        ) { feeds, diapers, sleeps ->
             buildList {
-                addAll(bottles.map { LogItem.BottleLog(it) })
                 addAll(feeds.map { LogItem.FeedLogItem(it) })
                 addAll(diapers.map { LogItem.DiaperLogItem(it) })
                 addAll(sleeps.map { LogItem.SleepLogItem(it) })
@@ -142,10 +131,6 @@ class LogsViewModel @Inject constructor(
     )
 
     // ── Delete actions ───────────────────────────────────────────────────────
-
-    fun deleteBottle(bottleId: String) {
-        viewModelScope.launch { bottleRepository.delete(bottleId) }
-    }
 
     fun deleteFeedLog(feedLogId: String) {
         viewModelScope.launch { feedLogRepository.delete(feedLogId) }
@@ -164,7 +149,6 @@ class LogsViewModel @Inject constructor(
 
 private fun LogFilter.matches(item: LogItem): Boolean = when (this) {
     LogFilter.ALL -> true
-    LogFilter.BOTTLE -> item is LogItem.BottleLog
     LogFilter.FEED -> item is LogItem.FeedLogItem
     LogFilter.DIAPER -> item is LogItem.DiaperLogItem
     LogFilter.SLEEP -> item is LogItem.SleepLogItem

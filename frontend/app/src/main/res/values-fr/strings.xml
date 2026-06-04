@@ -226,7 +226,6 @@
     <!-- Logs Screen -->
     <string name="logs_title">Journal</string>
     <string name="logs_filter_all">Tout</string>
-    <string name="logs_filter_bottles">Biberons</string>
     <string name="logs_filter_feeds">Alimentations</string>
     <string name="logs_filter_diapers">Couches</string>
     <string name="logs_filter_sleep">Sommeil</string>
@@ -286,4 +285,10 @@
     <string name="signin_hide_password_cd">Masquer le mot de passe</string>
     <string name="signin_disclaimer">Vos données de minuterie de biberon sont toujours enregistrées localement. La connexion active une sauvegarde cloud facultative.</string>
 
+    <string name="today_new_bottle">Ajouter une alimentation</string>
+    <string name="action_save_feed">Enregistrer l'alimentation</string>
+    <string name="new_feed_title">Ajouter un suivi d'alimentation</string>
+    <string name="new_feed_disclaimer">Cela enregistre uniquement une alimentation. Ce n'est pas un avis médical.</string>
+
+    <string name="cd_new_bottle_fab">Ajouter un suivi d'alimentation</string>
 </resources>

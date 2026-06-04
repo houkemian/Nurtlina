@@ -42,6 +42,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.annotation.StringRes
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -103,6 +104,9 @@ fun NewBottleSheet(
     onCreate: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    @StringRes titleRes: Int = R.string.new_bottle_title,
+    @StringRes createButtonRes: Int = R.string.action_create_bottle,
+    @StringRes disclaimerRes: Int = R.string.new_bottle_disclaimer,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showTimePicker by remember { mutableStateOf(false) }
@@ -121,7 +125,7 @@ fun NewBottleSheet(
                 .padding(horizontal = 24.dp),
         ) {
             Text(
-                text = stringResource(R.string.new_bottle_title),
+                text = stringResource(titleRes),
                 style = MaterialTheme.typography.titleLarge,
             )
             Spacer(Modifier.height(20.dp))
@@ -189,7 +193,7 @@ fun NewBottleSheet(
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    text = stringResource(R.string.new_bottle_disclaimer),
+                    text = stringResource(disclaimerRes),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -207,7 +211,7 @@ fun NewBottleSheet(
                 shape = MaterialTheme.shapes.large,
             ) {
                 Text(
-                    text = stringResource(R.string.action_create_bottle),
+                    text = stringResource(createButtonRes),
                     style = MaterialTheme.typography.titleMedium,
                 )
             }

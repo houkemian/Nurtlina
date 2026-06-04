@@ -1,0 +1,7 @@
+接下来需要你做的事
+替换 Firebase 配置 — app/google-services.json 填入真实项目
+替换 AdMob ID — res/values/strings.xml 中的 admob_app_id
+创建 Google Play 内购商品 — nurtlina_pro_monthly、nurtlina_pro_yearly、nurtlina_pro_lifetime
+添加 App Icon — res/mipmap-*/ic_launcher*（当前缺少图标资源）
+运行 ./gradlew test 验证单元测试
+运行 ./gradlew assembleDebug 检查编译

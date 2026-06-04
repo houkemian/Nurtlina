@@ -56,7 +56,6 @@ import com.nurtlina.app.domain.model.UserSettings
 import com.nurtlina.app.domain.repository.SettingsRepository
 import com.nurtlina.app.ui.bottle.BottleDetailScreen
 import com.nurtlina.app.ui.bottle.BottleDetailUiState
-import com.nurtlina.app.ui.bottle.BottleUiEvent
 import com.nurtlina.app.ui.bottle.BottleViewModel
 import com.nurtlina.app.ui.bottle.NewBottleSheet
 import com.nurtlina.app.ui.bottle.NewBottleUiState
@@ -353,25 +352,11 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
 
 @Composable
 private fun NewBottleRoute(navController: NavController) {
-    val bottleViewModel: BottleViewModel = hiltViewModel()
     val todayViewModel: TodayViewModel = hiltViewModel()
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val selectedBaby by todayViewModel.selectedBaby.collectAsStateWithLifecycle()
     val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
     var sheetState by remember { mutableStateOf(NewBottleUiState()) }
-
-    LaunchedEffect(bottleViewModel) {
-        bottleViewModel.uiEvents.collect { event ->
-            when (event) {
-                is BottleUiEvent.NavigateToDetail -> {
-                    navController.navigate(NavRoutes.BottleDetail.createRoute(event.bottleId)) {
-                        popUpTo(NavRoutes.NewBottle.route) { inclusive = true }
-                    }
-                }
-                is BottleUiEvent.ShowError -> Unit
-            }
-        }
-    }
 
     Box(Modifier.fillMaxSize())
     NewBottleSheet(
@@ -387,16 +372,18 @@ private fun NewBottleRoute(navController: NavController) {
         },
         onNoteChange = { sheetState = sheetState.copy(note = it) },
         onCreate = {
-            val baby = selectedBaby ?: return@NewBottleSheet
-            bottleViewModel.createBottle(
-                babyId = baby.id,
+            selectedBaby ?: return@NewBottleSheet
+            todayViewModel.logFeed(
                 milkType = sheetState.milkType,
                 amountMl = sheetState.amountMl,
-                preparedAt = if (sheetState.isJustNow) Instant.now() else sheetState.preparedAt,
-                guidelineRegion = settings?.guidelineRegion ?: GuidelineRegion.US,
+                startedAt = if (sheetState.isJustNow) Instant.now() else sheetState.preparedAt,
                 note = sheetState.note.ifBlank { null },
+                onLogged = { navController.popBackStack() },
             )
         },
+        titleRes = R.string.new_feed_title,
+        createButtonRes = R.string.action_save_feed,
+        disclaimerRes = R.string.new_feed_disclaimer,
         onDismiss = { navController.popBackStack() },
     )
 }
@@ -444,7 +431,6 @@ private fun LogsRoute() {
         onEntryClick = {},
         onEntryDelete = { entry ->
             when (entry) {
-                is LogEntry.Bottle -> viewModel.deleteBottle(entry.id)
                 is LogEntry.Feed -> viewModel.deleteFeedLog(entry.id)
                 is LogEntry.Diaper -> viewModel.deleteDiaperLog(entry.id)
                 is LogEntry.Sleep -> viewModel.deleteSleepLog(entry.id)
@@ -546,7 +532,6 @@ private fun PaywallRoute(navController: NavController) {
 }
 
 private fun LogItem.toLogEntry(): LogEntry = when (this) {
-    is LogItem.BottleLog -> LogEntry.Bottle(bottle)
     is LogItem.FeedLogItem -> LogEntry.Feed(feedLog)
     is LogItem.DiaperLogItem -> LogEntry.Diaper(diaperLog)
     is LogItem.SleepLogItem -> LogEntry.Sleep(sleepLog)

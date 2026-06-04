@@ -36,7 +36,7 @@ import java.time.format.FormatStyle
 // Public data types used by callers
 // ---------------------------------------------------------------------------
 
-// LogFilter is defined in LogsViewModel.kt (same package): ALL, BOTTLE, FEED, DIAPER, SLEEP
+// LogFilter is defined in LogsViewModel.kt (same package): ALL, FEED, DIAPER, SLEEP
 
 /** Sealed union of every loggable entry type shown in the timeline. */
 sealed interface LogEntry {
@@ -56,11 +56,6 @@ sealed interface LogEntry {
     data class Sleep(val log: SleepLog) : LogEntry {
         override val id get() = log.id
         override val timestampInstant get() = log.startedAt
-    }
-
-    data class Bottle(val bottle: com.nurtlina.app.domain.model.Bottle) : LogEntry {
-        override val id get() = bottle.id
-        override val timestampInstant get() = bottle.preparedAt
     }
 }
 
@@ -101,7 +96,6 @@ fun LogsScreen(
     val filteredEntries = remember(entries, activeFilter) {
         when (activeFilter) {
             LogFilter.ALL -> entries
-            LogFilter.BOTTLE -> entries.filterIsInstance<LogEntry.Bottle>()
             LogFilter.FEED -> entries.filterIsInstance<LogEntry.Feed>()
             LogFilter.DIAPER -> entries.filterIsInstance<LogEntry.Diaper>()
             LogFilter.SLEEP -> entries.filterIsInstance<LogEntry.Sleep>()
@@ -236,7 +230,6 @@ private fun FilterChipRow(
     val filters = remember {
         listOf(
             LogFilter.ALL to R.string.logs_filter_all,
-            LogFilter.BOTTLE to R.string.logs_filter_bottles,
             LogFilter.FEED to R.string.logs_filter_feeds,
             LogFilter.DIAPER to R.string.logs_filter_diapers,
             LogFilter.SLEEP to R.string.logs_filter_sleep,
@@ -428,7 +421,6 @@ private fun LogEntry.typeIcon() = when (this) {
     }
     is LogEntry.Diaper -> Icons.Outlined.BabyChangingStation
     is LogEntry.Sleep -> Icons.Outlined.Bedtime
-    is LogEntry.Bottle -> Icons.Outlined.Science
 }
 
 @Composable
@@ -454,15 +446,6 @@ private fun LogEntry.primaryLabel(useOz: Boolean): String = when (this) {
         val m = (millis % 3_600_000) / 60_000
         if (h > 0) "%dh %02dm".format(h, m) else "%dm".format(m)
     }
-    is LogEntry.Bottle -> when (bottle.status) {
-        BottleStatus.NOT_STARTED -> stringResource(R.string.log_bottle_status_not_started)
-        BottleStatus.FEEDING_STARTED -> stringResource(R.string.log_bottle_status_feeding_started)
-        BottleStatus.REFRIGERATED -> stringResource(R.string.log_bottle_status_refrigerated)
-        BottleStatus.EXPIRED -> stringResource(R.string.log_bottle_status_expired)
-        BottleStatus.FED -> stringResource(R.string.log_bottle_status_fed)
-        BottleStatus.DISCARDED -> stringResource(R.string.log_bottle_status_discarded)
-        BottleStatus.CANCELED -> stringResource(R.string.log_bottle_status_canceled)
-    }
 }
 
 @Composable
@@ -472,7 +455,6 @@ private fun LogEntry.secondaryLabel(useOz: Boolean): String? = when (this) {
     }
     is LogEntry.Sleep -> null
     is LogEntry.Diaper -> null
-    is LogEntry.Bottle -> null
 }
 
 // ---------------------------------------------------------------------------

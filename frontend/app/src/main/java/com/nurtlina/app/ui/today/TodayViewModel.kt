@@ -174,6 +174,30 @@ class TodayViewModel @Inject constructor(
         }
     }
 
+    fun logFeed(
+        milkType: MilkType,
+        amountMl: Double?,
+        startedAt: Instant,
+        note: String?,
+        onLogged: () -> Unit = {},
+    ) {
+        val babyId = selectedBaby.value?.id ?: return
+        viewModelScope.launch {
+            runCatching {
+                val log = logFeedUseCase(
+                    babyId = babyId,
+                    feedType = milkType.toFeedType(),
+                    amountMl = amountMl,
+                    startedAt = startedAt,
+                    endedAt = startedAt,
+                    note = note,
+                )
+                nextFeedNotificationScheduler.schedule(log.babyId, log.startedAt)
+                onLogged()
+            }.onFailure { _actionError.value = it }
+        }
+    }
+
     fun quickLogFeed(amountMl: Double) {
         val babyId = selectedBaby.value?.id ?: return
         val activeBottle = activeBottles.value.firstOrNull { bottle ->

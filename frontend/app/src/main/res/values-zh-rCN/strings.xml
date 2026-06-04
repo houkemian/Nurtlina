@@ -226,7 +226,6 @@
     <!-- Logs Screen -->
     <string name="logs_title">记录</string>
     <string name="logs_filter_all">全部</string>
-    <string name="logs_filter_bottles">奶瓶</string>
     <string name="logs_filter_feeds">喂奶</string>
     <string name="logs_filter_diapers">尿裤</string>
     <string name="logs_filter_sleep">睡眠</string>
@@ -286,4 +285,10 @@
     <string name="signin_hide_password_cd">隐藏密码</string>
     <string name="signin_disclaimer">您的奶瓶计时数据始终会保存在本地。登录后可启用可选的云端备份。</string>
 
+    <string name="today_new_bottle">新增喂奶</string>
+    <string name="action_save_feed">保存喂奶</string>
+    <string name="new_feed_title">新增喂奶记录</string>
+    <string name="new_feed_disclaimer">这里只保存喂奶记录，不构成医疗建议。</string>
+
+    <string name="cd_new_bottle_fab">新增喂奶记录</string>
 </resources>

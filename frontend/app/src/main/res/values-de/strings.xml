@@ -226,7 +226,6 @@
     <!-- Logs Screen -->
     <string name="logs_title">Protokoll</string>
     <string name="logs_filter_all">Alle</string>
-    <string name="logs_filter_bottles">Flaschen</string>
     <string name="logs_filter_feeds">Fütterungen</string>
     <string name="logs_filter_diapers">Windeln</string>
     <string name="logs_filter_sleep">Schlaf</string>
@@ -286,4 +285,10 @@
     <string name="signin_hide_password_cd">Passwort ausblenden</string>
     <string name="signin_disclaimer">Deine Flaschentimer-Daten werden immer lokal gespeichert. Durch die Anmeldung wird ein optionales Cloud-Backup aktiviert.</string>
 
+    <string name="today_new_bottle">Fütterung hinzufügen</string>
+    <string name="action_save_feed">Fütterung speichern</string>
+    <string name="new_feed_title">Fütterung eintragen</string>
+    <string name="new_feed_disclaimer">Dies speichert nur einen Fütterungseintrag. Kein medizinischer Rat.</string>
+
+    <string name="cd_new_bottle_fab">Fütterungseintrag hinzufügen</string>
 </resources>
