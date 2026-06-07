@@ -12,20 +12,17 @@
 - 后端已经有 FastAPI + PostgreSQL + Alembic 初始 schema、Firebase ID token 验证、用户/默认家庭初始化、同步 push/pull、Google Play entitlement 基础校验、账号软删除、导出接口占位。
 - Firebase 侧已有 Firestore rules、Functions scaffold、Firebase 配置文件。
 
-但当前状态仍应判断为 **MVP 后端集成中期，而不是可发布的后端闭环**。最大的架构问题是 **后端通道并存且职责未收敛**：
+但当前状态仍应判断为 **MVP 后端集成中期，而不是可发布的后端闭环**。原先最大的架构问题是后端通道并存；按当前代码复评，主同步路径已收敛到 **FastAPI/Postgres-first**，剩余问题主要是旧 Firestore 同步实现仍未清理、生产闭环和测试覆盖不足：
 
 - Android 的后台队列 `SyncQueueProcessor` 会通过 FastAPI 推送本地变更。
 - Android 的 `SyncRepository` 绑定已切换为 `ApiSyncRepository`，设置页/登录页手动同步会 flush FastAPI 队列并通过 `/sync/changes` 拉取后端变更。
 - FastAPI 后端也有自己的 PostgreSQL 数据模型与同步接口。
 
-这意味着项目已经开始收敛到 FastAPI/Postgres-first，但仍需清理或冻结旧 Firestore 同步实现，避免后续误用造成数据分裂、冲突策略不一致、权限模型不一致、测试覆盖重复但不闭环的问题。
+这意味着项目已经实质选择 FastAPI/Postgres-first。旧 Firestore 同步实现现在更像遗留维护风险，而不是当前产品主路径风险；后续应清理或冻结旧实现，避免误绑定和团队认知分叉。
 
-推荐方向：**MVP 选择一种主同步后端并删减另一条路径的产品依赖**。
+推荐方向：**继续按 FastAPI/Postgres-first 推进 MVP 后端闭环**。Firebase 侧建议保留 Auth、Crashlytics、Analytics、Remote Config 等职责；Firestore 业务同步路径应删除、冻结或明确标注 deprecated。
 
-- 如果目标是一人快速上线 Android MVP：建议 Firebase-first，即 Auth + Firestore + Remote Config + Functions 做权益/后台任务；FastAPI 暂时降级为未来版本候选。
-- 如果目标是掌控数据与导出/订阅校验并长期使用 Postgres：建议 FastAPI/Postgres-first，同时移除 Android 业务同步对 Firestore 的依赖，仅保留 Firebase Auth、Crashlytics、Analytics、Remote Config。
-
-基于当前代码投入，仓库里 FastAPI 后端已经具备基础雏形，但 Android 端仍明显混合两套后端。因此后续首要任务不是继续堆新功能，而是收敛后端职责。
+基于当前代码投入，后续首要任务已经从“选择主后端”转为“清理旧同步路径、补齐 pull cursor、entitlement、导出、删除和测试/部署闭环”。
 
 ## 2. 当前已完成能力
 
@@ -98,36 +95,41 @@
 
 ## 3. 主要风险与缺口
 
-### P0：后端同步路径不统一（已开始收敛）
+### P0 复评：后端同步路径不统一（已降级为 P1）
 
-此前存在两条同步路径：
+原判断：此前存在两条同步路径：
 
 - Firestore 直连：`FirebaseSyncRepository`
 - FastAPI/Postgres：`SyncQueueProcessor` + `BackendApiService`
 
-当前已选择 FastAPI/Postgres-first：
+复评结论：**主同步路径已收敛到 FastAPI/Postgres-first，原 P0 风险不再成立；剩余为 P1 维护风险。**
+
+代码证据：
 
 - `SyncRepository` 绑定已由 `FirebaseSyncRepository` 替换为 `ApiSyncRepository`。
 - `ApiSyncRepository.syncAll()` 会先 flush 本地 sync queue，再调用 FastAPI `/api/v1/sync/changes` 拉取远端变更并合并到 Room。
 - `SyncWorker` 与 `WorkManagerSyncManager.syncNow()` 已改为委托 `SyncRepository`，后台同步、手动同步和登录后同步使用同一主通道。
 - `FirebaseSyncRepository` 旧实现仍存在于代码中，但不再作为产品同步路径绑定。
 
-风险：
+剩余风险：
 
-- 同一个本地记录可能被写入 Firestore，也可能被写入 FastAPI/Postgres。
-- 手动同步、后台同步、登录后同步的实际行为不一致。
-- 两边冲突策略不完全一致。
-- 两边权限/数据模型不完全一致。
-- 用户删除、导出、恢复、权益校验无法形成单一可信源。
+- `FirebaseSyncRepository` 旧实现仍在仓库中，未来改 DI 或重构时有误绑定风险。
+- Firestore DTO/rules 仍存在，容易让后续开发误以为 Firestore 仍是业务同步数据库。
+- 文档和注释需要统一描述 FastAPI/Postgres-first，避免团队认知分叉。
 
-剩余建议：
+后续建议：
 
 - 删除或显式标注冻结 `FirebaseSyncRepository`，避免未来误绑定。
-- 继续修复下方 FastAPI family ownership 校验和 pull cursor 稳定性问题。
+- 在 ADR 中记录 FastAPI/Postgres 为同步 source of truth，Firebase 仅保留 Auth/Analytics/Crashlytics/Remote Config 等职责。
+- 将旧 Firestore 同步实现移入 deprecated 包或移除绑定测试之外的产品依赖。
 
-### P0：FastAPI 同步入库缺少部分归属校验（已修复）
+### P0 复评：FastAPI 同步入库缺少部分归属校验（已关闭）
 
-FastAPI push 入口会校验当前用户是 `family_id` 的成员。现已在 sync repository 入库前补齐记录级归属校验：
+原判断：FastAPI push 入口只校验当前用户是 `family_id` 的成员，入库前缺少记录级归属校验。
+
+复评结论：**已修复，当前不再列为 P0。**
+
+代码证据：
 
 - incoming record 的 `family_id` 必须等于 request envelope 的 `family_id`，不再由 service 层覆盖 payload family。
 - bottle/feed/diaper/sleep 的 `baby_id` 必须属于同一个 family。
@@ -137,15 +139,30 @@ FastAPI push 入口会校验当前用户是 `family_id` 的成员。现已在 sy
 
 新增 `test_sync_ownership.py` 覆盖 payload family mismatch、跨 family existing record、child baby/bottle 归属校验和软删除合并。
 
-### P0：Android 手动同步和后台同步语义不一致（已修复）
+剩余建议：
+
+- 增加真实数据库集成测试，覆盖外键约束、并发更新和事务回滚。
+- 在 API 层对 `rejected` 结果增加可观测性，避免客户端静默积压不可恢复的同步项。
+- 将 family ownership 规则写入 `docs/sync-contract.md`，作为客户端和后端共同契约。
+
+### P0 复评：Android 手动同步和后台同步语义不一致（已关闭）
+
+原判断：设置页/登录页走 `SyncRepository.syncAll()`，业务写入后走 `SyncManager.requestSyncSoon()`，两者可能落到不同后端通道。
+
+复评结论：**已修复，当前不再列为 P0。**
 
 设置页/登录页和 WorkManager 后台同步已统一到 `ApiSyncRepository.syncAll()`。该入口会 flush 本地 FastAPI sync queue，并执行 `/api/v1/sync/changes` pull。
 
-当前状态：
+代码证据：
 
 - `SyncRepository` 与 `SyncManager` 已收敛到 FastAPI/Postgres 主通道。
 - 手动同步会 flush 同步队列并执行 pull。
 - UI 展示的 sync state 来自 `ApiSyncRepository.observeSyncState()`。
+
+剩余建议：
+
+- 为 `ApiSyncRepository.syncAll()` 增加 Android 单元测试，覆盖 push 失败时不推进 pull cursor、pull 成功时写入 Room、删除 tombstone 合并。
+- `WorkManagerSyncManager.syncNow()` 当前只返回成功/失败计数，后续可透传实际 push/pull 数量和错误类型，便于设置页展示。
 
 ### P1：FastAPI pull 分页游标不够稳
 
@@ -273,10 +290,10 @@ PRD/架构要求 Remote Config 只用于非安全 UI、paywall、rollout 设置�
 | Firebase Auth 登录 | Android 与 FastAPI 均已接入 | 中 | 真机验证登录失败/离线缓存 |
 | 用户初始化 | `/me/init` 已有默认 family 创建 | 中 | 幂等与并发测试 |
 | 本地优先 | Android Room + 队列已具备 | 中高 | 验证后端失败不影响所有核心操作 |
-| FastAPI 同步 push | 已实现 | 中 | 补 family/baby/bottle 归属校验 |
+| FastAPI 同步 push | 已实现并补齐记录级归属校验 | 中高 | 增加真实 DB 集成测试与 rejected 可观测性 |
 | FastAPI 同步 pull | 已实现基础版 | 中 | 稳定分页、客户端 merge、删除同步 |
-| Firestore 同步 | 已实现基础版 | 中 | 若保留，需 rules 加固和冲突测试 |
-| 同步路径一致性 | 未完成 | 低 | 必须收敛为单一主路径 |
+| Firestore 同步 | 旧实现仍存在但不再绑定主路径 | 低中 | 删除、冻结或标注 deprecated |
+| 同步路径一致性 | 主路径已收敛到 FastAPI/Postgres | 中高 | 清理旧 Firestore 同步实现并补 ADR |
 | Entitlement 校验 | 已有基础框架 | 中 | RTDN、恢复、退款/过期测试 |
 | 导出 | stub | 低 | 实现或移出 MVP 承诺 |
 | 账号删除 | 后端软删除 | 中 | Firebase/Firestore/GCS/analytics 清理闭环 |
@@ -388,22 +405,28 @@ PRD/架构要求 Remote Config 只用于非安全 UI、paywall、rollout 设置�
 
 ## 6. 建议优先级清单
 
-### P0：必须先处理
+### P0：当前复评结果
 
-- 选定唯一主同步后端。
-- 移除 Android 端 Firestore sync 与 FastAPI sync 的并行产品路径。
-- FastAPI upsert 增加跨 family / baby / bottle 归属校验。
-- 手动同步、后台同步、启动同步统一到同一实现。
-- 为同步安全边界增加测试。
+当前未发现仍处于打开状态的 P0。原三项 P0 中：
+
+- 主同步路径已收敛到 FastAPI/Postgres-first，降级为 P1 清理旧实现。
+- FastAPI upsert 跨 family / baby / bottle 归属校验已补齐，状态关闭。
+- 手动同步、后台同步、启动同步已统一到 `ApiSyncRepository.syncAll()`，状态关闭。
+
+下一步不应再按 P0 阻塞处理这三项，但应在 P1 中继续补旧 Firestore 同步清理、ADR、真实数据库集成测试和 pull cursor 稳定化。
 
 ### P1：MVP 发布前处理
 
+- 清理、冻结或标注 deprecated 旧 `FirebaseSyncRepository`/Firestore 业务同步路径。
+- 新增 ADR，明确 FastAPI/Postgres 是同步 source of truth。
+- 为 FastAPI 同步归属校验增加真实数据库集成测试。
+- 增加同步 `rejected` 结果的客户端/后端可观测性。
 - entitlement restore 与 RTDN 闭环。
 - 导出功能实现，或从 Pro/MVP 文案中移除。
 - 账号删除补齐 Firebase/Firestore/GCS/analytics 边界。
 - pull cursor 稳定化。
 - 生产 CORS、secrets、Cloud Run/Cloud SQL 部署清单。
-- Firestore rules 加固，除非 Firebase 不再作为业务数据库。
+- Firestore rules 仅在继续保留 Firestore 业务数据时加固；若删除业务同步路径，则同步移除相关产品依赖。
 
 ### P2：发布后早期迭代
 

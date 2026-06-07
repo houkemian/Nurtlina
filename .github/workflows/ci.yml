@@ -1,9 +1,8 @@
 name: Deploy
 
+# Temporarily disabled. Keep the workflow available for manual runs only.
 on:
-  push:
-    branches:
-      - "main"
+  workflow_dispatch:
 
 jobs:
   backend:
