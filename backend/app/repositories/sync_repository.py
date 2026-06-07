@@ -4,7 +4,6 @@ import datetime
 from typing import TypeVar
 
 from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.baby import Baby
@@ -28,9 +27,7 @@ BOTTLE_STATUS_PRIORITY: dict[str, int] = {
 T = TypeVar("T", Baby, Bottle, FeedLog, DiaperLog, SleepLog)
 
 
-async def upsert_baby(
-    db: AsyncSession, data: dict, family_id: str
-) -> tuple[str, str]:
+async def upsert_baby(db: AsyncSession, data: dict, family_id: str) -> tuple[str, str]:
     """Returns (record_id, outcome) where outcome is 'accepted'|'rejected'|'conflict'."""
     existing = await db.get(Baby, data["id"])
     if existing is None:
@@ -45,9 +42,7 @@ async def upsert_baby(
     return data["id"], "rejected"
 
 
-async def upsert_bottle(
-    db: AsyncSession, data: dict, family_id: str
-) -> tuple[str, str]:
+async def upsert_bottle(db: AsyncSession, data: dict, family_id: str) -> tuple[str, str]:
     existing = await db.get(Bottle, data["id"])
     if existing is None:
         db.add(Bottle(**data, family_id=family_id))
@@ -74,9 +69,7 @@ async def upsert_bottle(
     return data["id"], "rejected"
 
 
-async def upsert_feed_log(
-    db: AsyncSession, data: dict, family_id: str
-) -> tuple[str, str]:
+async def upsert_feed_log(db: AsyncSession, data: dict, family_id: str) -> tuple[str, str]:
     existing = await db.get(FeedLog, data["id"])
     if existing is None:
         db.add(FeedLog(**data, family_id=family_id))
@@ -90,9 +83,7 @@ async def upsert_feed_log(
     return data["id"], "rejected"
 
 
-async def upsert_diaper_log(
-    db: AsyncSession, data: dict, family_id: str
-) -> tuple[str, str]:
+async def upsert_diaper_log(db: AsyncSession, data: dict, family_id: str) -> tuple[str, str]:
     existing = await db.get(DiaperLog, data["id"])
     if existing is None:
         db.add(DiaperLog(**data, family_id=family_id))
@@ -106,9 +97,7 @@ async def upsert_diaper_log(
     return data["id"], "rejected"
 
 
-async def upsert_sleep_log(
-    db: AsyncSession, data: dict, family_id: str
-) -> tuple[str, str]:
+async def upsert_sleep_log(db: AsyncSession, data: dict, family_id: str) -> tuple[str, str]:
     existing = await db.get(SleepLog, data["id"])
     if existing is None:
         db.add(SleepLog(**data, family_id=family_id))
@@ -123,6 +112,7 @@ async def upsert_sleep_log(
 
 
 # ─── Pull helpers ─────────────────────────────────────────────────────────────
+
 
 async def pull_babies(
     db: AsyncSession, family_id: str, since: datetime.datetime, limit: int = 500
@@ -185,6 +175,7 @@ async def pull_sleep_logs(
 
 
 # ─── Cursor helpers ───────────────────────────────────────────────────────────
+
 
 async def get_or_create_cursor(
     db: AsyncSession,

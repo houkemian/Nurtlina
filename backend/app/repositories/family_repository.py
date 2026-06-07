@@ -17,9 +17,7 @@ async def create_family(db: AsyncSession, family: Family) -> Family:
     return family
 
 
-async def get_member(
-    db: AsyncSession, family_id: str, user_id: str
-) -> FamilyMember | None:
+async def get_member(db: AsyncSession, family_id: str, user_id: str) -> FamilyMember | None:
     result = await db.execute(
         select(FamilyMember).where(
             FamilyMember.family_id == family_id,

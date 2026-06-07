@@ -30,10 +30,10 @@ from app.repositories.sync_repository import (
     upsert_sleep_log,
 )
 from app.schemas.sync import (
-    BabySyncRequest,
-    BottleSyncRequest,
     BabyChange,
+    BabySyncRequest,
     BottleChange,
+    BottleSyncRequest,
     DiaperLogChange,
     DiaperLogSyncRequest,
     FeedLogChange,
@@ -52,9 +52,7 @@ def _ensure_family_id(data: dict, family_id: str) -> dict:
     return data
 
 
-async def push_babies(
-    db: AsyncSession, req: BabySyncRequest, user_id: str
-) -> SyncPushResponse:
+async def push_babies(db: AsyncSession, req: BabySyncRequest, user_id: str) -> SyncPushResponse:
     await _assert_family_access(db, req.family_id, user_id)
     now = utcnow()
     accepted, rejected, conflicts = [], [], []
@@ -65,12 +63,12 @@ async def push_babies(
         record_id, outcome = await upsert_baby(db, row, req.family_id)
         _bucket(record_id, outcome, accepted, rejected, conflicts)
     await _update_cursor_push(db, user_id, req.family_id, req.client_id, now)
-    return SyncPushResponse(server_time=now, accepted=accepted, rejected=rejected, conflicts=conflicts)
+    return SyncPushResponse(
+        server_time=now, accepted=accepted, rejected=rejected, conflicts=conflicts
+    )
 
 
-async def push_bottles(
-    db: AsyncSession, req: BottleSyncRequest, user_id: str
-) -> SyncPushResponse:
+async def push_bottles(db: AsyncSession, req: BottleSyncRequest, user_id: str) -> SyncPushResponse:
     await _assert_family_access(db, req.family_id, user_id)
     now = utcnow()
     accepted, rejected, conflicts = [], [], []
@@ -81,7 +79,9 @@ async def push_bottles(
         record_id, outcome = await upsert_bottle(db, row, req.family_id)
         _bucket(record_id, outcome, accepted, rejected, conflicts)
     await _update_cursor_push(db, user_id, req.family_id, req.client_id, now)
-    return SyncPushResponse(server_time=now, accepted=accepted, rejected=rejected, conflicts=conflicts)
+    return SyncPushResponse(
+        server_time=now, accepted=accepted, rejected=rejected, conflicts=conflicts
+    )
 
 
 async def push_feed_logs(
@@ -97,7 +97,9 @@ async def push_feed_logs(
         record_id, outcome = await upsert_feed_log(db, row, req.family_id)
         _bucket(record_id, outcome, accepted, rejected, conflicts)
     await _update_cursor_push(db, user_id, req.family_id, req.client_id, now)
-    return SyncPushResponse(server_time=now, accepted=accepted, rejected=rejected, conflicts=conflicts)
+    return SyncPushResponse(
+        server_time=now, accepted=accepted, rejected=rejected, conflicts=conflicts
+    )
 
 
 async def push_diaper_logs(
@@ -113,7 +115,9 @@ async def push_diaper_logs(
         record_id, outcome = await upsert_diaper_log(db, row, req.family_id)
         _bucket(record_id, outcome, accepted, rejected, conflicts)
     await _update_cursor_push(db, user_id, req.family_id, req.client_id, now)
-    return SyncPushResponse(server_time=now, accepted=accepted, rejected=rejected, conflicts=conflicts)
+    return SyncPushResponse(
+        server_time=now, accepted=accepted, rejected=rejected, conflicts=conflicts
+    )
 
 
 async def push_sleep_logs(
@@ -129,7 +133,9 @@ async def push_sleep_logs(
         record_id, outcome = await upsert_sleep_log(db, row, req.family_id)
         _bucket(record_id, outcome, accepted, rejected, conflicts)
     await _update_cursor_push(db, user_id, req.family_id, req.client_id, now)
-    return SyncPushResponse(server_time=now, accepted=accepted, rejected=rejected, conflicts=conflicts)
+    return SyncPushResponse(
+        server_time=now, accepted=accepted, rejected=rejected, conflicts=conflicts
+    )
 
 
 async def pull_changes(
@@ -189,9 +195,8 @@ async def pull_changes(
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async def _assert_family_access(
-    db: AsyncSession, family_id: str, user_id: str
-) -> None:
+
+async def _assert_family_access(db: AsyncSession, family_id: str, user_id: str) -> None:
     from app.core.errors import ForbiddenError
 
     member = await repo.family_repository.get_member(db, family_id, user_id)
@@ -246,6 +251,7 @@ async def _update_cursor_pull(
 
 
 # ─── ORM → Schema converters ─────────────────────────────────────────────────
+
 
 def _baby_to_change(b: object) -> BabyChange:
     from app.models.baby import Baby as BabyModel

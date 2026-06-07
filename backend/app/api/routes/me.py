@@ -15,7 +15,7 @@ async def init_me(
     current_user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> MeInitResponse:
-    """Idempotent – ensures user + default family exist, returns their IDs."""
+    """Idempotent - ensures user + default family exist, returns their IDs."""
     return await user_service.init_me(db, current_user.firebase_uid, current_user.email)
 
 

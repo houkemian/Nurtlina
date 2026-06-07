@@ -1,7 +1,5 @@
 """User and family provisioning (equivalent of /me/init and /me)."""
 
-import datetime
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import repositories as repo

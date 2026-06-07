@@ -12,9 +12,7 @@ async def get_by_firebase_uid(db: AsyncSession, firebase_uid: str) -> User | Non
 
 
 async def get_by_id(db: AsyncSession, user_id: str) -> User | None:
-    result = await db.execute(
-        select(User).where(User.id == user_id, User.deleted_at.is_(None))
-    )
+    result = await db.execute(select(User).where(User.id == user_id, User.deleted_at.is_(None)))
     return result.scalar_one_or_none()
 
 

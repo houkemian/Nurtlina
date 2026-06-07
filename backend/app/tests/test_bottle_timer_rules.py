@@ -8,14 +8,12 @@ These tests verify the default timer rules referenced in AGENTS.md:
   Breast milk, room temperature:            4 hours from expressed/prepared_at
   Breast milk refrigerated:                 4 days from expressed/prepared_at
 
-No external dependencies required – pure datetime arithmetic.
+No external dependencies required - pure datetime arithmetic.
 """
 
 import datetime
 
-import pytest
-
-UTC = datetime.timezone.utc
+UTC = datetime.UTC
 
 
 def formula_room_temp_expiry(prepared_at: datetime.datetime) -> datetime.datetime:
@@ -44,6 +42,7 @@ def breast_milk_refrigerated_expiry(expressed_at: datetime.datetime) -> datetime
 
 
 # ─── Tests ────────────────────────────────────────────────────────────────────
+
 
 class TestFormulaRoomTemp:
     def test_expires_2_hours_after_prepared(self) -> None:

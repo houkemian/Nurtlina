@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import repositories as repo
 from app.core.clock import utcnow
-from app.core.errors import BillingError, NotFoundError
+from app.core.errors import BillingError
 from app.core.ids import new_id
 from app.integrations.google_play import (
     GooglePlayError,
@@ -113,9 +113,7 @@ async def get_entitlement(db: AsyncSession, user_id: str) -> EntitlementResponse
 
 def _to_response(e: Entitlement) -> EntitlementResponse:
     now = utcnow()
-    is_active = e.status == "ACTIVE" and (
-        e.expires_at is None or e.expires_at > now
-    )
+    is_active = e.status == "ACTIVE" and (e.expires_at is None or e.expires_at > now)
     # Allow grace period
     if not is_active and e.grace_period_until and e.grace_period_until > now:
         is_active = True

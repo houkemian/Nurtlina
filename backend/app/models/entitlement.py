@@ -19,12 +19,10 @@ class Entitlement(Base):
     __table_args__ = (Index("idx_entitlements_user", "user_id"),)
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    user_id: Mapped[str] = mapped_column(
-        String, ForeignKey("users.id"), nullable=False
-    )
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False)
     source: Mapped[str] = mapped_column(String, nullable=False)
     product_id: Mapped[str] = mapped_column(String, nullable=False)
-    # Hashed (SHA-256) – never store raw purchase token in DB
+    # Hashed (SHA-256) - never store raw purchase token in DB
     purchase_token_hash: Mapped[str | None] = mapped_column(String, nullable=True)
     status: Mapped[str] = mapped_column(String, nullable=False)
     plan: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -40,9 +38,5 @@ class Entitlement(Base):
     # Raw provider response for audit; do not expose to clients
     raw_provider_status: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     schema_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False)

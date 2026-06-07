@@ -32,9 +32,9 @@ async def verify_firebase_token(
     token = _extract_bearer(authorization)
     try:
         decoded = verify_id_token(token)
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired Firebase ID token.",
-        )
+        ) from exc
     return decoded  # type: ignore[return-value]

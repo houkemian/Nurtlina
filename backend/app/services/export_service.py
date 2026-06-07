@@ -1,6 +1,4 @@
-"""Export service – MVP returns a stub; full async export is V1.1."""
-
-import datetime
+"""Export service - MVP returns a stub; full async export is V1.1."""
 
 from sqlalchemy.ext.asyncio import AsyncSession
 

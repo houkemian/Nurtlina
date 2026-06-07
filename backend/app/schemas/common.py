@@ -22,5 +22,5 @@ class ErrorResponse(ApiModel):
 def to_utc(dt: datetime.datetime) -> datetime.datetime:
     """Ensure datetime is UTC-aware for serialization."""
     if dt.tzinfo is None:
-        return dt.replace(tzinfo=datetime.timezone.utc)
-    return dt.astimezone(datetime.timezone.utc)
+        return dt.replace(tzinfo=datetime.UTC)
+    return dt.astimezone(datetime.UTC)

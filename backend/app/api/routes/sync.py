@@ -70,12 +70,10 @@ async def pull_changes(
     family_id: str = Query(...),
     client_id: str = Query(...),
     since: datetime.datetime = Query(
-        default=datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
+        default=datetime.datetime(2000, 1, 1, tzinfo=datetime.UTC),
         description="ISO 8601 UTC timestamp; return records updated after this time.",
     ),
     current_user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SyncPullResponse:
-    return await sync_service.pull_changes(
-        db, family_id, current_user.user_id, client_id, since
-    )
+    return await sync_service.pull_changes(db, family_id, current_user.user_id, client_id, since)

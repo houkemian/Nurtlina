@@ -10,14 +10,14 @@ from app.models.sync import SyncCursor
 from app.models.user import User
 
 __all__ = [
-    "User",
-    "Family",
-    "FamilyMember",
     "Baby",
     "Bottle",
-    "FeedLog",
     "DiaperLog",
-    "SleepLog",
     "Entitlement",
+    "Family",
+    "FamilyMember",
+    "FeedLog",
+    "SleepLog",
     "SyncCursor",
+    "User",
 ]

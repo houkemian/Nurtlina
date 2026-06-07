@@ -1,13 +1,12 @@
 """Account and data deletion service (GDPR / Google Play Data Safety)."""
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.clock import utcnow
 from app.models.baby import Baby
 from app.models.bottle import Bottle
 from app.models.diaper_log import DiaperLog
-from app.models.entitlement import Entitlement
 from app.models.family import Family, FamilyMember
 from app.models.feed_log import FeedLog
 from app.models.sleep_log import SleepLog

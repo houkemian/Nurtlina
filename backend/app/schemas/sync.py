@@ -1,4 +1,4 @@
-"""Schemas for the sync push/pull API (section 17.7.3–17.7.4)."""
+"""Schemas for the sync push/pull API (section 17.7.3-17.7.4)."""
 
 import datetime
 from decimal import Decimal
@@ -7,8 +7,8 @@ from pydantic import Field
 
 from app.schemas.common import ApiModel
 
-
 # ─── Generic push envelope ────────────────────────────────────────────────────
+
 
 class SyncPushResponse(ApiModel):
     server_time: datetime.datetime
@@ -18,6 +18,7 @@ class SyncPushResponse(ApiModel):
 
 
 # ─── Pull response ────────────────────────────────────────────────────────────
+
 
 class SyncPullResponse(ApiModel):
     server_time: datetime.datetime
@@ -31,6 +32,7 @@ class SyncPullResponse(ApiModel):
 
 
 # ─── Change payload schemas ───────────────────────────────────────────────────
+
 
 class BabyChange(ApiModel):
     id: str
@@ -114,6 +116,7 @@ class SleepLogChange(ApiModel):
 
 
 # ─── Push request envelopes ───────────────────────────────────────────────────
+
 
 class BabySyncRequest(ApiModel):
     family_id: str
