@@ -7,8 +7,8 @@ import com.nurtlina.app.BuildConfig
 import com.nurtlina.app.data.remote.api.AuthTokenInterceptor
 import com.nurtlina.app.data.remote.api.BackendApiService
 import com.nurtlina.app.data.repository.ApiBackendRepository
+import com.nurtlina.app.data.repository.ApiSyncRepository
 import com.nurtlina.app.data.repository.FirebaseAuthRepository
-import com.nurtlina.app.data.repository.FirebaseSyncRepository
 import com.nurtlina.app.domain.repository.AuthRepository
 import com.nurtlina.app.domain.repository.BackendRepository
 import com.nurtlina.app.domain.repository.SyncRepository
@@ -71,7 +71,7 @@ abstract class RemoteBindingModule {
 
     @Binds
     @Singleton
-    abstract fun bindSyncRepository(impl: FirebaseSyncRepository): SyncRepository
+    abstract fun bindSyncRepository(impl: ApiSyncRepository): SyncRepository
 
     @Binds
     @Singleton

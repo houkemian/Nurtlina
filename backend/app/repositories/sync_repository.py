@@ -1,7 +1,6 @@
 """Low-level data access for sync operations (upsert with conflict guard)."""
 
 import datetime
-from typing import TypeVar
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,14 +23,57 @@ BOTTLE_STATUS_PRIORITY: dict[str, int] = {
     "NOT_STARTED": 1,
 }
 
-T = TypeVar("T", Baby, Bottle, FeedLog, DiaperLog, SleepLog)
+def _payload_family_matches(data: dict, family_id: str) -> bool:
+    return data.get("family_id") == family_id
+
+
+def _belongs_to_family(record: object | None, family_id: str) -> bool:
+    return record is not None and getattr(record, "family_id", None) == family_id
+
+
+def _existing_can_be_updated(existing: object | None, family_id: str) -> bool:
+    return existing is None or _belongs_to_family(existing, family_id)
+
+
+async def _baby_belongs_to_family(db: AsyncSession, baby_id: str, family_id: str) -> bool:
+    baby = await db.get(Baby, baby_id)
+    return _belongs_to_family(baby, family_id)
+
+
+async def _bottle_belongs_to_family(db: AsyncSession, bottle_id: str, family_id: str) -> bool:
+    bottle = await db.get(Bottle, bottle_id)
+    return _belongs_to_family(bottle, family_id)
+
+
+async def _child_record_is_owned(
+    db: AsyncSession,
+    data: dict,
+    family_id: str,
+    existing: object | None,
+) -> bool:
+    if not _payload_family_matches(data, family_id):
+        return False
+    if not _existing_can_be_updated(existing, family_id):
+        return False
+    if not await _baby_belongs_to_family(db, data["baby_id"], family_id):
+        return False
+    bottle_id = data.get("bottle_id")
+    if bottle_id is None:
+        return True
+    return await _bottle_belongs_to_family(db, bottle_id, family_id)
 
 
 async def upsert_baby(db: AsyncSession, data: dict, family_id: str) -> tuple[str, str]:
     """Returns (record_id, outcome) where outcome is 'accepted'|'rejected'|'conflict'."""
+    if not _payload_family_matches(data, family_id):
+        return data["id"], "rejected"
+
     existing = await db.get(Baby, data["id"])
+    if not _existing_can_be_updated(existing, family_id):
+        return data["id"], "rejected"
+
     if existing is None:
-        db.add(Baby(**data, family_id=family_id))
+        db.add(Baby(**data))
         await db.flush()
         return data["id"], "accepted"
     if data["updated_at"] >= existing.updated_at:
@@ -44,8 +86,11 @@ async def upsert_baby(db: AsyncSession, data: dict, family_id: str) -> tuple[str
 
 async def upsert_bottle(db: AsyncSession, data: dict, family_id: str) -> tuple[str, str]:
     existing = await db.get(Bottle, data["id"])
+    if not await _child_record_is_owned(db, data, family_id, existing):
+        return data["id"], "rejected"
+
     if existing is None:
-        db.add(Bottle(**data, family_id=family_id))
+        db.add(Bottle(**data))
         await db.flush()
         return data["id"], "accepted"
 
@@ -71,8 +116,11 @@ async def upsert_bottle(db: AsyncSession, data: dict, family_id: str) -> tuple[s
 
 async def upsert_feed_log(db: AsyncSession, data: dict, family_id: str) -> tuple[str, str]:
     existing = await db.get(FeedLog, data["id"])
+    if not await _child_record_is_owned(db, data, family_id, existing):
+        return data["id"], "rejected"
+
     if existing is None:
-        db.add(FeedLog(**data, family_id=family_id))
+        db.add(FeedLog(**data))
         await db.flush()
         return data["id"], "accepted"
     if data["updated_at"] >= existing.updated_at:
@@ -85,8 +133,11 @@ async def upsert_feed_log(db: AsyncSession, data: dict, family_id: str) -> tuple
 
 async def upsert_diaper_log(db: AsyncSession, data: dict, family_id: str) -> tuple[str, str]:
     existing = await db.get(DiaperLog, data["id"])
+    if not await _child_record_is_owned(db, data, family_id, existing):
+        return data["id"], "rejected"
+
     if existing is None:
-        db.add(DiaperLog(**data, family_id=family_id))
+        db.add(DiaperLog(**data))
         await db.flush()
         return data["id"], "accepted"
     if data["updated_at"] >= existing.updated_at:
@@ -99,8 +150,11 @@ async def upsert_diaper_log(db: AsyncSession, data: dict, family_id: str) -> tup
 
 async def upsert_sleep_log(db: AsyncSession, data: dict, family_id: str) -> tuple[str, str]:
     existing = await db.get(SleepLog, data["id"])
+    if not await _child_record_is_owned(db, data, family_id, existing):
+        return data["id"], "rejected"
+
     if existing is None:
-        db.add(SleepLog(**data, family_id=family_id))
+        db.add(SleepLog(**data))
         await db.flush()
         return data["id"], "accepted"
     if data["updated_at"] >= existing.updated_at:

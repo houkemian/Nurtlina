@@ -8,17 +8,17 @@
 
 当前项目已经超过纯原型阶段，具备一个可继续推进的 Android 本地优先应用骨架，并且后端不是空壳：
 
-- Android 端已经有 Room 本地数据、瓶子/喂养/尿布/睡眠记录、通知、WorkManager 同步队列、Firebase Auth、Firestore 同步仓库、FastAPI API 客户端。
+- Android 端已经有 Room 本地数据、瓶子/喂养/尿布/睡眠记录、通知、WorkManager 同步队列、Firebase Auth、FastAPI API 客户端，以及 FastAPI/Postgres 主同步仓库。
 - 后端已经有 FastAPI + PostgreSQL + Alembic 初始 schema、Firebase ID token 验证、用户/默认家庭初始化、同步 push/pull、Google Play entitlement 基础校验、账号软删除、导出接口占位。
 - Firebase 侧已有 Firestore rules、Functions scaffold、Firebase 配置文件。
 
 但当前状态仍应判断为 **MVP 后端集成中期，而不是可发布的后端闭环**。最大的架构问题是 **后端通道并存且职责未收敛**：
 
 - Android 的后台队列 `SyncQueueProcessor` 会通过 FastAPI 推送本地变更。
-- Android 的 `SyncRepository` 绑定仍是 `FirebaseSyncRepository`，设置页/登录页手动同步会走 Firestore 直连。
+- Android 的 `SyncRepository` 绑定已切换为 `ApiSyncRepository`，设置页/登录页手动同步会 flush FastAPI 队列并通过 `/sync/changes` 拉取后端变更。
 - FastAPI 后端也有自己的 PostgreSQL 数据模型与同步接口。
 
-这意味着当前项目同时存在 Firestore 直连同步和 FastAPI/Postgres 同步，容易出现数据分裂、冲突策略不一致、权限模型不一致、测试覆盖重复但不闭环的问题。后续需要尽快确定后端主路径。
+这意味着项目已经开始收敛到 FastAPI/Postgres-first，但仍需清理或冻结旧 Firestore 同步实现，避免后续误用造成数据分裂、冲突策略不一致、权限模型不一致、测试覆盖重复但不闭环的问题。
 
 推荐方向：**MVP 选择一种主同步后端并删减另一条路径的产品依赖**。
 
@@ -98,12 +98,19 @@
 
 ## 3. 主要风险与缺口
 
-### P0：后端同步路径不统一
+### P0：后端同步路径不统一（已开始收敛）
 
-当前存在两条同步路径：
+此前存在两条同步路径：
 
 - Firestore 直连：`FirebaseSyncRepository`
 - FastAPI/Postgres：`SyncQueueProcessor` + `BackendApiService`
+
+当前已选择 FastAPI/Postgres-first：
+
+- `SyncRepository` 绑定已由 `FirebaseSyncRepository` 替换为 `ApiSyncRepository`。
+- `ApiSyncRepository.syncAll()` 会先 flush 本地 sync queue，再调用 FastAPI `/api/v1/sync/changes` 拉取远端变更并合并到 Room。
+- `SyncWorker` 与 `WorkManagerSyncManager.syncNow()` 已改为委托 `SyncRepository`，后台同步、手动同步和登录后同步使用同一主通道。
+- `FirebaseSyncRepository` 旧实现仍存在于代码中，但不再作为产品同步路径绑定。
 
 风险：
 
@@ -113,33 +120,32 @@
 - 两边权限/数据模型不完全一致。
 - 用户删除、导出、恢复、权益校验无法形成单一可信源。
 
-建议：
+剩余建议：
 
-- 立即选定一个 MVP 主后端。
-- 若选 FastAPI/Postgres：新增 `ApiSyncRepository` 替换 `FirebaseSyncRepository` 绑定，Android 端所有 sync 操作统一走 FastAPI。
-- 若选 Firebase-first：移除或冻结 FastAPI 同步队列，避免发布时存在两套写入路径。
+- 删除或显式标注冻结 `FirebaseSyncRepository`，避免未来误绑定。
+- 继续修复下方 FastAPI family ownership 校验和 pull cursor 稳定性问题。
 
-### P0：FastAPI 同步入库缺少部分归属校验
+### P0：FastAPI 同步入库缺少部分归属校验（已修复）
 
-FastAPI push 入口会校验当前用户是 `family_id` 的成员，但 upsert 时还需要加强：
+FastAPI push 入口会校验当前用户是 `family_id` 的成员。现已在 sync repository 入库前补齐记录级归属校验：
 
-- incoming record 的 `family_id` 必须等于 request envelope 的 `family_id`，不能被 payload 混淆。
+- incoming record 的 `family_id` 必须等于 request envelope 的 `family_id`，不再由 service 层覆盖 payload family。
 - bottle/feed/diaper/sleep 的 `baby_id` 必须属于同一个 family。
 - feed_log 的 `bottle_id` 如果存在，也必须属于同一个 family。
-- 已存在记录如果 ID 属于其他 family，应拒绝，而不是仅按主键取出后更新。
-- 删除型变更需要明确是软删除，不能造成其他用户数据被硬删或覆盖。
+- 已存在记录如果 ID 属于其他 family，会返回 `rejected`，不会按主键取出后更新。
+- 删除型变更通过 `deleted_at` tombstone 软删除合并，不会硬删或覆盖其他 family 数据。
 
-这是数据隔离和安全规则层面的核心问题，必须在发布前修复并测试。
+新增 `test_sync_ownership.py` 覆盖 payload family mismatch、跨 family existing record、child baby/bottle 归属校验和软删除合并。
 
-### P0：Android 手动同步和后台同步语义不一致
+### P0：Android 手动同步和后台同步语义不一致（已修复）
 
-设置页/登录页通过 `SyncRepository.syncAll()` 走 Firestore；业务 repository 写入后通过 `SyncManager.requestSyncSoon()` 走 WorkManager/FastAPI 队列。这会导致用户点击“同步”时不一定同步队列里的 FastAPI 变更。
+设置页/登录页和 WorkManager 后台同步已统一到 `ApiSyncRepository.syncAll()`。该入口会 flush 本地 FastAPI sync queue，并执行 `/api/v1/sync/changes` pull。
 
-建议：
+当前状态：
 
-- 将 `SyncRepository` 与 `SyncManager` 收敛到同一后端通道。
-- 手动同步必须 flush 同步队列，并执行 pull。
-- UI 展示的 sync state 必须来自主同步通道。
+- `SyncRepository` 与 `SyncManager` 已收敛到 FastAPI/Postgres 主通道。
+- 手动同步会 flush 同步队列并执行 pull。
+- UI 展示的 sync state 来自 `ApiSyncRepository.observeSyncState()`。
 
 ### P1：FastAPI pull 分页游标不够稳
 
@@ -309,14 +315,14 @@ PRD/架构要求 Remote Config 只用于非安全 UI、paywall、rollout 设置�
 
 如果选择 FastAPI/Postgres-first：
 
-1. 新增 `ApiSyncRepository`，替换 `FirebaseSyncRepository` 绑定。
-2. `SyncQueueProcessor.syncNow()` 支持：
+1. 已新增 `ApiSyncRepository`，并替换 `FirebaseSyncRepository` 绑定。
+2. 已通过 `ApiSyncRepository.syncAll()` 支持：
    - push 队列
    - pull changes
    - 本地 merge
    - 删除 tombstone merge
    - cursor 持久化
-3. FastAPI upsert 增加 family ownership 校验：
+3. 已为 FastAPI upsert 增加 family ownership 校验：
    - existing record family 校验
    - baby belongs to family
    - optional bottle belongs to family

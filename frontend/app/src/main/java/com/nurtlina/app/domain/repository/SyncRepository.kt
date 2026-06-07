@@ -4,7 +4,7 @@ import com.nurtlina.app.domain.model.SyncState
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Orchestrates upload and download of local records to/from Firestore.
+ * Orchestrates upload and download of local records through the backend sync API.
  *
  * Rules:
  * - Sync must never block bottle timer creation, state changes, or notifications.
@@ -18,8 +18,8 @@ interface SyncRepository {
     fun observeSyncState(): Flow<SyncState>
 
     /**
-     * Pushes all local records modified since [since] to Firestore and pulls
-     * remote changes. Returns success or a wrapped exception on failure.
+     * Flushes queued local records to the backend and pulls remote changes.
+     * Returns success or a wrapped exception on failure.
      * Should be called by [SyncWorker] rather than directly from the UI.
      */
     suspend fun syncAll(): Result<Unit>

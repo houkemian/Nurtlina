@@ -10,6 +10,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.nurtlina.app.domain.repository.SyncRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.util.concurrent.TimeUnit
@@ -30,11 +31,11 @@ import java.util.concurrent.TimeUnit
 class SyncWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted params: WorkerParameters,
-    private val syncQueueProcessor: SyncQueueProcessor,
+    private val syncRepository: SyncRepository,
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
-        val syncResult = syncQueueProcessor.syncNow()
+        val syncResult = syncRepository.syncAll()
         return if (syncResult.isSuccess) {
             Result.success()
         } else {

@@ -47,18 +47,12 @@ from app.schemas.sync import (
 _PAGE_LIMIT = 500
 
 
-def _ensure_family_id(data: dict, family_id: str) -> dict:
-    data["family_id"] = family_id
-    return data
-
-
 async def push_babies(db: AsyncSession, req: BabySyncRequest, user_id: str) -> SyncPushResponse:
     await _assert_family_access(db, req.family_id, user_id)
     now = utcnow()
     accepted, rejected, conflicts = [], [], []
     for change in req.changes:
         row = change.model_dump()
-        row["family_id"] = req.family_id
         _normalise_timestamps(row)
         record_id, outcome = await upsert_baby(db, row, req.family_id)
         _bucket(record_id, outcome, accepted, rejected, conflicts)
@@ -74,7 +68,6 @@ async def push_bottles(db: AsyncSession, req: BottleSyncRequest, user_id: str) -
     accepted, rejected, conflicts = [], [], []
     for change in req.changes:
         row = change.model_dump()
-        row["family_id"] = req.family_id
         _normalise_timestamps(row)
         record_id, outcome = await upsert_bottle(db, row, req.family_id)
         _bucket(record_id, outcome, accepted, rejected, conflicts)
@@ -92,7 +85,6 @@ async def push_feed_logs(
     accepted, rejected, conflicts = [], [], []
     for change in req.changes:
         row = change.model_dump()
-        row["family_id"] = req.family_id
         _normalise_timestamps(row)
         record_id, outcome = await upsert_feed_log(db, row, req.family_id)
         _bucket(record_id, outcome, accepted, rejected, conflicts)
@@ -110,7 +102,6 @@ async def push_diaper_logs(
     accepted, rejected, conflicts = [], [], []
     for change in req.changes:
         row = change.model_dump()
-        row["family_id"] = req.family_id
         _normalise_timestamps(row)
         record_id, outcome = await upsert_diaper_log(db, row, req.family_id)
         _bucket(record_id, outcome, accepted, rejected, conflicts)
@@ -128,7 +119,6 @@ async def push_sleep_logs(
     accepted, rejected, conflicts = [], [], []
     for change in req.changes:
         row = change.model_dump()
-        row["family_id"] = req.family_id
         _normalise_timestamps(row)
         record_id, outcome = await upsert_sleep_log(db, row, req.family_id)
         _bucket(record_id, outcome, accepted, rejected, conflicts)

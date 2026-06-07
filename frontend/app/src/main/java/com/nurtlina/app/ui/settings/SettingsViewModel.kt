@@ -133,7 +133,7 @@ class SettingsViewModel @Inject constructor(
 
     // ── Sync / backup actions ──────────────────────────────────────────────────
 
-    /** Immediately triggers an incremental sync push/pull via WorkManager one-time request. */
+    /** Immediately triggers an incremental sync push/pull through the backend sync API. */
     fun triggerSync() {
         viewModelScope.launch {
             syncRepository.syncAll()

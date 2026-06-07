@@ -7,13 +7,14 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.nurtlina.app.domain.model.SyncResult
 import com.nurtlina.app.domain.repository.SyncManager
+import com.nurtlina.app.domain.repository.SyncRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class WorkManagerSyncManager @Inject constructor(
     private val workManager: WorkManager,
-    private val syncQueueProcessor: SyncQueueProcessor,
+    private val syncRepository: SyncRepository,
 ) : SyncManager {
 
     override fun requestSyncSoon() {
@@ -32,5 +33,10 @@ class WorkManagerSyncManager @Inject constructor(
         )
     }
 
-    override suspend fun syncNow(): SyncResult = syncQueueProcessor.syncNow()
+    override suspend fun syncNow(): SyncResult =
+        if (syncRepository.syncAll().isSuccess) {
+            SyncResult(syncedCount = 0, failedCount = 0)
+        } else {
+            SyncResult(syncedCount = 0, failedCount = 1)
+        }
 }
