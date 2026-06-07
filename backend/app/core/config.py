@@ -1,5 +1,7 @@
+from typing import Annotated
+
 from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -31,7 +33,7 @@ class Settings(BaseSettings):
     gcs_export_expiry_seconds: int = 3600
 
     # ── CORS ─────────────────────────────────────────────────────────────────
-    allowed_origins: list[str] = ["*"]
+    allowed_origins: Annotated[list[str], NoDecode] = ["*"]
 
     @field_validator("allowed_origins", mode="before")
     @classmethod
