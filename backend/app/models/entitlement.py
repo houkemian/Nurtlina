@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -16,7 +16,10 @@ class Entitlement(Base):
     """
 
     __tablename__ = "entitlements"
-    __table_args__ = (Index("idx_entitlements_user", "user_id"),)
+    __table_args__ = (
+        Index("idx_entitlements_user", "user_id"),
+        UniqueConstraint("purchase_token_hash", name="uq_entitlements_purchase_token_hash"),
+    )
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
     user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False)

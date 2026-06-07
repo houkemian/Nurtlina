@@ -1,10 +1,17 @@
-from fastapi import APIRouter, Depends
+import base64
+import json
+
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.core.security import CurrentUser
 from app.db.session import get_db
-from app.schemas.billing import EntitlementResponse, GooglePlayPurchaseRequest
+from app.schemas.billing import (
+    EntitlementResponse,
+    GooglePlayPurchaseRequest,
+    GooglePlayRtdnMessage,
+)
 from app.services import billing_service
 
 router = APIRouter(tags=["Billing"])
@@ -34,10 +41,34 @@ async def get_entitlement(
 
 @router.post("/webhooks/google-play/rtdn", status_code=204)
 async def rtdn_webhook(
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> None:
-    """
-    Google Play Real-Time Developer Notifications (Pub/Sub push).
-    V1.1: verify Pub/Sub JWT, decode message, update entitlement.
-    MVP: endpoint exists and returns 204 to avoid Pub/Sub retry storms.
-    """
+    """Process Google Play Real-Time Developer Notifications from Pub/Sub push."""
+    body = await request.json()
+    encoded = body.get("message", {}).get("data")
+    if not encoded:
+        return
+    decoded = json.loads(base64.b64decode(encoded).decode())
+    message = _rtdn_to_message(decoded)
+    if message is None:
+        return
+    await billing_service.process_google_play_rtdn(db, message)
+
+
+def _rtdn_to_message(decoded: dict) -> GooglePlayRtdnMessage | None:
+    package_name = decoded.get("packageName")
+    event_time = decoded.get("eventTimeMillis")
+    notification = decoded.get("subscriptionNotification") or decoded.get(
+        "oneTimeProductNotification"
+    )
+    if not notification:
+        return None
+    return GooglePlayRtdnMessage(
+        package_name=package_name,
+        product_id=notification.get("subscriptionId") or notification.get("sku"),
+        purchase_token=notification["purchaseToken"],
+        event_time_millis=event_time,
+        notification_type=notification.get("notificationType"),
+        raw=decoded,
+    )

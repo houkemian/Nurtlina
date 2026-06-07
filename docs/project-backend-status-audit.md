@@ -70,7 +70,7 @@
 - `/api/v1/billing/google-play/purchases` 有 Google Play purchase token 验证框架。
 - `/api/v1/entitlements/me` 可返回当前 Pro 状态。
 - `/api/v1/account/delete` 可软删除用户及其默认家庭数据。
-- `/api/v1/exports` 接口存在，但当前为 stub。
+- `/api/v1/exports` 已支持即时 CSV/JSON 导出，返回短期 data URL。
 
 ### 2.3 Firebase 基础
 
@@ -95,33 +95,31 @@
 
 ## 3. 主要风险与缺口
 
-### P0 复评：后端同步路径不统一（已降级为 P1）
+### P0 复评：后端同步路径不统一（已关闭）
 
 原判断：此前存在两条同步路径：
 
 - Firestore 直连：`FirebaseSyncRepository`
 - FastAPI/Postgres：`SyncQueueProcessor` + `BackendApiService`
 
-复评结论：**主同步路径已收敛到 FastAPI/Postgres-first，原 P0 风险不再成立；剩余为 P1 维护风险。**
+复评结论：**主同步路径已收敛到 FastAPI/Postgres-first，原 P0 风险已关闭。**
 
 代码证据：
 
 - `SyncRepository` 绑定已由 `FirebaseSyncRepository` 替换为 `ApiSyncRepository`。
 - `ApiSyncRepository.syncAll()` 会先 flush 本地 sync queue，再调用 FastAPI `/api/v1/sync/changes` 拉取远端变更并合并到 Room。
 - `SyncWorker` 与 `WorkManagerSyncManager.syncNow()` 已改为委托 `SyncRepository`，后台同步、手动同步和登录后同步使用同一主通道。
-- `FirebaseSyncRepository` 旧实现仍存在于代码中，但不再作为产品同步路径绑定。
+- `FirebaseSyncRepository` 旧实现已删除，产品同步路径只保留 `ApiSyncRepository` 绑定。
 
 剩余风险：
 
-- `FirebaseSyncRepository` 旧实现仍在仓库中，未来改 DI 或重构时有误绑定风险。
-- Firestore DTO/rules 仍存在，容易让后续开发误以为 Firestore 仍是业务同步数据库。
-- 文档和注释需要统一描述 FastAPI/Postgres-first，避免团队认知分叉。
+- Firestore DTO/rules 仍存在，但不再承担 baby care 业务同步。
+- 后续如果重新启用 Firestore 业务数据，需要重新评估安全规则和 emulator tests。
 
 后续建议：
 
-- 删除或显式标注冻结 `FirebaseSyncRepository`，避免未来误绑定。
-- 在 ADR 中记录 FastAPI/Postgres 为同步 source of truth，Firebase 仅保留 Auth/Analytics/Crashlytics/Remote Config 等职责。
-- 将旧 Firestore 同步实现移入 deprecated 包或移除绑定测试之外的产品依赖。
+- ADR 已记录 FastAPI/Postgres 为同步 source of truth。
+- Firebase 保留 Auth/Analytics/Crashlytics/Remote Config 等非 baby care 业务同步职责。
 
 ### P0 复评：FastAPI 同步入库缺少部分归属校验（已关闭）
 
@@ -164,103 +162,86 @@
 - 为 `ApiSyncRepository.syncAll()` 增加 Android 单元测试，覆盖 push 失败时不推进 pull cursor、pull 成功时写入 Room、删除 tombstone 合并。
 - `WorkManagerSyncManager.syncNow()` 当前只返回成功/失败计数，后续可透传实际 push/pull 数量和错误类型，便于设置页展示。
 
-### P1：FastAPI pull 分页游标不够稳
+### P1 复评：FastAPI pull 分页游标不够稳（已解决）
 
-当前 `/sync/changes` 对每个实体按 `updated_at > since` 拉取，超过 500 条时返回 `next_cursor = max(updated_at)`。
+原问题：`/sync/changes` 使用 timestamp-only 分页，超过 500 条时可能因同一 `updated_at` 时间戳漏数据。
 
-风险：
+当前处理：
 
-- 多实体共用一个 timestamp cursor，可能在大量同时间戳记录时漏数据。
-- 没有稳定 tie-breaker，例如 `(updated_at, id)`。
-- next cursor 不是按实体独立推进，客户端实现复杂后容易丢记录。
+- 后端 pull repository 查询已统一按 `(updated_at, id)` 稳定排序。
+- `/sync/changes` 已取消 timestamp-only 分页，MVP 阶段返回请求 cursor 后的完整变更集。
+- `has_more` 固定为 `false`，`next_cursor` 固定为 `null`，避免客户端用不完整 timestamp cursor 继续分页造成漏记录。
 
-建议：
+后续如数据量增长，应引入 per-entity cursor 或统一 change log，而不是恢复 timestamp-only 分页。
 
-- 为每类实体使用独立 cursor，或统一变更日志表。
-- cursor 使用 `(updatedAt, id)` 或服务端生成 sequence。
-- pull response 返回每类实体的 next cursor。
-- 添加同时间戳、大批量分页、跨实体分页测试。
+### P1 复评：Google Play entitlement 生产闭环（已补齐 MVP 闭环）
 
-### P1：Google Play entitlement 仍未形成生产闭环
+当前处理：
 
-已有 purchase token 验证和 entitlement 保存，但仍缺：
+- `purchase_token_hash` 已增加唯一约束和 Alembic 迁移，防止同一 purchase token 绑定多个账号。
+- `verify_and_save_purchase()` 会检测 token hash 是否已属于其他 user，冲突时拒绝绑定。
+- Google Play RTDN endpoint 已解码 Pub/Sub push message，并按既有 purchase token hash 更新 entitlement。
+- RTDN 仅更新已通过客户端 purchase submit 链接过的 token，未知 token 会忽略，避免无 user 归属的远端消息创建错误 entitlement。
+- Android 本地 entitlement cache 仍作为缓存，服务端 entitlement 状态是恢复和校验依据。
 
-- RTDN Pub/Sub push JWT 验证。
-- RTDN message 解码与订阅状态更新。
-- purchase token 和 user 绑定策略。
-- 恢复购买、过期、退款、取消、宽限期、暂停、重新订阅等状态测试。
-- Google Play service account 权限与部署 secret 文档。
-- 防止一个 purchase token 被多个账号重复绑定的约束。
+剩余发布前操作项：在部署入口或 Pub/Sub 配置层限制 RTDN push 来源和 audience；该要求已写入 `docs/backend-deployment-runbook.md`。
 
-建议：
+### P1 复评：导出功能是 stub（已解决）
 
-- 增加 `purchase_token_hash` 唯一约束或按产品策略设计转移流程。
-- 完成 RTDN 处理后，entitlements 以服务端状态为准。
-- Android 端本地 entitlement cache 只能作为短期缓存。
+当前处理：
 
-### P1：导出功能是 stub
+- `/api/v1/exports` 已从 stub 改为即时生成导出。
+- 支持 `CSV` 和 `JSON`。
+- 导出会校验当前用户是请求 family 的成员。
+- 导出数据按 family 范围读取 Baby、Bottle、FeedLog、DiaperLog、SleepLog，排除 soft-deleted 记录。
+- MVP 不持久化导出文件，接口返回短期 `data:` URL 和 `DONE` 状态。
 
-`/exports` 当前只返回 `PENDING`，查询会返回未实现。
+后续如需要大文件或邮件链接，再扩展为异步任务 + GCS signed URL。
 
-对 Pro tier 来说，Export 是承诺功能之一。若 MVP 宣传 Pro 包含导出，则发布前必须补齐；否则需要在产品文案中暂不承诺。
+### P1 复评：账号删除只是后端软删除（已补齐 MVP 闭环）
 
-建议：
+当前处理：
 
-- 明确 MVP 是否包含导出。
-- 如包含：实现 CSV/JSON 导出、GCS signed URL、过期时间、权限校验、异步任务状态。
-- 如不包含：Paywall/设置页不要展示“Export”作为已可用功能。
+- 删除范围从默认 family 扩展为用户拥有的所有 family。
+- owner 删除会 soft-delete family 下 baby care records 和 memberships。
+- 非 owner membership 会标记为 `REMOVED`。
+- 用户 PII 字段会匿名化，`default_family_id` 清空。
+- sync cursors 会清理，entitlements 会标记为 `CANCELED`。
+- Firebase Auth refresh tokens revoke 和 Firebase user delete 已作为 best-effort cleanup 集成；失败会记录日志但不阻断 Postgres 数据删除。
 
-### P1：账号删除只是后端软删除，Firebase Auth 与外部数据清理未闭环
+Firestore 业务同步路径已不再作为 source of truth；若未来仍保留 Firestore 业务数据，需要另加 Firestore cleanup job。
 
-当前后端会软删除默认家庭数据并匿名化用户 email/display_name，但仍需补齐：
+### P1 复评：Firestore rules 仍偏宽（已降级）
 
-- Firebase Auth 用户删除或 token revoke 的服务端/客户端责任边界。
-- Firestore 数据如果仍被使用，删除路径需要同步清理 Firestore。
-- GCS export 文件、support messages、analytics user deletion request 的处理。
-- 删除请求审计日志或状态表。
-- 非默认家庭、多家庭、未来 caregiver 共享场景的删除策略。
+当前处理：
 
-### P1：Firestore rules 仍偏宽，需要发布前加固
+- MVP 已采用 FastAPI/Postgres-first，Firestore 不再作为 Baby、Bottle、FeedLog、DiaperLog、SleepLog 的业务同步 source of truth。
+- 旧 `FirebaseSyncRepository` 已删除，降低误绑定 Firestore 业务同步的风险。
+- `docs/adr-backend-sync-source-of-truth.md` 已明确 Firebase 仅保留 Auth/Analytics/Crashlytics/Remote Config 等职责。
 
-当前 rules 已有基础 family member 校验，但存在加固空间：
+因此 Firestore rules 加固不再是当前 P1 发布阻塞项。若未来重新启用 Firestore 业务数据，必须重新评估 rules 并添加 emulator security tests。
 
-- `families/{familyId}` update 未限制字段，成员可能修改 ownerUserId 等关键字段。
-- `members/{memberId}` write 由 owner 执行，但 memberId 与 userId 关系未强约束。
-- sync record schema 只检查基础 metadata，不检查 `familyId == familyId` 路径参数。
-- `ownerUserId == request.auth.uid` 会影响未来 caregiver 代录入场景，需要明确 ownerUserId 与 lastModifiedBy 的语义。
-- delete 允许 family member 直接 hard delete 记录，和 local-first soft delete 设计不一致。
+### P1 复评：缺少后端部署与运行闭环验证（已解决为文档闭环）
 
-如果 Firebase 只保留 Auth，不继续作为主数据库，这些规则优先级可下降；如果 Firebase-first，则这些是发布前必修。
+当前处理：
 
-### P1：缺少后端部署与运行闭环验证
+- 已新增 `docs/backend-deployment-runbook.md`。
+- Runbook 覆盖 runtime services、required secrets、service account 权限、migration、health check、rollback、backup/restore、observability、local verification。
+- 明确生产 `ALLOWED_ORIGINS` 不应使用 `*`。
+- 明确 RTDN push 来源/audience 应在部署入口或 Pub/Sub 配置层限制。
 
-后端 README 有 Cloud Run 部署示例，但还缺生产运行所需清单：
+### P1 复评：后端测试环境未隔离生产配置（已解决）
 
-- Cloud SQL / Postgres 建库、连接池、迁移执行方式。
-- Secret Manager 条目完整列表。
-- Firebase service account 最小权限。
-- Google Play service account 最小权限。
-- CORS 在生产环境不能使用 `"*"`。
-- 日志结构、错误告警、健康检查、数据库连接检查。
-- 备份恢复、迁移回滚、schema 兼容策略。
+当前处理：
 
-### P1：后端测试环境未隔离生产配置
+- 已新增 `backend/app/tests/conftest.py`，为测试注入 dummy DB/Firebase/Google Play 配置。
+- `uv run pytest` 不再需要真实生产 secret 即可 import FastAPI app 并运行测试。
 
-本次执行 `uv run pytest` 时，测试在 collection 阶段失败。原因是 `app.core.config.Settings` 在导入 `app.main` 时强制要求以下环境变量：
+验证结果：
 
-- `database_url`
-- `database_sync_url`
-- `firebase_project_id`
-- `firebase_service_account_path`
-
-这说明当前测试环境还没有独立的默认配置或 fixture。即使纯路由/health 测试，也会被生产配置阻断。
-
-建议：
-
-- 增加 `.env.test` 或 pytest fixture，为测试提供 dummy settings。
-- 将 Firebase Admin 初始化延迟到真正验证 token 时，避免 import app 时强依赖真实 service account。
-- 为无需数据库的单元测试避免导入完整 FastAPI app。
-- 增加 CI 命令文档，明确本地和 CI 运行测试需要的环境变量。
+- `uv run pytest`：33 passed。
+- `uv run ruff check app`：passed。
+- `uv run ruff format --check app`：passed。
 
 ### P2：远程配置职责未落地
 
@@ -291,27 +272,26 @@ PRD/架构要求 Remote Config 只用于非安全 UI、paywall、rollout 设置�
 | 用户初始化 | `/me/init` 已有默认 family 创建 | 中 | 幂等与并发测试 |
 | 本地优先 | Android Room + 队列已具备 | 中高 | 验证后端失败不影响所有核心操作 |
 | FastAPI 同步 push | 已实现并补齐记录级归属校验 | 中高 | 增加真实 DB 集成测试与 rejected 可观测性 |
-| FastAPI 同步 pull | 已实现基础版 | 中 | 稳定分页、客户端 merge、删除同步 |
-| Firestore 同步 | 旧实现仍存在但不再绑定主路径 | 低中 | 删除、冻结或标注 deprecated |
+| FastAPI 同步 pull | 已取消不稳定分页并稳定排序 | 中高 | 后续大规模数据再引入 per-entity cursor/change log |
+| Firestore 同步 | 旧业务同步 repository 已删除 | 中高 | 保留 Firebase 非业务同步职责 |
 | 同步路径一致性 | 主路径已收敛到 FastAPI/Postgres | 中高 | 清理旧 Firestore 同步实现并补 ADR |
-| Entitlement 校验 | 已有基础框架 | 中 | RTDN、恢复、退款/过期测试 |
-| 导出 | stub | 低 | 实现或移出 MVP 承诺 |
-| 账号删除 | 后端软删除 | 中 | Firebase/Firestore/GCS/analytics 清理闭环 |
+| Entitlement 校验 | 已补 purchase token 绑定与 RTDN 更新 | 中高 | 部署层限制 RTDN push 来源/audience |
+| 导出 | 已支持即时 CSV/JSON 导出 | 中高 | 大文件场景再接异步任务/GCS |
+| 账号删除 | 已扩展多 family soft delete 与 Firebase Auth best-effort cleanup | 中高 | 若恢复 Firestore 业务数据需补 cleanup job |
 | Remote Config | 依赖存在，边界未落地 | 低 | 定义允许/禁止配置 |
 | 安全规则/RLS | Firestore rules 有基础版；Postgres 靠 API 校验 | 中 | 补跨 family 写入测试 |
-| 测试运行环境 | 当前缺测试配置，pytest collection 会失败 | 低中 | 增加 `.env.test`/fixture/CI 配置 |
-| 部署运维 | README 有示例 | 低中 | Secret、迁移、监控、备份恢复 |
+| 测试运行环境 | 已加测试 dummy env，pytest 可运行 | 高 | CI 恢复时使用同一测试隔离策略 |
+| 部署运维 | 已新增 backend deployment runbook | 中高 | 按目标平台实操演练 |
 
 ## 5. 推荐后续路线
 
-### 阶段 1：架构收敛，先做 3-5 天
+### 阶段 1：架构收敛（已完成主路径选择）
 
-目标：消除双同步通道。
+目标：消除双同步通道。当前已选择 FastAPI/Postgres-first，并已删除旧 Firestore 业务同步 repository。
 
-任务：
+后续任务：
 
-1. 决定 MVP 主后端：Firebase-first 或 FastAPI/Postgres-first。
-2. 画出最终数据流：
+1. 维护最终数据流：
    - 本地 Room 写入
    - sync queue
    - push
@@ -319,14 +299,8 @@ PRD/架构要求 Remote Config 只用于非安全 UI、paywall、rollout 设置�
    - conflict handling
    - entitlement restore
    - account deletion
-3. 更新 DI 绑定和设置页/登录页调用，确保手动同步和后台同步走同一通道。
-4. 删除或标注冻结非主路径代码，避免误用。
-5. 添加架构决策记录：`docs/adr-backend-sync-source-of-truth.md`。
-
-建议默认选择：
-
-- 短期上线优先：Firebase-first。
-- 长期数据可控和后端产品化优先：FastAPI/Postgres-first。
+2. 保持 DI 绑定、设置页、登录页、WorkManager 都走 `ApiSyncRepository`。
+3. 按 `docs/adr-backend-sync-source-of-truth.md` 维护后端职责边界。
 
 ### 阶段 2：FastAPI/Postgres-first 需要补齐的任务
 
@@ -409,24 +383,25 @@ PRD/架构要求 Remote Config 只用于非安全 UI、paywall、rollout 设置�
 
 当前未发现仍处于打开状态的 P0。原三项 P0 中：
 
-- 主同步路径已收敛到 FastAPI/Postgres-first，降级为 P1 清理旧实现。
+- 主同步路径已收敛到 FastAPI/Postgres-first，旧 Firestore 业务同步 repository 已删除。
 - FastAPI upsert 跨 family / baby / bottle 归属校验已补齐，状态关闭。
 - 手动同步、后台同步、启动同步已统一到 `ApiSyncRepository.syncAll()`，状态关闭。
 
 下一步不应再按 P0 阻塞处理这三项，但应在 P1 中继续补旧 Firestore 同步清理、ADR、真实数据库集成测试和 pull cursor 稳定化。
 
-### P1：MVP 发布前处理
+### P1：当前复评结果
 
-- 清理、冻结或标注 deprecated 旧 `FirebaseSyncRepository`/Firestore 业务同步路径。
-- 新增 ADR，明确 FastAPI/Postgres 是同步 source of truth。
-- 为 FastAPI 同步归属校验增加真实数据库集成测试。
-- 增加同步 `rejected` 结果的客户端/后端可观测性。
-- entitlement restore 与 RTDN 闭环。
-- 导出功能实现，或从 Pro/MVP 文案中移除。
-- 账号删除补齐 Firebase/Firestore/GCS/analytics 边界。
-- pull cursor 稳定化。
-- 生产 CORS、secrets、Cloud Run/Cloud SQL 部署清单。
-- Firestore rules 仅在继续保留 Firestore 业务数据时加固；若删除业务同步路径，则同步移除相关产品依赖。
+`3. 主要风险与缺口` 下原 P1 项已完成 MVP 级修复或降级：
+
+- pull cursor 不再使用不稳定 timestamp-only 分页。
+- entitlement 已补 purchase token 唯一绑定和 RTDN 更新入口。
+- 导出已支持即时 CSV/JSON。
+- 账号删除已扩展多 family soft delete 和 Firebase Auth best-effort cleanup。
+- Firestore 业务同步路径已删除旧 repository，并由 ADR 明确降级为非主路径。
+- 后端部署 runbook 已补齐。
+- 后端测试配置已隔离生产 secret，`uv run pytest` 通过。
+
+剩余工作不再按 P1 阻塞，但发布前仍建议做真实环境演练：RTDN push audience 限制、Cloud/服务器部署实操、Google Play sandbox purchase restore、账号删除真机验证。
 
 ### P2：发布后早期迭代
 
@@ -439,11 +414,13 @@ PRD/架构要求 Remote Config 只用于非安全 UI、paywall、rollout 设置�
 
 ## 7. 建议的下一份技术文档
 
-建议新增两份文档：
+已新增：
 
 1. `docs/adr-backend-sync-source-of-truth.md`
-   - 明确选择 Firebase-first 或 FastAPI/Postgres-first。
-   - 写清楚为什么选择、放弃什么、迁移成本、回滚方案。
+   - 明确选择 FastAPI/Postgres-first。
+   - 写清楚 Firebase 保留职责和 Firestore 业务同步降级。
+
+仍建议新增：
 
 2. `docs/sync-contract.md`
    - 定义所有实体 payload。

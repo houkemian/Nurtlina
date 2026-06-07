@@ -32,3 +32,13 @@ def verify_id_token(id_token: str) -> dict:
     """
     _get_app()
     return firebase_auth.verify_id_token(id_token)  # type: ignore[return-value]
+
+
+def revoke_refresh_tokens(firebase_uid: str) -> None:
+    _get_app()
+    firebase_auth.revoke_refresh_tokens(firebase_uid)
+
+
+def delete_user(firebase_uid: str) -> None:
+    _get_app()
+    firebase_auth.delete_user(firebase_uid)

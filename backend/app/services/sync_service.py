@@ -139,35 +139,18 @@ async def pull_changes(
     now = utcnow()
     since_utc = ensure_utc(since)
 
-    babies = await pull_babies(db, family_id, since_utc, _PAGE_LIMIT + 1)
-    bottles = await pull_bottles(db, family_id, since_utc, _PAGE_LIMIT + 1)
-    feed_logs = await pull_feed_logs(db, family_id, since_utc, _PAGE_LIMIT + 1)
-    diaper_logs = await pull_diaper_logs(db, family_id, since_utc, _PAGE_LIMIT + 1)
-    sleep_logs = await pull_sleep_logs(db, family_id, since_utc, _PAGE_LIMIT + 1)
+    # MVP stability choice: return a complete change set for the requested cursor.
+    # The previous timestamp-only pagination could skip records when more than
+    # one page shared the same updated_at value. Until the API exposes a richer
+    # per-entity cursor, do not paginate this endpoint.
+    babies = await pull_babies(db, family_id, since_utc, None)
+    bottles = await pull_bottles(db, family_id, since_utc, None)
+    feed_logs = await pull_feed_logs(db, family_id, since_utc, None)
+    diaper_logs = await pull_diaper_logs(db, family_id, since_utc, None)
+    sleep_logs = await pull_sleep_logs(db, family_id, since_utc, None)
 
-    has_more = (
-        len(babies) > _PAGE_LIMIT
-        or len(bottles) > _PAGE_LIMIT
-        or len(feed_logs) > _PAGE_LIMIT
-        or len(diaper_logs) > _PAGE_LIMIT
-        or len(sleep_logs) > _PAGE_LIMIT
-    )
-    babies = babies[:_PAGE_LIMIT]
-    bottles = bottles[:_PAGE_LIMIT]
-    feed_logs = feed_logs[:_PAGE_LIMIT]
-    diaper_logs = diaper_logs[:_PAGE_LIMIT]
-    sleep_logs = sleep_logs[:_PAGE_LIMIT]
-
+    has_more = False
     next_cursor: datetime.datetime | None = None
-    if has_more:
-        all_updated = (
-            [b.updated_at for b in babies]
-            + [b.updated_at for b in bottles]
-            + [f.updated_at for f in feed_logs]
-            + [d.updated_at for d in diaper_logs]
-            + [s.updated_at for s in sleep_logs]
-        )
-        next_cursor = max(all_updated) if all_updated else None
 
     await _update_cursor_pull(db, user_id, family_id, client_id, now)
 

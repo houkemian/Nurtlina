@@ -23,6 +23,7 @@ BOTTLE_STATUS_PRIORITY: dict[str, int] = {
     "NOT_STARTED": 1,
 }
 
+
 def _payload_family_matches(data: dict, family_id: str) -> bool:
     return data.get("family_id") == family_id
 
@@ -169,62 +170,72 @@ async def upsert_sleep_log(db: AsyncSession, data: dict, family_id: str) -> tupl
 
 
 async def pull_babies(
-    db: AsyncSession, family_id: str, since: datetime.datetime, limit: int = 500
+    db: AsyncSession, family_id: str, since: datetime.datetime, limit: int | None = 500
 ) -> list[Baby]:
-    result = await db.execute(
+    query = (
         select(Baby)
         .where(Baby.family_id == family_id, Baby.updated_at > since)
-        .order_by(Baby.updated_at)
-        .limit(limit)
+        .order_by(Baby.updated_at, Baby.id)
     )
+    if limit is not None:
+        query = query.limit(limit)
+    result = await db.execute(query)
     return list(result.scalars().all())
 
 
 async def pull_bottles(
-    db: AsyncSession, family_id: str, since: datetime.datetime, limit: int = 500
+    db: AsyncSession, family_id: str, since: datetime.datetime, limit: int | None = 500
 ) -> list[Bottle]:
-    result = await db.execute(
+    query = (
         select(Bottle)
         .where(Bottle.family_id == family_id, Bottle.updated_at > since)
-        .order_by(Bottle.updated_at)
-        .limit(limit)
+        .order_by(Bottle.updated_at, Bottle.id)
     )
+    if limit is not None:
+        query = query.limit(limit)
+    result = await db.execute(query)
     return list(result.scalars().all())
 
 
 async def pull_feed_logs(
-    db: AsyncSession, family_id: str, since: datetime.datetime, limit: int = 500
+    db: AsyncSession, family_id: str, since: datetime.datetime, limit: int | None = 500
 ) -> list[FeedLog]:
-    result = await db.execute(
+    query = (
         select(FeedLog)
         .where(FeedLog.family_id == family_id, FeedLog.updated_at > since)
-        .order_by(FeedLog.updated_at)
-        .limit(limit)
+        .order_by(FeedLog.updated_at, FeedLog.id)
     )
+    if limit is not None:
+        query = query.limit(limit)
+    result = await db.execute(query)
     return list(result.scalars().all())
 
 
 async def pull_diaper_logs(
-    db: AsyncSession, family_id: str, since: datetime.datetime, limit: int = 500
+    db: AsyncSession, family_id: str, since: datetime.datetime, limit: int | None = 500
 ) -> list[DiaperLog]:
-    result = await db.execute(
+    query = (
         select(DiaperLog)
         .where(DiaperLog.family_id == family_id, DiaperLog.updated_at > since)
-        .order_by(DiaperLog.updated_at)
-        .limit(limit)
+        .order_by(DiaperLog.updated_at, DiaperLog.id)
     )
+    if limit is not None:
+        query = query.limit(limit)
+    result = await db.execute(query)
     return list(result.scalars().all())
 
 
 async def pull_sleep_logs(
-    db: AsyncSession, family_id: str, since: datetime.datetime, limit: int = 500
+    db: AsyncSession, family_id: str, since: datetime.datetime, limit: int | None = 500
 ) -> list[SleepLog]:
-    result = await db.execute(
+    query = (
         select(SleepLog)
         .where(SleepLog.family_id == family_id, SleepLog.updated_at > since)
-        .order_by(SleepLog.updated_at)
-        .limit(limit)
+        .order_by(SleepLog.updated_at, SleepLog.id)
     )
+    if limit is not None:
+        query = query.limit(limit)
+    result = await db.execute(query)
     return list(result.scalars().all())
 
 

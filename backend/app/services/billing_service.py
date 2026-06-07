@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import repositories as repo
 from app.core.clock import utcnow
-from app.core.errors import BillingError
+from app.core.errors import BillingError, ConflictError
 from app.core.ids import new_id
 from app.integrations.google_play import (
     GooglePlayError,
@@ -14,7 +14,11 @@ from app.integrations.google_play import (
     verify_subscription_purchase,
 )
 from app.models.entitlement import Entitlement
-from app.schemas.billing import EntitlementResponse, GooglePlayPurchaseRequest
+from app.schemas.billing import (
+    EntitlementResponse,
+    GooglePlayPurchaseRequest,
+    GooglePlayRtdnMessage,
+)
 
 # Lifetime product IDs (one-time purchases)
 _LIFETIME_PRODUCT_IDS = {"pro_lifetime"}
@@ -72,11 +76,16 @@ async def verify_and_save_purchase(
     except GooglePlayError as e:
         raise BillingError(str(e)) from e
 
-    existing = await repo.entitlement_repository.get_active_by_user(db, user_id)
+    token_hash = _hash_token(req.purchase_token)
+    existing_token = await repo.entitlement_repository.get_by_purchase_token_hash(db, token_hash)
+    if existing_token and existing_token.user_id != user_id:
+        raise ConflictError("Purchase token is already linked to another account.")
+
+    existing = existing_token or await repo.entitlement_repository.get_latest_by_user(db, user_id)
 
     if existing:
         existing.product_id = req.product_id
-        existing.purchase_token_hash = _hash_token(req.purchase_token)
+        existing.purchase_token_hash = token_hash
         existing.status = status
         existing.plan = _derive_plan(req.product_id)
         existing.expires_at = expires_at
@@ -90,7 +99,7 @@ async def verify_and_save_purchase(
             user_id=user_id,
             source="GOOGLE_PLAY",
             product_id=req.product_id,
-            purchase_token_hash=_hash_token(req.purchase_token),
+            purchase_token_hash=token_hash,
             status=status,
             plan=_derive_plan(req.product_id),
             expires_at=expires_at,
@@ -150,3 +159,50 @@ def _parse_expiry(raw: dict) -> object:
         return datetime.datetime.fromisoformat(expiry_str.replace("Z", "+00:00"))
     except ValueError:
         return None
+
+
+async def process_google_play_rtdn(
+    db: AsyncSession,
+    message: GooglePlayRtdnMessage,
+) -> None:
+    """Process a Google Play RTDN message for a previously linked purchase token.
+
+    Pub/Sub push authentication should be enforced at the edge with a service
+    account or ingress policy. The app-level guard here only updates tokens that
+    were already linked through submit_purchase, so unknown tokens are ignored.
+    """
+    from app.core.config import settings
+
+    package_name = message.package_name or settings.google_play_package_name
+    token_hash = _hash_token(message.purchase_token)
+    entitlement = await repo.entitlement_repository.get_by_purchase_token_hash(db, token_hash)
+    if entitlement is None:
+        return
+
+    try:
+        if message.product_id in _LIFETIME_PRODUCT_IDS:
+            raw = await verify_one_time_purchase(
+                package_name=package_name,
+                product_id=message.product_id or entitlement.product_id,
+                purchase_token=message.purchase_token,
+            )
+            status = "ACTIVE" if raw.get("purchaseState") == 0 else "PENDING"
+            expires_at = None
+        else:
+            raw = await verify_subscription_purchase(
+                package_name=package_name,
+                subscription_id=message.product_id or entitlement.product_id,
+                purchase_token=message.purchase_token,
+            )
+            status = _map_subscription_state(raw.get("subscriptionState", ""))
+            expires_at = _parse_expiry(raw)
+    except GooglePlayError as e:
+        raise BillingError(str(e)) from e
+
+    now = utcnow()
+    entitlement.status = status
+    entitlement.expires_at = expires_at
+    entitlement.last_verified_at = now
+    entitlement.raw_provider_status = {"rtdn": message.model_dump(), "provider": raw}
+    entitlement.updated_at = now
+    await repo.entitlement_repository.upsert(db, entitlement)
