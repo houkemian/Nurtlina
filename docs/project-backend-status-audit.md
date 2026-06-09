@@ -432,6 +432,88 @@ PRD/架构要求 Remote Config 只用于非安全 UI、paywall、rollout 设置�
 
 ## 8. 审核判断
 
-当前代码适合继续推进 MVP，但不建议在现状下直接发布带云备份/同步/Pro 权益承诺的版本。原因不是功能完全缺失，而是后端路径并存导致可信源不清晰。
+当前代码适合继续推进 MVP，但不建议在现状下直接发布带云备份/同步/Pro 权益承诺的版本。原因不是主后端路径不清晰；主路径已经收敛到 FastAPI/Postgres-first。当前发布风险主要来自真实环境演练、集成测试、Remote Config 边界、隐私说明和部署闭环仍需补齐。
 
-最务实的下一步是先做一次小范围架构收敛：选定主后端，改 DI 和同步入口，补安全校验和同步测试。完成后，项目会从“功能堆叠中的中期状态”进入“可验证的 MVP 后端闭环”。
+最务实的下一步是围绕已选定的 FastAPI/Postgres-first 路径做发布前硬化：补同步契约文档、增加真实数据库集成测试、完成部署演练、验证 Google Play sandbox purchase restore，并确保所有后端失败都不会影响本地瓶子 timer flow。
+
+## 9. 接下来任务规划
+
+### Sprint 1：同步契约与测试硬化
+
+目标：把 FastAPI/Postgres-first 从“代码已收敛”推进到“行为可验证”。
+
+任务：
+
+1. 新增 `docs/sync-contract.md`。
+   - 定义 Baby、Bottle、FeedLog、DiaperLog、SleepLog payload。
+   - 定义 `accepted`、`rejected`、`conflict` 语义。
+   - 定义 soft delete/tombstone 合并规则。
+   - 定义客户端 pull merge 和 cursor 持久化规则。
+   - 定义 family ownership、baby ownership、bottle ownership 校验。
+2. 增加 FastAPI 真实数据库集成测试。
+   - A 用户不能写 B family。
+   - `baby_id` 不属于 family 时拒绝。
+   - `feed_log.bottle_id` 不属于 family 时拒绝。
+   - stale update 不覆盖较新记录。
+   - soft delete 能被 pull 到 Android。
+3. 增加 Android `ApiSyncRepository.syncAll()` 单元测试。
+   - push 失败时不推进 pull cursor。
+   - pull 成功时写入 Room。
+   - tombstone merge 后本地记录进入删除状态。
+   - 后端不可用时本地创建 bottle 仍成功。
+
+验收：
+
+- 后端 `uv run pytest` 通过。
+- Android 相关单元测试通过。
+- 文档中的 sync contract 与 API/Room 行为一致。
+
+### Sprint 2：部署与权益闭环
+
+目标：确认云端部署、购买恢复和账号删除在真实环境中可操作。
+
+任务：
+
+1. 按 `docs/backend-deployment-runbook.md` 完成 staging 部署演练。
+2. 验证 Alembic 在空库和已有 staging 库均可执行。
+3. 配置 RTDN push 来源/audience 限制。
+4. 使用 Google Play sandbox 验证：
+   - purchase submit；
+   - entitlement restore；
+   - token hash 唯一绑定；
+   - RTDN 更新已绑定 token。
+5. 真机验证账号删除。
+   - Postgres 记录 soft delete/匿名化。
+   - Firebase Auth cleanup best-effort 行为符合日志预期。
+   - Android 本地状态与隐私说明一致。
+
+验收：
+
+- staging `/health`、`/api/v1/me/init`、sync push/pull、export、delete 均通过。
+- 日志不包含 purchase token、baby notes 或原始个人记录。
+- 后端失败不影响本地 timer 创建、状态变更和通知。
+
+### Sprint 3：Remote Config 与隐私发布准备
+
+目标：补齐发布前合规边界和用户说明。
+
+任务：
+
+1. 定义 Remote Config allowlist。
+   - 允许：paywall copy、价格展示、feature flags、rollout percentage。
+   - 禁止：timer duration、规则版本静默覆盖、安全判断文案。
+2. 增加 Remote Config 默认值和离线降级策略。
+3. 检查 user-facing strings。
+   - 不出现 “safe to drink”、“guaranteed safe”、“doctor recommended” 等禁用措辞。
+   - 保持 “timer expired”、“based on your selected guideline”、“not medical advice” 语义。
+4. 完善 backup/sync 说明。
+   - 明确开启备份/同步时会上传哪些字段。
+   - 明确 notes 不进入 analytics。
+   - 引导 baby name 使用昵称。
+5. 完成 Google Play Data Safety 初稿。
+
+验收：
+
+- Remote Config 不控制 safety timer rules。
+- 隐私说明、导出、删除路径与实际实现一致。
+- 中英文核心合规文案含义一致。
