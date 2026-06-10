@@ -4,12 +4,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.nurtlina.app.domain.model.ThemeType
+import com.nurtlina.app.ui.navigation.AppViewModel
 import com.nurtlina.app.ui.navigation.NurtlinaNavHost
 import com.nurtlina.app.ui.theme.NurtlinaTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -21,10 +25,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            NurtlinaTheme {
+            val appViewModel: AppViewModel = hiltViewModel()
+            val themeType by appViewModel.themeType.collectAsStateWithLifecycle()
+            val systemDark = isSystemInDarkTheme()
+            val darkTheme = when (themeType) {
+                ThemeType.DARK -> true
+                ThemeType.LIGHT -> false
+                ThemeType.SYSTEM -> systemDark
+            }
+
+            NurtlinaTheme(darkTheme = darkTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = MaterialTheme.colorScheme.background,
                 ) {
                     NurtlinaNavHost()
                 }

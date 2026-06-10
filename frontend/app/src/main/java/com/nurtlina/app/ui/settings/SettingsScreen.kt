@@ -8,6 +8,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -24,7 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.nurtlina.app.R
-import com.nurtlina.app.domain.model.*import com.nurtlina.app.ui.theme.NurtlinaTheme
+import com.nurtlina.app.domain.model.*
+import com.nurtlina.app.ui.theme.NurtlinaTheme
 
 // ---------------------------------------------------------------------------
 // Screen
@@ -33,30 +36,31 @@ import com.nurtlina.app.domain.model.*import com.nurtlina.app.ui.theme.NurtlinaT
 /**
  * Stateless Settings screen. State hoisted to ViewModel.
  *
- * @param baby              Currently selected baby. Null if none added yet.
- * @param settings          Current [UserSettings] values.
- * @param isPro             Whether the user has an active Pro subscription.
- * @param currentUser       Currently signed-in account. Null while loading.
- * @param appVersion        Displayed in the About section.
- * @param onEditBaby        Navigate to baby profile edit.
- * @param onUnitChanged     User changed volume unit.
+ * @param baby                    Currently selected baby. Null if none added yet.
+ * @param settings                Current [UserSettings] values.
+ * @param isPro                   Whether the user has an active Pro subscription.
+ * @param currentUser             Currently signed-in account. Null while loading.
+ * @param appVersion              Displayed in the About section.
+ * @param onEditBaby              Reserved for future navigation to a dedicated baby-profile screen.
+ * @param onBabyNameSaved         User saved a new baby nickname from the inline dialog.
+ * @param onUnitChanged           User changed volume unit.
  * @param onGuidelineRegionChanged User changed guideline region.
- * @param onLanguageClick   Navigate to language picker.
- * @param onNotificationsToggled User toggled notification enable/disable.
- * @param onReminderTimingChanged User changed reminder lead-time.
- * @param onNightModeToggled User toggled night mode.
- * @param onThemeChanged    User selected a theme.
- * @param onManageSubscription Navigate to Play Store subscription management.
- * @param onRestorePurchases Trigger restore flow.
- * @param onUpgradeTapped   Navigate to paywall.
- * @param onExportCsv       Trigger CSV export.
- * @param onBackupClick     Navigate to backup settings.
- * @param onSignInClick     Navigate to sign-in screen.
- * @param onSignOutClick    Sign out the current user.
- * @param onFaqClick        Navigate to FAQ.
- * @param onPrivacyPolicyClick Open privacy policy URL.
- * @param onTermsClick      Open terms URL.
- * @param onContactSupportClick Open support email/form.
+ * @param onLanguageSelected      User selected a language code (e.g. "en", "zh").
+ * @param onNotificationsToggled  User toggled notification enable/disable.
+ * @param onReminderTimingChanged User changed reminder lead-time in minutes.
+ * @param onNightModeToggled      User toggled night mode.
+ * @param onThemeChanged          User selected a theme.
+ * @param onManageSubscription    Navigate to Play Store subscription management.
+ * @param onRestorePurchases      Trigger restore flow.
+ * @param onUpgradeTapped         Navigate to paywall.
+ * @param onExportCsv             Trigger CSV export.
+ * @param onBackupClick           Navigate to backup settings.
+ * @param onSignInClick           Navigate to sign-in screen.
+ * @param onSignOutClick          Sign out the current user.
+ * @param onFaqClick              Navigate to FAQ.
+ * @param onPrivacyPolicyClick    Open privacy policy URL.
+ * @param onTermsClick            Open terms URL.
+ * @param onContactSupportClick   Open support email/form.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,10 +70,11 @@ fun SettingsScreen(
     isPro: Boolean,
     currentUser: UserAccount?,
     appVersion: String,
-    onEditBaby: () -> Unit,
+    onEditBaby: () -> Unit = {},
+    onBabyNameSaved: (String) -> Unit,
     onUnitChanged: (UnitType) -> Unit,
     onGuidelineRegionChanged: (GuidelineRegion) -> Unit,
-    onLanguageClick: () -> Unit,
+    onLanguageSelected: (String) -> Unit,
     onNotificationsToggled: (Boolean) -> Unit,
     onReminderTimingChanged: (Int) -> Unit,
     onNightModeToggled: (Boolean) -> Unit,
@@ -88,10 +93,22 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     var showSourcesPage by remember { mutableStateOf(false) }
+    var showEditBabyDialog by remember { mutableStateOf(false) }
 
     if (showSourcesPage) {
         SafeSourcesPage(onBack = { showSourcesPage = false })
         return
+    }
+
+    if (showEditBabyDialog) {
+        EditBabyDialog(
+            currentName = baby?.name.orEmpty(),
+            onSave = { name ->
+                onBabyNameSaved(name)
+                showEditBabyDialog = false
+            },
+            onDismiss = { showEditBabyDialog = false },
+        )
     }
 
     Scaffold(
@@ -113,7 +130,7 @@ fun SettingsScreen(
         ) {
             // ---- Baby profile ----
             SettingsSectionHeader(stringResource(R.string.settings_section_baby_profile))
-            BabyProfileRow(baby = baby, onEditBaby = onEditBaby)
+            BabyProfileRow(baby = baby, onEditBaby = { showEditBabyDialog = true })
 
             SettingsDivider()
 
@@ -124,11 +141,9 @@ fun SettingsScreen(
                 region = settings.guidelineRegion,
                 onChanged = onGuidelineRegionChanged,
             )
-            SettingsClickRow(
-                icon = Icons.Outlined.Language,
-                label = stringResource(R.string.settings_language_label),
-                value = settings.language.uppercase(),
-                onClick = onLanguageClick,
+            LanguageRow(
+                currentLanguage = settings.language,
+                onLanguageSelected = onLanguageSelected,
             )
 
             SettingsDivider()
@@ -225,7 +240,7 @@ fun SettingsScreen(
             // ---- About ----
             SettingsSectionHeader(stringResource(R.string.settings_section_about))
             SettingsClickRow(
-                icon = Icons.Outlined.HelpOutline,
+                icon = Icons.AutoMirrored.Outlined.HelpOutline,
                 label = stringResource(R.string.settings_faq),
                 onClick = onFaqClick,
             )
@@ -273,7 +288,6 @@ private fun AccountRow(
     val isSignedIn = currentUser != null && !currentUser.isAnonymous
 
     if (isSignedIn && currentUser != null) {
-        // Show signed-in account info
         val displayLabel = currentUser.displayName
             ?: currentUser.email
             ?: stringResource(R.string.settings_account_signed_in)
@@ -284,13 +298,12 @@ private fun AccountRow(
             value = displayLabel,
         )
         SettingsClickRow(
-            icon = Icons.Outlined.Logout,
+            icon = Icons.AutoMirrored.Outlined.Logout,
             label = stringResource(R.string.settings_account_sign_out),
             labelColor = MaterialTheme.colorScheme.error,
             onClick = onSignOutClick,
         )
     } else {
-        // Show sign-in prompt
         SettingsClickRow(
             icon = Icons.Outlined.AccountCircle,
             label = stringResource(R.string.settings_account_sign_in),
@@ -301,7 +314,7 @@ private fun AccountRow(
 }
 
 // ---------------------------------------------------------------------------
-// Baby profile row
+// Baby profile row + edit dialog
 // ---------------------------------------------------------------------------
 
 @Composable
@@ -310,6 +323,7 @@ private fun BabyProfileRow(baby: Baby?, onEditBaby: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 48.dp)
             .clickable(onClick = onEditBaby)
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .semantics { contentDescription = editCd },
@@ -343,39 +357,72 @@ private fun BabyProfileRow(baby: Baby?, onEditBaby: () -> Unit) {
     }
 }
 
+@Composable
+private fun EditBabyDialog(
+    currentName: String,
+    onSave: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var name by remember { mutableStateOf(currentName) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_baby_name_label)) },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text(stringResource(R.string.settings_baby_name_label)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onSave(name.trim()) },
+                enabled = name.isNotBlank(),
+            ) {
+                Text(stringResource(android.R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.cancel))
+            }
+        },
+    )
+}
+
 // ---------------------------------------------------------------------------
 // Unit picker
 // ---------------------------------------------------------------------------
 
 @Composable
 private fun UnitPickerRow(unit: UnitType, onUnitChanged: (UnitType) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    val currentLabel = when (unit) {
-        UnitType.ML -> stringResource(R.string.settings_unit_ml)
-        UnitType.OZ -> stringResource(R.string.settings_unit_oz)
+    var showDialog by remember { mutableStateOf(false) }
+    val entries = UnitType.entries
+    val labels = entries.map { type ->
+        when (type) {
+            UnitType.ML -> stringResource(R.string.settings_unit_ml)
+            UnitType.OZ -> stringResource(R.string.settings_unit_oz)
+        }
     }
+    val selectedIndex = entries.indexOf(unit).coerceAtLeast(0)
 
     SettingsClickRow(
         icon = Icons.Outlined.Scale,
         label = stringResource(R.string.settings_unit_label),
-        value = currentLabel,
-        onClick = { expanded = true },
+        value = labels[selectedIndex],
+        onClick = { showDialog = true },
     )
 
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-        UnitType.entries.forEach { unitType ->
-            val label = when (unitType) {
-                UnitType.ML -> stringResource(R.string.settings_unit_ml)
-                UnitType.OZ -> stringResource(R.string.settings_unit_oz)
-            }
-            DropdownMenuItem(
-                text = { Text(label) },
-                onClick = { onUnitChanged(unitType); expanded = false },
-                leadingIcon = if (unit == unitType) {
-                    { Icon(Icons.Default.Check, contentDescription = null) }
-                } else null,
-            )
-        }
+    if (showDialog) {
+        SingleChoiceDialog(
+            title = stringResource(R.string.settings_unit_label),
+            options = labels,
+            selectedIndex = selectedIndex,
+            onSelect = { idx -> onUnitChanged(entries[idx]); showDialog = false },
+            onDismiss = { showDialog = false },
+        )
     }
 }
 
@@ -388,26 +435,26 @@ private fun GuidelineRegionRow(
     region: GuidelineRegion,
     onChanged: (GuidelineRegion) -> Unit,
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    val currentLabel = region.displayLabel()
+    var showDialog by remember { mutableStateOf(false) }
+    val entries = GuidelineRegion.entries
+    val labels = entries.map { it.displayLabel() }
+    val selectedIndex = entries.indexOf(region).coerceAtLeast(0)
 
     SettingsClickRow(
         icon = Icons.Outlined.Public,
         label = stringResource(R.string.settings_guideline_region_label),
-        value = currentLabel,
-        onClick = { expanded = true },
+        value = labels[selectedIndex],
+        onClick = { showDialog = true },
     )
 
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-        GuidelineRegion.entries.forEach { r ->
-            DropdownMenuItem(
-                text = { Text(r.displayLabel()) },
-                onClick = { onChanged(r); expanded = false },
-                leadingIcon = if (region == r) {
-                    { Icon(Icons.Default.Check, contentDescription = null) }
-                } else null,
-            )
-        }
+    if (showDialog) {
+        SingleChoiceDialog(
+            title = stringResource(R.string.settings_guideline_region_label),
+            options = labels,
+            selectedIndex = selectedIndex,
+            onSelect = { idx -> onChanged(entries[idx]); showDialog = false },
+            onDismiss = { showDialog = false },
+        )
     }
 }
 
@@ -419,34 +466,80 @@ private fun GuidelineRegion.displayLabel() = when (this) {
 }
 
 // ---------------------------------------------------------------------------
+// Language picker
+// ---------------------------------------------------------------------------
+
+private val supportedLanguages: List<Pair<String, String>> = listOf(
+    "en" to "English",
+    "es" to "Español",
+    "zh" to "中文（简体）",
+    "de" to "Deutsch",
+    "fr" to "Français",
+)
+
+@Composable
+private fun LanguageRow(
+    currentLanguage: String,
+    onLanguageSelected: (String) -> Unit,
+) {
+    var showDialog by remember { mutableStateOf(false) }
+    val selectedIndex = supportedLanguages
+        .indexOfFirst { it.first == currentLanguage }
+        .coerceAtLeast(0)
+    val currentLabel = supportedLanguages[selectedIndex].second
+
+    SettingsClickRow(
+        icon = Icons.Outlined.Language,
+        label = stringResource(R.string.settings_language_label),
+        value = currentLabel,
+        onClick = { showDialog = true },
+    )
+
+    if (showDialog) {
+        SingleChoiceDialog(
+            title = stringResource(R.string.settings_language_label),
+            options = supportedLanguages.map { it.second },
+            selectedIndex = selectedIndex,
+            onSelect = { idx ->
+                onLanguageSelected(supportedLanguages[idx].first)
+                showDialog = false
+            },
+            onDismiss = { showDialog = false },
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Reminder timing picker
 // ---------------------------------------------------------------------------
 
 @Composable
 private fun ReminderTimingRow(currentMinutes: Int, onChanged: (Int) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    val options = listOf(5 to R.string.settings_reminder_5min, 10 to R.string.settings_reminder_10min,
-        15 to R.string.settings_reminder_15min, 30 to R.string.settings_reminder_30min)
-    val currentLabel = options.firstOrNull { it.first == currentMinutes }?.second
-        ?: R.string.settings_reminder_15min
+    var showDialog by remember { mutableStateOf(false) }
+    val options = listOf(
+        5 to R.string.settings_reminder_5min,
+        10 to R.string.settings_reminder_10min,
+        15 to R.string.settings_reminder_15min,
+        30 to R.string.settings_reminder_30min,
+    )
+    val labels = options.map { stringResource(it.second) }
+    val selectedIndex = options.indexOfFirst { it.first == currentMinutes }.coerceAtLeast(0)
 
     SettingsClickRow(
         icon = Icons.Outlined.Timer,
         label = stringResource(R.string.settings_reminder_timing_label),
-        value = stringResource(currentLabel),
-        onClick = { expanded = true },
+        value = labels[selectedIndex],
+        onClick = { showDialog = true },
     )
 
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-        options.forEach { (min, labelRes) ->
-            DropdownMenuItem(
-                text = { Text(stringResource(labelRes)) },
-                onClick = { onChanged(min); expanded = false },
-                leadingIcon = if (currentMinutes == min) {
-                    { Icon(Icons.Default.Check, contentDescription = null) }
-                } else null,
-            )
-        }
+    if (showDialog) {
+        SingleChoiceDialog(
+            title = stringResource(R.string.settings_reminder_timing_label),
+            options = labels,
+            selectedIndex = selectedIndex,
+            onSelect = { idx -> onChanged(options[idx].first); showDialog = false },
+            onDismiss = { showDialog = false },
+        )
     }
 }
 
@@ -456,26 +549,26 @@ private fun ReminderTimingRow(currentMinutes: Int, onChanged: (Int) -> Unit) {
 
 @Composable
 private fun ThemePickerRow(theme: ThemeType, onChanged: (ThemeType) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    val currentLabel = theme.displayLabel()
+    var showDialog by remember { mutableStateOf(false) }
+    val entries = ThemeType.entries
+    val labels = entries.map { it.displayLabel() }
+    val selectedIndex = entries.indexOf(theme).coerceAtLeast(0)
 
     SettingsClickRow(
         icon = Icons.Outlined.Palette,
         label = stringResource(R.string.settings_theme_label),
-        value = currentLabel,
-        onClick = { expanded = true },
+        value = labels[selectedIndex],
+        onClick = { showDialog = true },
     )
 
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-        ThemeType.entries.forEach { t ->
-            DropdownMenuItem(
-                text = { Text(t.displayLabel()) },
-                onClick = { onChanged(t); expanded = false },
-                leadingIcon = if (theme == t) {
-                    { Icon(Icons.Default.Check, contentDescription = null) }
-                } else null,
-            )
-        }
+    if (showDialog) {
+        SingleChoiceDialog(
+            title = stringResource(R.string.settings_theme_label),
+            options = labels,
+            selectedIndex = selectedIndex,
+            onSelect = { idx -> onChanged(entries[idx]); showDialog = false },
+            onDismiss = { showDialog = false },
+        )
     }
 }
 
@@ -484,6 +577,54 @@ private fun ThemeType.displayLabel() = when (this) {
     ThemeType.SYSTEM -> stringResource(R.string.settings_theme_system)
     ThemeType.LIGHT -> stringResource(R.string.settings_theme_light)
     ThemeType.DARK -> stringResource(R.string.settings_theme_dark)
+}
+
+// ---------------------------------------------------------------------------
+// Reusable: centered single-choice dialog
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun SingleChoiceDialog(
+    title: String,
+    options: List<String>,
+    selectedIndex: Int,
+    onSelect: (Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title, style = MaterialTheme.typography.titleLarge) },
+        text = {
+            Column {
+                options.forEachIndexed { index, label ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(index) }
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(
+                            selected = index == selectedIndex,
+                            onClick = { onSelect(index) },
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.cancel))
+            }
+        },
+    )
 }
 
 // ---------------------------------------------------------------------------
@@ -518,9 +659,9 @@ private fun SettingsClickRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 48.dp)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .defaultMinSize(minHeight = 48.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -572,9 +713,9 @@ private fun SettingsToggleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 48.dp)
             .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .defaultMinSize(minHeight = 48.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -659,7 +800,10 @@ private fun SafeSourcesPage(onBack: () -> Unit) {
                 title = { Text(stringResource(R.string.settings_sources_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_cancel))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.common_cancel),
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -676,14 +820,12 @@ private fun SafeSourcesPage(onBack: () -> Unit) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Intro text
             Text(
                 text = stringResource(R.string.settings_sources_intro),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            // Source cards
             sources.forEach { source ->
                 val label = stringResource(source.labelRes)
                 val url = stringResource(source.urlRes)
@@ -732,7 +874,6 @@ private fun SafeSourcesPage(onBack: () -> Unit) {
 
             HorizontalDivider()
 
-            // Disclaimer block
             Surface(
                 shape = MaterialTheme.shapes.medium,
                 color = MaterialTheme.colorScheme.errorContainer,
@@ -787,8 +928,8 @@ private fun SettingsScreenLightPreview() {
             isPro = false,
             currentUser = null,
             appVersion = "1.0.0",
-            onEditBaby = {}, onUnitChanged = {}, onGuidelineRegionChanged = {},
-            onLanguageClick = {}, onNotificationsToggled = {}, onReminderTimingChanged = {},
+            onBabyNameSaved = {}, onUnitChanged = {}, onGuidelineRegionChanged = {},
+            onLanguageSelected = {}, onNotificationsToggled = {}, onReminderTimingChanged = {},
             onNightModeToggled = {}, onThemeChanged = {}, onManageSubscription = {},
             onRestorePurchases = {}, onUpgradeTapped = {}, onExportCsv = {},
             onBackupClick = {}, onSignInClick = {}, onSignOutClick = {},
@@ -808,8 +949,8 @@ private fun SettingsScreenProDarkPreview() {
             isPro = true,
             currentUser = UserAccount(uid = "uid1", email = "parent@example.com", isAnonymous = false, familyId = "fam1", isProActive = true),
             appVersion = "1.0.0",
-            onEditBaby = {}, onUnitChanged = {}, onGuidelineRegionChanged = {},
-            onLanguageClick = {}, onNotificationsToggled = {}, onReminderTimingChanged = {},
+            onBabyNameSaved = {}, onUnitChanged = {}, onGuidelineRegionChanged = {},
+            onLanguageSelected = {}, onNotificationsToggled = {}, onReminderTimingChanged = {},
             onNightModeToggled = {}, onThemeChanged = {}, onManageSubscription = {},
             onRestorePurchases = {}, onUpgradeTapped = {}, onExportCsv = {},
             onBackupClick = {}, onSignInClick = {}, onSignOutClick = {},

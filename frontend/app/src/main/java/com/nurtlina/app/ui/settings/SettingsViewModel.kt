@@ -171,6 +171,18 @@ class SettingsViewModel @Inject constructor(
         updateSettings { it.copy(notificationEnabled = enabled) }
     }
 
+    fun updateNightModeEnabled(enabled: Boolean) {
+        updateSettings { it.copy(nightModeEnabled = enabled) }
+    }
+
+    fun updateReminderBeforeExpiryMinutes(minutes: Int) {
+        updateSettings { it.copy(reminderBeforeExpiryMinutes = minutes) }
+    }
+
+    fun updateLanguage(language: String) {
+        updateSettings { it.copy(language = language) }
+    }
+
     fun updatePreExpiry15MinEnabled(enabled: Boolean) {
         updateSettings { it.copy(preExpiry15MinEnabled = enabled) }
     }
@@ -183,6 +195,15 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val current = settingsRepository.get()
             settingsRepository.update(current.copy(selectedBabyId = babyId))
+        }
+    }
+
+    fun updateBabyName(babyId: String, name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) return
+        viewModelScope.launch {
+            val baby = babies.value.firstOrNull { it.id == babyId } ?: return@launch
+            babyRepository.upsert(baby.copy(name = trimmed))
         }
     }
 

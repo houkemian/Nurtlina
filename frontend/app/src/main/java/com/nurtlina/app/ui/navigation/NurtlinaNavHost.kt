@@ -50,6 +50,7 @@ import com.nurtlina.app.domain.model.BottleTransition
 import com.nurtlina.app.domain.model.DiaperType
 import com.nurtlina.app.domain.model.FeedLog
 import com.nurtlina.app.domain.model.GuidelineRegion
+import com.nurtlina.app.domain.model.ThemeType
 import com.nurtlina.app.domain.model.TodaySummary
 import com.nurtlina.app.domain.model.UnitType
 import com.nurtlina.app.domain.model.UserSettings
@@ -101,7 +102,7 @@ import javax.inject.Inject
  * placeholder rather than flash the wrong screen.
  */
 @HiltViewModel
-internal class AppViewModel @Inject constructor(
+class AppViewModel @Inject constructor(
     settingsRepository: SettingsRepository,
     entitlementManager: EntitlementManager,
 ) : ViewModel() {
@@ -123,6 +124,16 @@ internal class AppViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000L),
             initialValue = false,
+        )
+
+    /** Current theme preference from user settings. Used in [MainActivity] to drive [NurtlinaTheme]. */
+    val themeType: StateFlow<ThemeType> = settingsRepository
+        .observe()
+        .map { it.theme }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = ThemeType.SYSTEM,
         )
 }
 
@@ -474,13 +485,15 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
         isPro = isPro,
         currentUser = currentUser,
         appVersion = "1.0.0",
-        onEditBaby = {},
+        onBabyNameSaved = { name ->
+            selectedBaby?.let { viewModel.updateBabyName(it.id, name) }
+        },
         onUnitChanged = viewModel::updateUnitType,
         onGuidelineRegionChanged = viewModel::updateGuidelineRegion,
-        onLanguageClick = {},
+        onLanguageSelected = viewModel::updateLanguage,
         onNotificationsToggled = viewModel::updateNotificationEnabled,
-        onReminderTimingChanged = {},
-        onNightModeToggled = {},
+        onReminderTimingChanged = viewModel::updateReminderBeforeExpiryMinutes,
+        onNightModeToggled = viewModel::updateNightModeEnabled,
         onThemeChanged = viewModel::updateTheme,
         onManageSubscription = {
             context.startActivity(
