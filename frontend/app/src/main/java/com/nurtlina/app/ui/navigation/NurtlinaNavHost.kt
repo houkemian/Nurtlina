@@ -1,10 +1,14 @@
 package com.nurtlina.app.ui.navigation
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -50,7 +54,6 @@ import com.nurtlina.app.domain.model.BottleTransition
 import com.nurtlina.app.domain.model.DiaperType
 import com.nurtlina.app.domain.model.FeedLog
 import com.nurtlina.app.domain.model.GuidelineRegion
-import com.nurtlina.app.domain.model.ThemeType
 import com.nurtlina.app.domain.model.TodaySummary
 import com.nurtlina.app.domain.model.UnitType
 import com.nurtlina.app.domain.model.UserSettings
@@ -126,14 +129,14 @@ class AppViewModel @Inject constructor(
             initialValue = false,
         )
 
-    /** Current theme preference from user settings. Used in [MainActivity] to drive [NurtlinaTheme]. */
-    val themeType: StateFlow<ThemeType> = settingsRepository
+    /** Low-stimulation mode for nighttime use. It also suppresses ads on care screens. */
+    val nightModeEnabled: StateFlow<Boolean> = settingsRepository
         .observe()
-        .map { it.theme }
+        .map { it.nightModeEnabled }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000L),
-            initialValue = ThemeType.SYSTEM,
+            initialValue = false,
         )
 }
 
@@ -295,15 +298,18 @@ private fun OnboardingRoute(navController: NavController) {
 @Composable
 private fun TodayRoute(navController: NavController, isPro: Boolean) {
     val viewModel: TodayViewModel = hiltViewModel()
+    val settingsViewModel: SettingsViewModel = hiltViewModel()
     val babies by viewModel.babies.collectAsStateWithLifecycle()
     val selectedBaby by viewModel.selectedBaby.collectAsStateWithLifecycle()
     val activeBottles by viewModel.activeBottles.collectAsStateWithLifecycle()
     val latestFeed by viewModel.latestFeed.collectAsStateWithLifecycle()
     val todaySummary by viewModel.todaySummary.collectAsStateWithLifecycle()
+    val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
     var now by remember { mutableStateOf(Instant.now()) }
     val activeBottle = activeBottles.firstOrNull()
     val summary = todaySummary ?: emptyTodaySummary()
-    val unitType = UnitType.ML
+    val currentSettings = settings ?: UserSettings()
+    val unitType = currentSettings.unit
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -331,8 +337,8 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
             countdownText = formatRemaining(activeBottle?.expiresAt),
             isExpiringSoon = isExpiringSoon(activeBottle?.expiresAt),
             todaySummary = summary,
-            showAds = !isPro,
-            nightModeEnabled = false,
+            showAds = !isPro && !currentSettings.nightModeEnabled,
+            nightModeEnabled = currentSettings.nightModeEnabled,
             unitType = unitType,
         ),
         onSelectBaby = { viewModel.selectBaby(it.id) },
@@ -349,7 +355,6 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
         onDiscard = { viewModel.transitionBottle(it, BottleTransition.Discard) },
         onMarkFed = { viewModel.transitionBottle(it, BottleTransition.MarkFed) },
         onBottleDetail = { navController.navigate(NavRoutes.BottleDetail.createRoute(it.id)) },
-        onQuickFeed = { amountMl -> viewModel.quickLogFeed(amountMl) },
         onQuickDiaper = { viewModel.quickLogDiaper(DiaperType.WET) },
         onQuickSleep = {
             if (todaySummary?.activeSleepStartedAt == null) {
@@ -473,17 +478,33 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val babies by viewModel.babies.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val notificationPermissionGranted by viewModel.notificationPermissionGranted.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        viewModel.refreshNotificationPermission()
+        viewModel.updateNotificationEnabled(granted)
+    }
 
     val currentSettings = settings ?: UserSettings()
     val selectedBaby = babies.firstOrNull { it.id == currentSettings.selectedBabyId }
         ?: babies.firstOrNull()
+
+    LaunchedEffect(settings?.notificationEnabled) {
+        val persistedSettings = settings ?: return@LaunchedEffect
+        val hasSystemPermission = viewModel.refreshNotificationPermission()
+        if (persistedSettings.notificationEnabled && !hasSystemPermission) {
+            viewModel.updateNotificationEnabled(false)
+        }
+    }
 
     SettingsScreen(
         baby = selectedBaby,
         settings = currentSettings,
         isPro = isPro,
         currentUser = currentUser,
+        notificationPermissionGranted = notificationPermissionGranted,
         appVersion = "1.0.0",
         onBabyNameSaved = { name ->
             selectedBaby?.let { viewModel.updateBabyName(it.id, name) }
@@ -491,16 +512,24 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
         onUnitChanged = viewModel::updateUnitType,
         onGuidelineRegionChanged = viewModel::updateGuidelineRegion,
         onLanguageSelected = viewModel::updateLanguage,
-        onNotificationsToggled = viewModel::updateNotificationEnabled,
+        onNotificationsToggled = { enabled ->
+            if (
+                enabled &&
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                !notificationPermissionGranted
+            ) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                viewModel.updateNotificationEnabled(enabled)
+            }
+        },
         onReminderTimingChanged = viewModel::updateReminderBeforeExpiryMinutes,
         onNightModeToggled = viewModel::updateNightModeEnabled,
-        onThemeChanged = viewModel::updateTheme,
         onManageSubscription = {
             context.startActivity(
                 Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_SUBS_URL))
             )
         },
-        onRestorePurchases = { viewModel.restorePurchases() },
         onUpgradeTapped = { navController.navigate(NavRoutes.Paywall.route) },
         onExportCsv = {},
         onBackupClick = { viewModel.requestFullSync() },

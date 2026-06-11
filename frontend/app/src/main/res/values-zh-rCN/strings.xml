@@ -259,6 +259,10 @@
     <string name="cd_quick_diaper_button">快速记录换尿裤</string>
     <string name="cd_quick_sleep_button">开始或停止睡眠记录</string>
 
+    <string name="settings_notifications_permission_needed">Android 系统通知权限未开启。开启后才能收到系统级提醒。</string>
+    <string name="settings_notifications_system_status_label">系统通知</string>
+    <string name="settings_notifications_system_status_off">关闭</string>
+
     <!-- Account / Sign-In -->
     <string name="settings_section_account">账号</string>
     <string name="settings_account_sign_in">登录以同步</string>
@@ -285,7 +289,8 @@
     <string name="signin_hide_password_cd">隐藏密码</string>
     <string name="signin_disclaimer">您的奶瓶计时数据始终会保存在本地。登录后可启用可选的云端备份。</string>
 
-    <string name="today_new_bottle">新增喂奶</string>
+    <string name="today_new_bottle">喂奶</string>
+    <string name="today_add_baby_pro">添加宝宝</string>
     <string name="action_save_feed">保存喂奶</string>
     <string name="new_feed_title">新增喂奶记录</string>
     <string name="new_feed_disclaimer">这里只保存喂奶记录，不构成医疗建议。</string>

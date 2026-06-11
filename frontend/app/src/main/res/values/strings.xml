@@ -59,10 +59,10 @@
     <string name="today_title">Today</string>
     <string name="today_no_active_bottle">No feed logged yet</string>
     <string name="today_no_active_bottle_cta">Tap Add Feed to save a feeding record</string>
-    <string name="today_new_bottle">Add Feed</string>
+    <string name="today_new_bottle">Feed</string>
     <string name="today_expires_in">Expires in</string>
     <string name="today_time_expired">EXPIRED</string>
-    <string name="today_add_baby_pro">Add Baby (Pro)</string>
+    <string name="today_add_baby_pro">Add a baby</string>
     <string name="today_no_baby_selected">Baby</string>
     <string name="today_last_feed_label">Last feed</string>
     <string name="today_last_feed_value">%1$s ago · %2$s</string>
@@ -187,7 +187,7 @@
     <string name="action_edit">Edit</string>
 
     <!-- ===== Today Screen aliases ===== -->
-    <string name="add_baby_pro">Add Baby (Pro)</string>
+    <string name="add_baby_pro">Add a baby</string>
     <string name="quick_log_section_title">Quick Log</string>
     <string name="quick_feed">Feed</string>
     <string name="quick_diaper">Diaper</string>
@@ -535,6 +535,9 @@
     <string name="settings_source_cdc_bm_label">CDC: Breast Milk Storage and Preparation</string>
     <string name="settings_source_cdc_bm_url" translatable="false">https://www.cdc.gov/breastfeeding/recommendations/handling_breastmilk.htm</string>
     <string name="settings_source_open_link_cd">Open %1$s</string>
+    <string name="settings_notifications_permission_needed">Android notification permission is off. Turn it on to receive system reminders.</string>
+    <string name="settings_notifications_system_status_label">System notifications</string>
+    <string name="settings_notifications_system_status_off">Off</string>
 
     <!-- ===== Account / Sign-In ===== -->
     <string name="settings_section_account">Account</string>

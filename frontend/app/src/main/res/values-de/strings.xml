@@ -259,6 +259,10 @@
     <string name="cd_quick_diaper_button">Schnellen Windelwechsel erfassen</string>
     <string name="cd_quick_sleep_button">Schlaftracking starten oder stoppen</string>
 
+    <string name="settings_notifications_permission_needed">Die Android-Benachrichtigungsberechtigung ist deaktiviert. Aktiviere sie, um Systemerinnerungen zu erhalten.</string>
+    <string name="settings_notifications_system_status_label">Systembenachrichtigungen</string>
+    <string name="settings_notifications_system_status_off">Aus</string>
+
     <!-- Account / Sign-In -->
     <string name="settings_section_account">Konto</string>
     <string name="settings_account_sign_in">Zum Synchronisieren anmelden</string>
@@ -285,7 +289,8 @@
     <string name="signin_hide_password_cd">Passwort ausblenden</string>
     <string name="signin_disclaimer">Deine Flaschentimer-Daten werden immer lokal gespeichert. Durch die Anmeldung wird ein optionales Cloud-Backup aktiviert.</string>
 
-    <string name="today_new_bottle">Fütterung hinzufügen</string>
+    <string name="today_new_bottle">Fütterung</string>
+    <string name="today_add_baby_pro">Baby hinzufügen</string>
     <string name="action_save_feed">Fütterung speichern</string>
     <string name="new_feed_title">Fütterung eintragen</string>
     <string name="new_feed_disclaimer">Dies speichert nur einen Fütterungseintrag. Kein medizinischer Rat.</string>

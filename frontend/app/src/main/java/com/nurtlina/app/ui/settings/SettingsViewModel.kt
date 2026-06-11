@@ -14,7 +14,6 @@ import com.nurtlina.app.data.sync.SyncWorker
 import com.nurtlina.app.domain.model.Baby
 import com.nurtlina.app.domain.model.GuidelineRegion
 import com.nurtlina.app.domain.model.SyncState
-import com.nurtlina.app.domain.model.ThemeType
 import com.nurtlina.app.domain.model.UnitType
 import com.nurtlina.app.domain.model.UserAccount
 import com.nurtlina.app.domain.model.UserSettings
@@ -98,8 +97,8 @@ class SettingsViewModel @Inject constructor(
     val notificationPermissionGranted: StateFlow<Boolean> =
         _notificationPermissionGranted.asStateFlow()
 
-    fun refreshNotificationPermission() {
-        _notificationPermissionGranted.value = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    fun refreshNotificationPermission(): Boolean {
+        val granted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
                 appContext,
                 Manifest.permission.POST_NOTIFICATIONS,
@@ -107,6 +106,8 @@ class SettingsViewModel @Inject constructor(
         } else {
             true
         }
+        _notificationPermissionGranted.value = granted
+        return granted
     }
 
     // ── Auth actions ──────────────────────────────────────────────────────────
@@ -148,11 +149,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    /** Re-queries the Play Store to restore entitlements after sign-in on a new device. */
-    fun restorePurchases() {
-        entitlementManager.restorePurchases()
-    }
-
     // ── Settings update helpers ───────────────────────────────────────────────
 
     fun updateGuidelineRegion(region: GuidelineRegion) {
@@ -161,10 +157,6 @@ class SettingsViewModel @Inject constructor(
 
     fun updateUnitType(unitType: UnitType) {
         updateSettings { it.copy(unit = unitType) }
-    }
-
-    fun updateTheme(theme: ThemeType) {
-        updateSettings { it.copy(theme = theme) }
     }
 
     fun updateNotificationEnabled(enabled: Boolean) {

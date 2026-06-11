@@ -2,10 +2,13 @@ package com.nurtlina.app.ui.settings
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
@@ -27,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.nurtlina.app.R
 import com.nurtlina.app.domain.model.*
+import com.nurtlina.app.ui.NurtlinaDialog
 import com.nurtlina.app.ui.theme.NurtlinaTheme
 
 // ---------------------------------------------------------------------------
@@ -40,6 +44,7 @@ import com.nurtlina.app.ui.theme.NurtlinaTheme
  * @param settings                Current [UserSettings] values.
  * @param isPro                   Whether the user has an active Pro subscription.
  * @param currentUser             Currently signed-in account. Null while loading.
+ * @param notificationPermissionGranted Whether Android allows this app to post notifications.
  * @param appVersion              Displayed in the About section.
  * @param onEditBaby              Reserved for future navigation to a dedicated baby-profile screen.
  * @param onBabyNameSaved         User saved a new baby nickname from the inline dialog.
@@ -49,9 +54,7 @@ import com.nurtlina.app.ui.theme.NurtlinaTheme
  * @param onNotificationsToggled  User toggled notification enable/disable.
  * @param onReminderTimingChanged User changed reminder lead-time in minutes.
  * @param onNightModeToggled      User toggled night mode.
- * @param onThemeChanged          User selected a theme.
  * @param onManageSubscription    Navigate to Play Store subscription management.
- * @param onRestorePurchases      Trigger restore flow.
  * @param onUpgradeTapped         Navigate to paywall.
  * @param onExportCsv             Trigger CSV export.
  * @param onBackupClick           Navigate to backup settings.
@@ -69,6 +72,7 @@ fun SettingsScreen(
     settings: UserSettings,
     isPro: Boolean,
     currentUser: UserAccount?,
+    notificationPermissionGranted: Boolean = true,
     appVersion: String,
     onEditBaby: () -> Unit = {},
     onBabyNameSaved: (String) -> Unit,
@@ -78,9 +82,7 @@ fun SettingsScreen(
     onNotificationsToggled: (Boolean) -> Unit,
     onReminderTimingChanged: (Int) -> Unit,
     onNightModeToggled: (Boolean) -> Unit,
-    onThemeChanged: (ThemeType) -> Unit,
     onManageSubscription: () -> Unit,
-    onRestorePurchases: () -> Unit,
     onUpgradeTapped: () -> Unit,
     onExportCsv: () -> Unit,
     onBackupClick: () -> Unit,
@@ -128,53 +130,19 @@ fun SettingsScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState()),
         ) {
+            // ---- Account ----
+            SettingsSectionHeader(stringResource(R.string.settings_section_account))
+            AccountRow(
+                currentUser = currentUser,
+                onSignInClick = onSignInClick,
+                onSignOutClick = onSignOutClick,
+            )
+
+            SettingsDivider()
+
             // ---- Baby profile ----
             SettingsSectionHeader(stringResource(R.string.settings_section_baby_profile))
             BabyProfileRow(baby = baby, onEditBaby = { showEditBabyDialog = true })
-
-            SettingsDivider()
-
-            // ---- Preferences ----
-            SettingsSectionHeader(stringResource(R.string.settings_section_preferences))
-            UnitPickerRow(unit = settings.unit, onUnitChanged = onUnitChanged)
-            GuidelineRegionRow(
-                region = settings.guidelineRegion,
-                onChanged = onGuidelineRegionChanged,
-            )
-            LanguageRow(
-                currentLanguage = settings.language,
-                onLanguageSelected = onLanguageSelected,
-            )
-
-            SettingsDivider()
-
-            // ---- Notifications ----
-            SettingsSectionHeader(stringResource(R.string.settings_section_notifications))
-            SettingsToggleRow(
-                icon = Icons.Outlined.Notifications,
-                label = stringResource(R.string.settings_notifications_enabled_label),
-                checked = settings.notificationEnabled,
-                onCheckedChange = onNotificationsToggled,
-            )
-            if (settings.notificationEnabled) {
-                ReminderTimingRow(
-                    currentMinutes = settings.reminderBeforeExpiryMinutes,
-                    onChanged = onReminderTimingChanged,
-                )
-            }
-            SettingsToggleRow(
-                icon = Icons.Outlined.DarkMode,
-                label = stringResource(R.string.settings_night_mode_label),
-                subtitle = stringResource(R.string.settings_night_mode_desc),
-                checked = settings.nightModeEnabled,
-                onCheckedChange = onNightModeToggled,
-            )
-
-            SettingsDivider()
-
-            // ---- Theme ----
-            SettingsSectionHeader(stringResource(R.string.settings_section_theme))
-            ThemePickerRow(theme = settings.theme, onChanged = onThemeChanged)
 
             SettingsDivider()
 
@@ -203,21 +171,6 @@ fun SettingsScreen(
                     onClick = onUpgradeTapped,
                 )
             }
-            SettingsClickRow(
-                icon = Icons.Outlined.Refresh,
-                label = stringResource(R.string.settings_restore_purchases),
-                onClick = onRestorePurchases,
-            )
-
-            SettingsDivider()
-
-            // ---- Account ----
-            SettingsSectionHeader(stringResource(R.string.settings_section_account))
-            AccountRow(
-                currentUser = currentUser,
-                onSignInClick = onSignInClick,
-                onSignOutClick = onSignOutClick,
-            )
 
             SettingsDivider()
 
@@ -233,6 +186,56 @@ fun SettingsScreen(
                 label = stringResource(R.string.settings_backup_label),
                 subtitle = stringResource(R.string.settings_backup_desc),
                 onClick = onBackupClick,
+            )
+
+            SettingsDivider()
+
+            // ---- Preferences ----
+            SettingsSectionHeader(stringResource(R.string.settings_section_preferences))
+            UnitPickerRow(unit = settings.unit, onUnitChanged = onUnitChanged)
+            GuidelineRegionRow(
+                region = settings.guidelineRegion,
+                onChanged = onGuidelineRegionChanged,
+            )
+            LanguageRow(
+                currentLanguage = settings.language,
+                onLanguageSelected = onLanguageSelected,
+            )
+
+            SettingsDivider()
+
+            // ---- Notifications ----
+            SettingsSectionHeader(stringResource(R.string.settings_section_notifications))
+            SettingsToggleRow(
+                icon = Icons.Outlined.Notifications,
+                label = stringResource(R.string.settings_notifications_enabled_label),
+                subtitle = if (settings.notificationEnabled && !notificationPermissionGranted) {
+                    stringResource(R.string.settings_notifications_permission_needed)
+                } else {
+                    null
+                },
+                checked = settings.notificationEnabled,
+                onCheckedChange = onNotificationsToggled,
+            )
+            if (settings.notificationEnabled && !notificationPermissionGranted) {
+                SettingsInfoRow(
+                    icon = Icons.Outlined.NotificationsOff,
+                    label = stringResource(R.string.settings_notifications_system_status_label),
+                    value = stringResource(R.string.settings_notifications_system_status_off),
+                )
+            }
+            if (settings.notificationEnabled) {
+                ReminderTimingRow(
+                    currentMinutes = settings.reminderBeforeExpiryMinutes,
+                    onChanged = onReminderTimingChanged,
+                )
+            }
+            SettingsToggleRow(
+                icon = Icons.Outlined.DarkMode,
+                label = stringResource(R.string.settings_night_mode_label),
+                subtitle = stringResource(R.string.settings_night_mode_desc),
+                checked = settings.nightModeEnabled,
+                onCheckedChange = onNightModeToggled,
             )
 
             SettingsDivider()
@@ -285,11 +288,11 @@ private fun AccountRow(
     onSignInClick: () -> Unit,
     onSignOutClick: () -> Unit,
 ) {
-    val isSignedIn = currentUser != null && !currentUser.isAnonymous
+    val signedInUser = currentUser?.takeUnless { it.isAnonymous }
 
-    if (isSignedIn && currentUser != null) {
-        val displayLabel = currentUser.displayName
-            ?: currentUser.email
+    if (signedInUser != null) {
+        val displayLabel = signedInUser.displayName
+            ?: signedInUser.email
             ?: stringResource(R.string.settings_account_signed_in)
 
         SettingsInfoRow(
@@ -364,20 +367,12 @@ private fun EditBabyDialog(
     onDismiss: () -> Unit,
 ) {
     var name by remember { mutableStateOf(currentName) }
-    AlertDialog(
+    NurtlinaDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_baby_name_label)) },
-        text = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text(stringResource(R.string.settings_baby_name_label)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        },
+        icon = Icons.Outlined.ChildCare,
+        title = stringResource(R.string.settings_baby_name_label),
         confirmButton = {
-            TextButton(
+            Button(
                 onClick = { onSave(name.trim()) },
                 enabled = name.isNotBlank(),
             ) {
@@ -389,7 +384,18 @@ private fun EditBabyDialog(
                 Text(stringResource(android.R.string.cancel))
             }
         },
-    )
+    ) {
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text(stringResource(R.string.settings_baby_name_label)) },
+            leadingIcon = {
+                Icon(Icons.Outlined.Edit, contentDescription = null)
+            },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -422,6 +428,7 @@ private fun UnitPickerRow(unit: UnitType, onUnitChanged: (UnitType) -> Unit) {
             selectedIndex = selectedIndex,
             onSelect = { idx -> onUnitChanged(entries[idx]); showDialog = false },
             onDismiss = { showDialog = false },
+            icon = Icons.Outlined.Scale,
         )
     }
 }
@@ -454,6 +461,7 @@ private fun GuidelineRegionRow(
             selectedIndex = selectedIndex,
             onSelect = { idx -> onChanged(entries[idx]); showDialog = false },
             onDismiss = { showDialog = false },
+            icon = Icons.Outlined.Public,
         )
     }
 }
@@ -505,6 +513,7 @@ private fun LanguageRow(
                 showDialog = false
             },
             onDismiss = { showDialog = false },
+            icon = Icons.Outlined.Language,
         )
     }
 }
@@ -539,50 +548,23 @@ private fun ReminderTimingRow(currentMinutes: Int, onChanged: (Int) -> Unit) {
             selectedIndex = selectedIndex,
             onSelect = { idx -> onChanged(options[idx].first); showDialog = false },
             onDismiss = { showDialog = false },
+            icon = Icons.Outlined.Timer,
         )
     }
-}
-
-// ---------------------------------------------------------------------------
-// Theme picker
-// ---------------------------------------------------------------------------
-
-@Composable
-private fun ThemePickerRow(theme: ThemeType, onChanged: (ThemeType) -> Unit) {
-    var showDialog by remember { mutableStateOf(false) }
-    val entries = ThemeType.entries
-    val labels = entries.map { it.displayLabel() }
-    val selectedIndex = entries.indexOf(theme).coerceAtLeast(0)
-
-    SettingsClickRow(
-        icon = Icons.Outlined.Palette,
-        label = stringResource(R.string.settings_theme_label),
-        value = labels[selectedIndex],
-        onClick = { showDialog = true },
-    )
-
-    if (showDialog) {
-        SingleChoiceDialog(
-            title = stringResource(R.string.settings_theme_label),
-            options = labels,
-            selectedIndex = selectedIndex,
-            onSelect = { idx -> onChanged(entries[idx]); showDialog = false },
-            onDismiss = { showDialog = false },
-        )
-    }
-}
-
-@Composable
-private fun ThemeType.displayLabel() = when (this) {
-    ThemeType.SYSTEM -> stringResource(R.string.settings_theme_system)
-    ThemeType.LIGHT -> stringResource(R.string.settings_theme_light)
-    ThemeType.DARK -> stringResource(R.string.settings_theme_dark)
 }
 
 // ---------------------------------------------------------------------------
 // Reusable: centered single-choice dialog
 // ---------------------------------------------------------------------------
 
+/**
+ * Single-choice picker dialog built on [NurtlinaDialog].
+ *
+ * The selected option is highlighted with [ColorScheme.primaryContainer] and a
+ * trailing check-mark. Tapping an option immediately confirms and closes the dialog.
+ *
+ * @param icon  Icon shown in the header bubble above the title.
+ */
 @Composable
 private fun SingleChoiceDialog(
     title: String,
@@ -590,41 +572,55 @@ private fun SingleChoiceDialog(
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     onDismiss: () -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
 ) {
-    AlertDialog(
+    NurtlinaDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title, style = MaterialTheme.typography.titleLarge) },
-        text = {
-            Column {
-                options.forEachIndexed { index, label ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelect(index) }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(
-                            selected = index == selectedIndex,
-                            onClick = { onSelect(index) },
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {},
+        icon = icon,
+        title = title,
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(android.R.string.cancel))
             }
         },
-    )
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            options.forEachIndexed { index, label ->
+                val isSelected = index == selectedIndex
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(
+                            if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                            else Color.Transparent,
+                        )
+                        .clickable { onSelect(index) }
+                        .padding(horizontal = 14.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (isSelected)
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        else
+                            MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (isSelected) {
+                        Spacer(Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -930,8 +926,8 @@ private fun SettingsScreenLightPreview() {
             appVersion = "1.0.0",
             onBabyNameSaved = {}, onUnitChanged = {}, onGuidelineRegionChanged = {},
             onLanguageSelected = {}, onNotificationsToggled = {}, onReminderTimingChanged = {},
-            onNightModeToggled = {}, onThemeChanged = {}, onManageSubscription = {},
-            onRestorePurchases = {}, onUpgradeTapped = {}, onExportCsv = {},
+            onNightModeToggled = {}, onManageSubscription = {},
+            onUpgradeTapped = {}, onExportCsv = {},
             onBackupClick = {}, onSignInClick = {}, onSignOutClick = {},
             onFaqClick = {}, onPrivacyPolicyClick = {},
             onTermsClick = {}, onContactSupportClick = {},
@@ -945,14 +941,14 @@ private fun SettingsScreenProDarkPreview() {
     NurtlinaTheme(darkTheme = true) {
         SettingsScreen(
             baby = null,
-            settings = fakeSettings().copy(theme = ThemeType.DARK, notificationEnabled = true),
+            settings = fakeSettings().copy(notificationEnabled = true),
             isPro = true,
             currentUser = UserAccount(uid = "uid1", email = "parent@example.com", isAnonymous = false, familyId = "fam1", isProActive = true),
             appVersion = "1.0.0",
             onBabyNameSaved = {}, onUnitChanged = {}, onGuidelineRegionChanged = {},
             onLanguageSelected = {}, onNotificationsToggled = {}, onReminderTimingChanged = {},
-            onNightModeToggled = {}, onThemeChanged = {}, onManageSubscription = {},
-            onRestorePurchases = {}, onUpgradeTapped = {}, onExportCsv = {},
+            onNightModeToggled = {}, onManageSubscription = {},
+            onUpgradeTapped = {}, onExportCsv = {},
             onBackupClick = {}, onSignInClick = {}, onSignOutClick = {},
             onFaqClick = {}, onPrivacyPolicyClick = {},
             onTermsClick = {}, onContactSupportClick = {},

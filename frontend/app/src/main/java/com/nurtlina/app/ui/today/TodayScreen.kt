@@ -26,7 +26,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -34,7 +33,6 @@ import androidx.compose.material.icons.filled.BabyChangingStation
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.LocalDrink
 import androidx.compose.material.icons.filled.WaterDrop
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ButtonDefaults
@@ -42,16 +40,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -69,7 +64,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -94,8 +88,6 @@ import java.util.concurrent.TimeUnit
 
 private const val KEEP_QUICK_LOG_FEEDBACK_VISIBLE_FOR_DEBUG = false
 private const val ML_PER_OUNCE = 29.5735
-private val QUICK_FEED_ML_PRESETS = listOf(60.0, 90.0, 120.0, 150.0, 180.0)
-private val QUICK_FEED_OZ_PRESETS_ML = listOf(2.0, 3.0, 4.0, 5.0, 6.0).map { it * ML_PER_OUNCE }
 
 // --------------------------------------------------------------------------
 // UI state
@@ -159,7 +151,6 @@ fun TodayScreen(
     onDiscard: (Bottle) -> Unit,
     onMarkFed: (Bottle) -> Unit,
     onBottleDetail: (Bottle) -> Unit,
-    onQuickFeed: (Double) -> Unit,
     onQuickDiaper: () -> Unit,
     onQuickSleep: () -> Unit,
     modifier: Modifier = Modifier,
@@ -167,8 +158,6 @@ fun TodayScreen(
 ) {
     var quickLogFeedback by remember { mutableStateOf<QuickLogFeedback?>(null) }
     var isQuickLogFeedbackVisible by remember { mutableStateOf(false) }
-    var showQuickFeedDialog by remember { mutableStateOf(false) }
-    var quickFeedInitialAmountMl by remember { mutableStateOf<Double?>(null) }
     val showFeedback: (QuickLogFeedbackType) -> Unit = { type ->
         quickLogFeedback = QuickLogFeedback(type = type, token = System.nanoTime())
         isQuickLogFeedbackVisible = true
@@ -294,10 +283,7 @@ fun TodayScreen(
                 Spacer(Modifier.height(8.dp))
                 QuickLogRow(
                     nightModeEnabled = state.nightModeEnabled,
-                    onQuickFeed = {
-                        quickFeedInitialAmountMl = state.activeBottle?.amountMl
-                        showQuickFeedDialog = true
-                    },
+                    onQuickFeed = onNewBottle,
                     onQuickDiaper = {
                         onQuickDiaper()
                         showFeedback(QuickLogFeedbackType.DIAPER)
@@ -337,19 +323,6 @@ fun TodayScreen(
             }
         }
 
-        if (showQuickFeedDialog) {
-            QuickFeedDialog(
-                unitType = state.unitType,
-                initialAmountMl = quickFeedInitialAmountMl,
-                onDismiss = { showQuickFeedDialog = false },
-                onSave = { amountMl ->
-                    showQuickFeedDialog = false
-                    onQuickFeed(amountMl)
-                    showFeedback(QuickLogFeedbackType.FEED)
-                },
-            )
-        }
-
         PlayfulQuickLogFeedback(
             feedback = quickLogFeedback,
             visible = isQuickLogFeedbackVisible,
@@ -367,7 +340,6 @@ private data class QuickLogFeedback(
 )
 
 private enum class QuickLogFeedbackType {
-    FEED,
     DIAPER,
     SLEEP_STARTED,
     SLEEP_STOPPED,
@@ -388,35 +360,30 @@ private fun PlayfulQuickLogFeedback(
     ) {
         feedback?.let { visibleFeedback ->
             val title = when (visibleFeedback.type) {
-                QuickLogFeedbackType.FEED -> stringResource(R.string.today_feedback_feed_logged)
                 QuickLogFeedbackType.DIAPER -> stringResource(R.string.today_feedback_diaper_logged)
                 QuickLogFeedbackType.SLEEP_STARTED -> stringResource(R.string.today_feedback_sleep_started)
                 QuickLogFeedbackType.SLEEP_STOPPED -> stringResource(R.string.today_feedback_sleep_stopped)
                 QuickLogFeedbackType.NEXT_FEED_DUE -> stringResource(R.string.today_feedback_next_feed_due)
             }
             val body = when (visibleFeedback.type) {
-                QuickLogFeedbackType.FEED -> stringResource(R.string.today_feedback_feed_body)
                 QuickLogFeedbackType.DIAPER -> stringResource(R.string.today_feedback_diaper_body)
                 QuickLogFeedbackType.SLEEP_STARTED -> stringResource(R.string.today_feedback_sleep_started_body)
                 QuickLogFeedbackType.SLEEP_STOPPED -> stringResource(R.string.today_feedback_sleep_stopped_body)
                 QuickLogFeedbackType.NEXT_FEED_DUE -> stringResource(R.string.today_feedback_next_feed_due_body)
             }
             val icon = when (visibleFeedback.type) {
-                QuickLogFeedbackType.FEED -> Icons.Default.LocalDrink
                 QuickLogFeedbackType.DIAPER -> Icons.Default.BabyChangingStation
                 QuickLogFeedbackType.SLEEP_STARTED,
                 QuickLogFeedbackType.SLEEP_STOPPED -> Icons.Default.Bedtime
                 QuickLogFeedbackType.NEXT_FEED_DUE -> Icons.Default.LocalDrink
             }
             val containerColor = when (visibleFeedback.type) {
-                QuickLogFeedbackType.FEED,
                 QuickLogFeedbackType.NEXT_FEED_DUE -> MaterialTheme.colorScheme.primaryContainer
                 QuickLogFeedbackType.DIAPER -> MaterialTheme.colorScheme.tertiaryContainer
                 QuickLogFeedbackType.SLEEP_STARTED,
                 QuickLogFeedbackType.SLEEP_STOPPED -> MaterialTheme.colorScheme.secondaryContainer
             }
             val contentColor = when (visibleFeedback.type) {
-                QuickLogFeedbackType.FEED,
                 QuickLogFeedbackType.NEXT_FEED_DUE -> MaterialTheme.colorScheme.onPrimaryContainer
                 QuickLogFeedbackType.DIAPER -> MaterialTheme.colorScheme.onTertiaryContainer
                 QuickLogFeedbackType.SLEEP_STARTED,
@@ -492,85 +459,6 @@ private fun PlayfulDots(
             )
         }
     }
-}
-
-@Composable
-private fun QuickFeedDialog(
-    unitType: UnitType,
-    initialAmountMl: Double?,
-    onDismiss: () -> Unit,
-    onSave: (Double) -> Unit,
-) {
-    var amountText by remember(initialAmountMl, unitType) {
-        mutableStateOf(initialAmountMl?.formatQuickFeedInput(unitType).orEmpty())
-    }
-    val amountMl = remember(amountText, unitType) {
-        parseQuickFeedAmount(amountText, unitType)
-    }
-    val validAmountMl = amountMl?.takeIf { it > 0.0 }
-    val presets = if (unitType == UnitType.ML) QUICK_FEED_ML_PRESETS else QUICK_FEED_OZ_PRESETS_ML
-    val unitLabel = if (unitType == UnitType.ML) {
-        stringResource(R.string.unit_ml)
-    } else {
-        stringResource(R.string.unit_oz)
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.today_quick_feed_dialog_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = stringResource(R.string.today_quick_feed_dialog_body),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(presets) { presetMl ->
-                        FilterChip(
-                            selected = validAmountMl != null &&
-                                kotlin.math.abs(validAmountMl - presetMl) < 1.0,
-                            onClick = {
-                                amountText = presetMl.formatQuickFeedInput(unitType)
-                            },
-                            label = {
-                                Text(presetMl.formatQuickFeedPresetLabel(unitType))
-                            },
-                        )
-                    }
-                }
-                OutlinedTextField(
-                    value = amountText,
-                    onValueChange = { amountText = it },
-                    label = { Text(stringResource(R.string.today_quick_feed_amount_label)) },
-                    suffix = { Text(unitLabel) },
-                    isError = amountText.isNotBlank() && validAmountMl == null,
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                if (amountText.isNotBlank() && validAmountMl == null) {
-                    Text(
-                        text = stringResource(R.string.today_quick_feed_amount_error),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = validAmountMl != null,
-                onClick = { validAmountMl?.let(onSave) },
-            ) {
-                Text(stringResource(R.string.action_save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
-            }
-        },
-    )
 }
 
 @Composable
@@ -1449,24 +1337,6 @@ internal fun Double.formatAmount(unit: UnitType): String = when (unit) {
     UnitType.OZ -> "%.1f oz".format(this / ML_PER_OUNCE)
 }
 
-private fun Double.formatQuickFeedInput(unit: UnitType): String = when (unit) {
-    UnitType.ML -> "%.0f".format(this)
-    UnitType.OZ -> "%.1f".format(this / ML_PER_OUNCE)
-}
-
-private fun Double.formatQuickFeedPresetLabel(unit: UnitType): String = when (unit) {
-    UnitType.ML -> "%.0f".format(this)
-    UnitType.OZ -> "%.0f".format(this / ML_PER_OUNCE)
-}
-
-private fun parseQuickFeedAmount(text: String, unit: UnitType): Double? {
-    val parsed = text.trim().replace(',', '.').toDoubleOrNull() ?: return null
-    return when (unit) {
-        UnitType.ML -> parsed
-        UnitType.OZ -> parsed * ML_PER_OUNCE
-    }
-}
-
 private fun Long.formatNextFeedCountdown(): String {
     if (this <= 0) return "0s"
     val seconds = TimeUnit.MILLISECONDS.toSeconds(this)
@@ -1551,7 +1421,6 @@ private fun PreviewTodayWithBottle() {
             onDiscard = {},
             onMarkFed = {},
             onBottleDetail = {},
-            onQuickFeed = {},
             onQuickDiaper = {},
             onQuickSleep = {},
         )
@@ -1583,7 +1452,6 @@ private fun PreviewTodayEmptyDark() {
             onDiscard = {},
             onMarkFed = {},
             onBottleDetail = {},
-            onQuickFeed = {},
             onQuickDiaper = {},
             onQuickSleep = {},
         )
@@ -1613,7 +1481,6 @@ private fun PreviewTodayNightMode() {
             onDiscard = {},
             onMarkFed = {},
             onBottleDetail = {},
-            onQuickFeed = {},
             onQuickDiaper = {},
             onQuickSleep = {},
         )

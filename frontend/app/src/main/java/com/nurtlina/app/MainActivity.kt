@@ -12,7 +12,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.nurtlina.app.domain.model.ThemeType
 import com.nurtlina.app.ui.navigation.AppViewModel
 import com.nurtlina.app.ui.navigation.NurtlinaNavHost
 import com.nurtlina.app.ui.theme.NurtlinaTheme
@@ -26,13 +25,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val appViewModel: AppViewModel = hiltViewModel()
-            val themeType by appViewModel.themeType.collectAsStateWithLifecycle()
+            val nightModeEnabled by appViewModel.nightModeEnabled.collectAsStateWithLifecycle()
             val systemDark = isSystemInDarkTheme()
-            val darkTheme = when (themeType) {
-                ThemeType.DARK -> true
-                ThemeType.LIGHT -> false
-                ThemeType.SYSTEM -> systemDark
-            }
+            val darkTheme = systemDark || nightModeEnabled
 
             NurtlinaTheme(darkTheme = darkTheme) {
                 Surface(
