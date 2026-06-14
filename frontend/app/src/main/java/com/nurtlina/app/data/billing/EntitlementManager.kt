@@ -2,19 +2,18 @@ package com.nurtlina.app.data.billing
 
 import android.app.Activity
 import android.content.Context
-import com.android.billingclient.api.AcknowledgePurchaseParams
-import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.BillingClientStateListener
-import com.android.billingclient.api.BillingFlowParams
-import com.android.billingclient.api.BillingResult
-import com.android.billingclient.api.ProductDetails
-import com.android.billingclient.api.Purchase
-import com.android.billingclient.api.PurchasesUpdatedListener
-import com.android.billingclient.api.QueryProductDetailsParams
-import com.android.billingclient.api.QueryPurchasesParams
-import com.nurtlina.app.data.remote.api.BackendApiService
-import com.nurtlina.app.data.remote.api.EntitlementResponse
-import com.nurtlina.app.data.remote.api.PurchaseVerificationRequest
+import android.util.Log
+import com.nurtlina.app.BuildConfig
+import com.revenuecat.purchases.CustomerInfo
+import com.revenuecat.purchases.Package
+import com.revenuecat.purchases.PurchaseParams
+import com.revenuecat.purchases.Purchases
+import com.revenuecat.purchases.PurchasesConfiguration
+import com.revenuecat.purchases.awaitOfferings
+import com.revenuecat.purchases.awaitPurchase
+import com.revenuecat.purchases.awaitRestore
+import com.revenuecat.purchases.interfaces.LogInCallback
+import com.revenuecat.purchases.interfaces.UpdatedCustomerInfoListener
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,13 +23,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
+import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
-
-private val SUBS_PRODUCTS = setOf(
-    EntitlementManager.PRODUCT_MONTHLY,
-    EntitlementManager.PRODUCT_YEARLY,
-)
 
 enum class ProStatus {
     UNKNOWN,
@@ -44,26 +39,32 @@ enum class ProStatus {
 class EntitlementManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val entitlementCacheRepository: EntitlementCacheRepository,
-    private val backendApiService: BackendApiService,
-) : PurchasesUpdatedListener {
+) {
 
     private val _proStatus = MutableStateFlow(ProStatus.UNKNOWN)
     val proStatus: StateFlow<ProStatus> = _proStatus
 
     val isPro: Boolean get() = _proStatus.value != ProStatus.FREE && _proStatus.value != ProStatus.UNKNOWN
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-    private var billingClient: BillingClient = BillingClient.newBuilder(context)
-        .setListener(this)
-        .enablePendingPurchases()
-        .build()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     companion object {
         const val PRODUCT_MONTHLY = "nurtlina_pro_monthly"
         const val PRODUCT_YEARLY = "nurtlina_pro_yearly"
         const val PRODUCT_LIFETIME = "nurtlina_pro_lifetime"
+        const val ENTITLEMENT_PRO = "pro"
+
+        private const val TAG = "EntitlementManager"
+        private const val PACKAGE_MONTHLY = "\$rc_monthly"
+        private const val PACKAGE_YEARLY = "\$rc_annual"
+        private const val PACKAGE_LIFETIME = "\$rc_lifetime"
         private val ENTITLEMENT_GRACE_PERIOD = Duration.ofDays(3)
+    }
+
+    private val customerInfoListener = UpdatedCustomerInfoListener { customerInfo ->
+        scope.launch {
+            applyCustomerInfo(customerInfo)
+        }
     }
 
     init {
@@ -73,164 +74,117 @@ class EntitlementManager @Inject constructor(
     }
 
     fun connect() {
-        billingClient.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(result: BillingResult) {
-                if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                    queryPurchases()
-                }
-            }
-            override fun onBillingServiceDisconnected() {
-                // Will retry on next launch
-            }
-        })
-    }
-
-    private fun queryPurchases() {
-        val subsParams = QueryPurchasesParams.newBuilder()
-            .setProductType(BillingClient.ProductType.SUBS)
-            .build()
-        billingClient.queryPurchasesAsync(subsParams) { _, purchases ->
-            handlePurchases(purchases)
-        }
-
-        val inappParams = QueryPurchasesParams.newBuilder()
-            .setProductType(BillingClient.ProductType.INAPP)
-            .build()
-        billingClient.queryPurchasesAsync(inappParams) { _, purchases ->
-            handlePurchases(purchases)
-        }
-    }
-
-    private fun handlePurchases(purchases: List<Purchase>) {
-        var hasPurchasedPro = false
-        for (purchase in purchases) {
-            if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
-                val status = when {
-                    purchase.products.contains(PRODUCT_LIFETIME) -> ProStatus.LIFETIME
-                    purchase.products.contains(PRODUCT_YEARLY) -> ProStatus.YEARLY
-                    purchase.products.contains(PRODUCT_MONTHLY) -> ProStatus.MONTHLY
-                    else -> null
-                }
-                if (status != null) {
-                    hasPurchasedPro = true
-                    _proStatus.value = status
-                    cacheTemporaryUnlock(status)
-                    verifyPurchaseWithBackend(purchase, status)
-                }
-                acknowledgePurchase(purchase)
-            }
-        }
-        if (!hasPurchasedPro && _proStatus.value == ProStatus.UNKNOWN) {
+        if (BuildConfig.REVENUECAT_API_KEY.isBlank()) {
             scope.launch {
-                val cached = entitlementCacheRepository.get()
-                if (!applyCachedEntitlement(cached)) {
+                if (!applyCachedEntitlement(entitlementCacheRepository.get())) {
+                    _proStatus.value = ProStatus.FREE
+                }
+            }
+            Log.w(TAG, "RevenueCat API key is not configured.")
+            return
+        }
+
+        val purchases = if (Purchases.isConfigured) {
+            Purchases.sharedInstance
+        } else {
+            Purchases.configure(
+                PurchasesConfiguration.Builder(context, BuildConfig.REVENUECAT_API_KEY)
+                    .build(),
+            )
+        }
+        purchases.updatedCustomerInfoListener = customerInfoListener
+    }
+
+    fun identify(appUserId: String) {
+        connect()
+        if (!Purchases.isConfigured || Purchases.sharedInstance.appUserID == appUserId) return
+
+        Purchases.sharedInstance.logIn(
+            appUserId,
+            object : LogInCallback {
+                override fun onReceived(customerInfo: CustomerInfo, created: Boolean) {
+                    scope.launch { applyCustomerInfo(customerInfo) }
+                }
+
+                override fun onError(error: com.revenuecat.purchases.PurchasesError) {
+                    Log.w(TAG, "RevenueCat login failed: ${error.message}")
+                }
+            },
+        )
+    }
+
+    fun restorePurchases() {
+        connect()
+        if (!Purchases.isConfigured) return
+
+        scope.launch {
+            runCatching {
+                Purchases.sharedInstance.awaitRestore()
+            }.onSuccess { customerInfo ->
+                applyCustomerInfo(customerInfo)
+            }.onFailure { throwable ->
+                Log.w(TAG, "RevenueCat restore failed.", throwable)
+                if (!applyCachedEntitlement(entitlementCacheRepository.get())) {
                     _proStatus.value = ProStatus.FREE
                 }
             }
         }
     }
 
-    private fun acknowledgePurchase(purchase: Purchase) {
-        if (!purchase.isAcknowledged) {
-            val params = AcknowledgePurchaseParams.newBuilder()
-                .setPurchaseToken(purchase.purchaseToken)
-                .build()
-            billingClient.acknowledgePurchase(params) { }
-        }
-    }
-
-    override fun onPurchasesUpdated(result: BillingResult, purchases: List<Purchase>?) {
-        if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-            handlePurchases(purchases)
-        }
-    }
-
-    fun restorePurchases() = queryPurchases()
-
-    /**
-     * Queries product details then immediately launches the Play Store purchase flow.
-     * Must be called from a UI context where [activity] is visible.
-     * Billing result is delivered via [onPurchasesUpdated].
-     */
     fun launchBillingFlow(activity: Activity, productId: String) {
-        val productType = if (productId in SUBS_PRODUCTS) {
-            BillingClient.ProductType.SUBS
-        } else {
-            BillingClient.ProductType.INAPP
-        }
+        connect()
+        if (!Purchases.isConfigured) return
 
-        val productList = listOf(
-            QueryProductDetailsParams.Product.newBuilder()
-                .setProductId(productId)
-                .setProductType(productType)
-                .build(),
-        )
-        val params = QueryProductDetailsParams.newBuilder()
-            .setProductList(productList)
-            .build()
-
-        billingClient.queryProductDetailsAsync(params) { result, productDetailsList ->
-            if (result.responseCode != BillingClient.BillingResponseCode.OK) return@queryProductDetailsAsync
-            val productDetails = productDetailsList.firstOrNull() ?: return@queryProductDetailsAsync
-            buildAndLaunchFlow(activity, productDetails, productType)
-        }
-    }
-
-    private fun buildAndLaunchFlow(
-        activity: Activity,
-        productDetails: ProductDetails,
-        productType: String,
-    ) {
-        val paramsBuilder = BillingFlowParams.ProductDetailsParams.newBuilder()
-            .setProductDetails(productDetails)
-
-        if (productType == BillingClient.ProductType.SUBS) {
-            val offerToken = productDetails.subscriptionOfferDetails
-                ?.firstOrNull()
-                ?.offerToken
-                ?: return
-            paramsBuilder.setOfferToken(offerToken)
-        }
-
-        val flowParams = BillingFlowParams.newBuilder()
-            .setProductDetailsParamsList(listOf(paramsBuilder.build()))
-            .build()
-
-        billingClient.launchBillingFlow(activity, flowParams)
-    }
-
-    private fun cacheTemporaryUnlock(status: ProStatus) {
-        scope.launch {
-            val now = Instant.now()
-            entitlementCacheRepository.save(
-                EntitlementCache(
-                    isPro = true,
-                    plan = status.name,
-                    status = "TEMPORARY",
-                    expiresAt = null,
-                    lastVerifiedAt = null,
-                    gracePeriodUntil = now.plus(ENTITLEMENT_GRACE_PERIOD),
-                    source = "GOOGLE_PLAY_LOCAL",
-                ),
-            )
-        }
-    }
-
-    private fun verifyPurchaseWithBackend(purchase: Purchase, status: ProStatus) {
-        val productId = purchase.products.firstOrNull() ?: return
         scope.launch {
             runCatching {
-                backendApiService.submitPurchase(
-                    PurchaseVerificationRequest(
-                        packageName = context.packageName,
-                        productId = productId,
-                        purchaseToken = purchase.purchaseToken,
-                    ),
-                )
-            }.onSuccess { response ->
-                entitlementCacheRepository.save(response.toCache(status))
-                applyCachedEntitlement(entitlementCacheRepository.get())
+                val packageToPurchase = findPackageForProduct(productId) ?: return@runCatching null
+                Purchases.sharedInstance.awaitPurchase(
+                    PurchaseParams.Builder(activity, packageToPurchase).build(),
+                ).customerInfo
+            }.onSuccess { customerInfo ->
+                if (customerInfo != null) {
+                    applyCustomerInfo(customerInfo)
+                } else {
+                    Log.w(TAG, "RevenueCat package not found for $productId.")
+                }
+            }.onFailure { throwable ->
+                Log.w(TAG, "RevenueCat purchase failed.", throwable)
             }
+        }
+    }
+
+    private suspend fun findPackageForProduct(productId: String): Package? {
+        val offering = Purchases.sharedInstance.awaitOfferings().current ?: return null
+        val preferredPackageIdentifier = when (productId) {
+            PRODUCT_MONTHLY -> PACKAGE_MONTHLY
+            PRODUCT_YEARLY -> PACKAGE_YEARLY
+            PRODUCT_LIFETIME -> PACKAGE_LIFETIME
+            else -> null
+        }
+        return offering.availablePackages.firstOrNull { it.identifier == preferredPackageIdentifier }
+            ?: offering.availablePackages.firstOrNull {
+                it.product.id == productId || it.product.id.substringBefore(":") == productId
+            }
+    }
+
+    private suspend fun applyCustomerInfo(customerInfo: CustomerInfo) {
+        val entitlement = customerInfo.entitlements.active[ENTITLEMENT_PRO]
+            ?: customerInfo.entitlements.active.values.firstOrNull()
+        val status = entitlement?.productIdentifier?.toProStatus()
+        val isPro = entitlement?.isActive == true && status != null
+        val now = Instant.now()
+        val cache = EntitlementCache(
+            isPro = isPro,
+            plan = status?.name,
+            status = if (isPro) "ACTIVE" else "FREE",
+            expiresAt = entitlement?.expirationDate?.toInstantCompat(),
+            lastVerifiedAt = now,
+            gracePeriodUntil = if (isPro) now.plus(ENTITLEMENT_GRACE_PERIOD) else null,
+            source = "REVENUECAT",
+        )
+        entitlementCacheRepository.save(cache)
+        if (!applyCachedEntitlement(cache)) {
+            _proStatus.value = ProStatus.FREE
         }
     }
 
@@ -245,20 +199,17 @@ class EntitlementManager @Inject constructor(
         return false
     }
 
-    private fun EntitlementResponse.toCache(fallbackStatus: ProStatus): EntitlementCache = EntitlementCache(
-        isPro = isPro,
-        plan = plan ?: fallbackStatus.name,
-        status = status,
-        expiresAt = expiresAt?.let { Instant.parse(it) },
-        lastVerifiedAt = lastVerifiedAt?.let { Instant.parse(it) } ?: Instant.now(),
-        gracePeriodUntil = gracePeriodUntil?.let { Instant.parse(it) },
-        source = source ?: "BACKEND",
-    )
+    private fun Date.toInstantCompat(): Instant = Instant.ofEpochMilli(time)
 
-    private fun String.toProStatus(): ProStatus = when (uppercase()) {
-        "MONTHLY" -> ProStatus.MONTHLY
-        "YEARLY" -> ProStatus.YEARLY
-        "LIFETIME" -> ProStatus.LIFETIME
+    private fun String.toProStatus(): ProStatus = when {
+        contains(PRODUCT_MONTHLY, ignoreCase = true) || contains("monthly", ignoreCase = true) -> ProStatus.MONTHLY
+        contains(PRODUCT_YEARLY, ignoreCase = true) ||
+            contains("yearly", ignoreCase = true) ||
+            contains("annual", ignoreCase = true) -> ProStatus.YEARLY
+        contains(PRODUCT_LIFETIME, ignoreCase = true) || contains("lifetime", ignoreCase = true) -> ProStatus.LIFETIME
+        uppercase() == "MONTHLY" -> ProStatus.MONTHLY
+        uppercase() == "YEARLY" -> ProStatus.YEARLY
+        uppercase() == "LIFETIME" -> ProStatus.LIFETIME
         else -> ProStatus.LIFETIME
     }
 }

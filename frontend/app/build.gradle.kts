@@ -8,6 +8,8 @@ plugins {
     alias(libs.plugins.firebase.crashlytics)
 }
 
+val revenueCatApiKey = providers.gradleProperty("REVENUECAT_API_KEY").orElse("").get()
+
 android {
     namespace = "com.nurtlina.app"
     compileSdk = 35
@@ -19,6 +21,7 @@ android {
         versionCode = 1
         versionName = "1.0.0"
         buildConfigField("String", "API_BASE_URL", "\"https://nurtlina-api.dothings.one/\"")
+        buildConfigField("String", "REVENUECAT_API_KEY", "\"$revenueCatApiKey\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -98,7 +101,7 @@ dependencies {
     implementation(libs.firebase.functions)
     implementation(libs.play.services.auth)
 
-    implementation(libs.play.billing)
+    implementation(libs.revenuecat)
     implementation(libs.admob)
     implementation(libs.material)
 

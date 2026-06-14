@@ -28,7 +28,7 @@ Nurtlina helps parents and caregivers:
 | DI | Hilt |
 | Analytics | Firebase Analytics |
 | Crash Reporting | Firebase Crashlytics |
-| Billing | Google Play Billing |
+| Billing | RevenueCat + Google Play products |
 | Ads | AdMob |
 
 ---
@@ -42,7 +42,7 @@ app/src/main/java/com/nurtlina/app/
 │   ├── notification/   Notification scheduling, boot receiver
 │   └── time/           Time formatting utilities
 ├── data/
-│   ├── billing/        Entitlement manager (Play Billing)
+│   ├── billing/        RevenueCat-backed entitlement manager
 │   ├── datastore/      DataStore settings repository
 │   ├── local/          Room entities, DAOs, database
 │   └── repository/     Room repository implementations
@@ -108,6 +108,10 @@ Always use:
 1. Replace `app/google-services.json` with your actual Firebase config
 2. Replace AdMob App ID in `res/values/strings.xml` (currently set to test ID)
 3. Set up Google Play products: `nurtlina_pro_monthly`, `nurtlina_pro_yearly`, `nurtlina_pro_lifetime`
+4. Set up RevenueCat with entitlement `pro` and packages `$rc_monthly`, `$rc_annual`, `$rc_lifetime`
+5. Provide the public Android RevenueCat SDK key via `~/.gradle/gradle.properties`: `REVENUECAT_API_KEY=goog_...`
+
+Detailed RevenueCat dashboard setup: [`docs/revenuecat-setup.md`](docs/revenuecat-setup.md)
 
 ---
 

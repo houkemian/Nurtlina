@@ -2,6 +2,7 @@ package com.nurtlina.app.data.startup
 
 import android.util.Log
 import com.nurtlina.app.BuildConfig
+import com.nurtlina.app.data.billing.EntitlementManager
 import com.nurtlina.app.domain.repository.AuthRepository
 import com.nurtlina.app.domain.repository.BackendRepository
 import com.nurtlina.app.domain.repository.SessionRepository
@@ -14,6 +15,7 @@ import javax.inject.Singleton
 class AppStartupCoordinator @Inject constructor(
     private val authRepository: AuthRepository,
     private val backendRepository: BackendRepository,
+    private val entitlementManager: EntitlementManager,
     private val sessionRepository: SessionRepository,
     private val syncManager: SyncManager,
 ) {
@@ -21,7 +23,8 @@ class AppStartupCoordinator @Inject constructor(
     suspend fun start() {
         runCatching {
             val session = sessionRepository.get()
-            authRepository.ensureSignedIn()
+            val authUser = authRepository.ensureSignedIn()
+            entitlementManager.identify(authUser.uid)
             val initResult = backendRepository.initMe(
                 clientId = session.clientId,
                 appVersion = BuildConfig.VERSION_NAME,
