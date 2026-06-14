@@ -313,7 +313,7 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
 
     LaunchedEffect(Unit) {
         while (true) {
-            delay(if (FeedReminderConfig.DEBUG_NEXT_FEED_REMINDER_ENABLED) 1_000L else 60_000L)
+            delay(60_000L)
             now = Instant.now()
         }
     }
