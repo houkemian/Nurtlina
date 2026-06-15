@@ -16,3 +16,7 @@ __pycache__/
 
 node_modules/
 dist/
+
+
+keystore.properties
+nurtlina-upload-key.jks
