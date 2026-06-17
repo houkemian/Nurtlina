@@ -1,0 +1,7 @@
+interface:
+  display_name: "Nurtlina Product Analysis"
+  short_description: "Plan compliant Nurtlina product surfaces"
+  default_prompt: "Use $nurtlina-product-analysis to review a Nurtlina feature idea for timing, copy, compliance, analytics, and MVP acceptance criteria."
+
+policy:
+  allow_implicit_invocation: true
