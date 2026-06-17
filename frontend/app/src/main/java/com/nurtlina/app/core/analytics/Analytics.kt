@@ -38,6 +38,18 @@ class Analytics @Inject constructor(
     fun logExportClicked() = log("export_clicked", null)
     fun logBackupEnabled() = log("backup_enabled", null)
     fun logLanguageChanged(language: String) = log("language_changed", bundle("language" to language))
+    fun logRatingPromptEligible(triggerSource: String) = log("rating_prompt_eligible", bundle("trigger_source" to triggerSource))
+    fun logRatingPromptShown(triggerSource: String, shownCount: Int) = log(
+        "rating_prompt_shown",
+        bundle("trigger_source" to triggerSource, "shown_count" to shownCount.toString()),
+    )
+    fun logRatingPromptRateClicked() = log("rating_prompt_rate_clicked", null)
+    fun logRatingPromptMaybeLaterClicked() = log("rating_prompt_maybe_later_clicked", null)
+    fun logRatingPromptNoThanksClicked() = log("rating_prompt_no_thanks_clicked", null)
+    fun logRatingPromptBlockedNightMode() = log("rating_prompt_blocked_night_mode", null)
+    fun logRatingPromptBlockedActiveExpiredBottle() = log("rating_prompt_blocked_active_expired_bottle", null)
+    fun logRatingPromptBlockedNotificationSession() = log("rating_prompt_blocked_notification_session", null)
+    fun logRatingPromptBlockedNegativeAction() = log("rating_prompt_blocked_negative_action", null)
 
     private fun log(event: String, params: Bundle?) {
         firebase.logEvent(event, params)

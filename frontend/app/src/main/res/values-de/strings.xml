@@ -296,4 +296,11 @@
     <string name="new_feed_disclaimer">Dies speichert nur einen Fütterungseintrag. Kein medizinischer Rat.</string>
 
     <string name="cd_new_bottle_fab">Fütterungseintrag hinzufügen</string>
+    <!-- ===== Rating Prompt ===== -->
+    <string name="rating_prompt_title">Gefällt dir Nurtlina?</string>
+    <string name="rating_prompt_body">Wenn Nurtlina dir beim Erfassen von Flaschen-Timern und Babypflege hilft, möchtest du die App bewerten?</string>
+    <string name="rating_prompt_rate">Nurtlina bewerten</string>
+    <string name="rating_prompt_maybe_later">Vielleicht später</string>
+    <string name="rating_prompt_no_thanks">Nein danke</string>
+
 </resources>

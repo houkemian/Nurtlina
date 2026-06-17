@@ -14,6 +14,7 @@ datastore = "1.1.1"
 workManager = "2.10.0"
 firebaseBom = "33.7.0"
 playBilling = "7.1.1"
+playReview = "2.0.2"
 adMob = "23.6.0"
 material = "1.12.0"
 revenueCat = "8.9.0"
@@ -68,6 +69,7 @@ firebase-functions = { group = "com.google.firebase", name = "firebase-functions
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version = "21.2.0" }
 
 play-billing = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "playBilling" }
+play-review-ktx = { group = "com.google.android.play", name = "review-ktx", version.ref = "playReview" }
 admob = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "adMob" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 revenuecat = { group = "com.revenuecat.purchases", name = "purchases", version.ref = "revenueCat" }

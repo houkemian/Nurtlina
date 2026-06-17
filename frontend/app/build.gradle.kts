@@ -120,6 +120,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.functions)
     implementation(libs.play.services.auth)
+    implementation(libs.play.review.ktx)
 
     implementation(libs.revenuecat)
     implementation(libs.admob)

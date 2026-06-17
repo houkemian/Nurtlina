@@ -2,6 +2,7 @@ package com.nurtlina.app.ui.today
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nurtlina.app.core.analytics.Analytics
 import com.nurtlina.app.core.notification.NextFeedNotificationScheduler
 import com.nurtlina.app.domain.model.Baby
 import com.nurtlina.app.domain.model.Bottle
@@ -16,6 +17,10 @@ import com.nurtlina.app.domain.model.TodaySummary
 import com.nurtlina.app.domain.repository.BabyRepository
 import com.nurtlina.app.domain.repository.BottleRepository
 import com.nurtlina.app.domain.repository.FeedLogRepository
+import com.nurtlina.app.domain.rating.RatingPromptBlockedReason
+import com.nurtlina.app.domain.rating.RatingPromptDecision
+import com.nurtlina.app.domain.rating.RatingPromptEligibility
+import com.nurtlina.app.domain.repository.RatingPromptRepository
 import com.nurtlina.app.domain.repository.SettingsRepository
 import com.nurtlina.app.domain.usecase.bottle.GetTodaySummaryUseCase
 import com.nurtlina.app.domain.usecase.bottle.TransitionBottleUseCase
@@ -54,7 +59,10 @@ class TodayViewModel @Inject constructor(
     private val logDiaperUseCase: LogDiaperUseCase,
     private val sleepUseCase: SleepUseCase,
     private val settingsRepository: SettingsRepository,
+    private val ratingPromptRepository: RatingPromptRepository,
+    private val ratingPromptEligibility: RatingPromptEligibility,
     private val nextFeedNotificationScheduler: NextFeedNotificationScheduler,
+    private val analytics: Analytics,
 ) : ViewModel() {
 
     // ── All babies (for the switcher UI) ────────────────────────────────────
@@ -139,6 +147,11 @@ class TodayViewModel @Inject constructor(
     private val _actionError = MutableStateFlow<Throwable?>(null)
     val actionError: StateFlow<Throwable?> = _actionError.asStateFlow()
 
+    private val _showRatingPrompt = MutableStateFlow(false)
+    val showRatingPrompt: StateFlow<Boolean> = _showRatingPrompt.asStateFlow()
+
+    private var ratingPromptShownThisSession = false
+
     // ── Public actions ───────────────────────────────────────────────────────
 
     fun selectBaby(babyId: String) {
@@ -162,12 +175,18 @@ class TodayViewModel @Inject constructor(
                     _actionError.value = IllegalStateException(result.reason)
                 }
                 is BottleTransitionResult.Success -> {
-                    if (transition is BottleTransition.MarkFed) {
-                        runCatching {
-                            logFeedFromBottle(result.bottle)
-                        }.onFailure { error ->
-                            _actionError.value = error
+                    when (transition) {
+                        is BottleTransition.MarkFed -> {
+                            runCatching {
+                                logFeedFromBottle(result.bottle)
+                                ratingPromptRepository.incrementPositiveAction()
+                            }.onFailure { error ->
+                                _actionError.value = error
+                            }
                         }
+                        is BottleTransition.Discard,
+                        is BottleTransition.Cancel -> ratingPromptRepository.recordNegativeAction(Instant.now())
+                        else -> Unit
                     }
                 }
             }
@@ -193,6 +212,7 @@ class TodayViewModel @Inject constructor(
                     note = note,
                 )
                 nextFeedNotificationScheduler.schedule(log.babyId, log.startedAt)
+                ratingPromptRepository.incrementPositiveAction()
                 onLogged()
             }.onFailure { _actionError.value = it }
         }
@@ -219,6 +239,7 @@ class TodayViewModel @Inject constructor(
                     endedAt = now,
                 )
                 nextFeedNotificationScheduler.schedule(log.babyId, log.startedAt)
+                ratingPromptRepository.incrementPositiveAction()
             }.onFailure { _actionError.value = it }
         }
     }
@@ -261,6 +282,67 @@ class TodayViewModel @Inject constructor(
         _actionError.value = null
     }
 
+    fun maybeShowRatingPrompt(activeBottles: List<Bottle>, nightModeEnabled: Boolean) {
+        viewModelScope.launch {
+            val now = Instant.now()
+            ratingPromptRepository.ensureFirstLaunchAt(now)
+            val state = ratingPromptRepository.get()
+            when (val decision = ratingPromptEligibility.evaluate(
+                state = state,
+                activeBottles = activeBottles,
+                nightModeEnabled = nightModeEnabled,
+                alreadyShownThisSession = ratingPromptShownThisSession,
+                now = now,
+            )) {
+                RatingPromptDecision.Eligible -> {
+                    analytics.logRatingPromptEligible(RATING_PROMPT_TRIGGER_SOURCE)
+                    ratingPromptRepository.recordShown(now)
+                    ratingPromptShownThisSession = true
+                    _showRatingPrompt.value = true
+                    analytics.logRatingPromptShown(
+                        triggerSource = RATING_PROMPT_TRIGGER_SOURCE,
+                        shownCount = state.ratingPromptShownCount + 1,
+                    )
+                }
+                is RatingPromptDecision.Blocked -> logRatingPromptBlocked(decision.reason)
+            }
+        }
+    }
+
+    private fun logRatingPromptBlocked(reason: RatingPromptBlockedReason) {
+        when (reason) {
+            RatingPromptBlockedReason.NIGHT_MODE -> analytics.logRatingPromptBlockedNightMode()
+            RatingPromptBlockedReason.ACTIVE_EXPIRED_BOTTLE -> analytics.logRatingPromptBlockedActiveExpiredBottle()
+            RatingPromptBlockedReason.RECENT_NOTIFICATION_SESSION -> analytics.logRatingPromptBlockedNotificationSession()
+            RatingPromptBlockedReason.RECENT_NEGATIVE_ACTION -> analytics.logRatingPromptBlockedNegativeAction()
+            else -> Unit
+        }
+    }
+
+    fun dismissRatingPromptForMaybeLater() {
+        viewModelScope.launch {
+            ratingPromptRepository.recordMaybeLater(Instant.now())
+            _showRatingPrompt.value = false
+            analytics.logRatingPromptMaybeLaterClicked()
+        }
+    }
+
+    fun dismissRatingPromptPermanently() {
+        viewModelScope.launch {
+            ratingPromptRepository.recordNoThanks()
+            _showRatingPrompt.value = false
+            analytics.logRatingPromptNoThanksClicked()
+        }
+    }
+
+    fun markRatingPromptRateClicked() {
+        viewModelScope.launch {
+            ratingPromptRepository.recordRateClicked(Instant.now())
+            _showRatingPrompt.value = false
+            analytics.logRatingPromptRateClicked()
+        }
+    }
+
     private suspend fun logFeedFromBottle(bottle: Bottle) {
         val fedAt = bottle.fedAt ?: Instant.now()
         val log = logFeedUseCase(
@@ -274,6 +356,8 @@ class TodayViewModel @Inject constructor(
         nextFeedNotificationScheduler.schedule(log.babyId, log.startedAt)
     }
 }
+
+private const val RATING_PROMPT_TRIGGER_SOURCE = "today_positive_action"
 
 private fun MilkType.toFeedType(): FeedType = when (this) {
     MilkType.FORMULA -> FeedType.FORMULA

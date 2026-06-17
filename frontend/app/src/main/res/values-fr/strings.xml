@@ -296,4 +296,11 @@
     <string name="new_feed_disclaimer">Cela enregistre uniquement une alimentation. Ce n\'est pas un avis médical.</string>
 
     <string name="cd_new_bottle_fab">Ajouter un suivi d\'alimentation</string>
+    <!-- ===== Rating Prompt ===== -->
+    <string name="rating_prompt_title">Vous aimez Nurtlina ?</string>
+    <string name="rating_prompt_body">Si Nurtlina vous aide à suivre les minuteurs de biberons et les soins de bébé, voulez-vous la noter ?</string>
+    <string name="rating_prompt_rate">Noter Nurtlina</string>
+    <string name="rating_prompt_maybe_later">Plus tard</string>
+    <string name="rating_prompt_no_thanks">Non merci</string>
+
 </resources>

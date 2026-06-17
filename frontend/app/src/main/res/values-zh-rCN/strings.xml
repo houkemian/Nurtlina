@@ -296,4 +296,11 @@
     <string name="new_feed_disclaimer">这里只保存喂奶记录，不构成医疗建议。</string>
 
     <string name="cd_new_bottle_fab">新增喂奶记录</string>
+    <!-- ===== Rating Prompt ===== -->
+    <string name="rating_prompt_title">喜欢使用 Nurtlina 吗？</string>
+    <string name="rating_prompt_body">如果 Nurtlina 帮你更轻松地记录奶瓶计时和宝宝照护，愿意给我们一个评分吗？</string>
+    <string name="rating_prompt_rate">去评分</string>
+    <string name="rating_prompt_maybe_later">稍后再说</string>
+    <string name="rating_prompt_no_thanks">不再提示</string>
+
 </resources>

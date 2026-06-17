@@ -46,6 +46,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.android.play.core.review.ReviewManagerFactory
 import com.nurtlina.app.R
 import com.nurtlina.app.core.notification.FeedReminderConfig
 import com.nurtlina.app.data.billing.EntitlementManager
@@ -146,6 +147,9 @@ private const val PRIVACY_URL = "https://nurtlina.app/privacy"
 private const val TERMS_URL = "https://nurtlina.app/terms"
 private const val PLAY_STORE_SUBS_URL =
     "https://play.google.com/store/account/subscriptions?package=com.nurtlina.app"
+private const val PLAY_STORE_APP_URL = "market://details?id=com.nurtlina.app"
+private const val PLAY_STORE_APP_WEB_URL =
+    "https://play.google.com/store/apps/details?id=com.nurtlina.app"
 
 /**
  * Root composable that owns the [NavHostController] and the app-level
@@ -304,8 +308,10 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
     val activeBottles by viewModel.activeBottles.collectAsStateWithLifecycle()
     val latestFeed by viewModel.latestFeed.collectAsStateWithLifecycle()
     val todaySummary by viewModel.todaySummary.collectAsStateWithLifecycle()
+    val showRatingPrompt by viewModel.showRatingPrompt.collectAsStateWithLifecycle()
     val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
     var now by remember { mutableStateOf(Instant.now()) }
+    val context = LocalContext.current
     val activeBottle = activeBottles.firstOrNull()
     val summary = todaySummary ?: emptyTodaySummary()
     val currentSettings = settings ?: UserSettings()
@@ -320,6 +326,18 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
 
     LaunchedEffect(latestFeed?.id, latestFeed?.startedAt) {
         latestFeed?.let(viewModel::scheduleNextFeedReminder)
+    }
+
+    LaunchedEffect(
+        summary.totalFeedCount,
+        activeBottles.map { it.id to it.status },
+        currentSettings.nightModeEnabled,
+    ) {
+        delay(7_000L)
+        viewModel.maybeShowRatingPrompt(
+            activeBottles = activeBottles,
+            nightModeEnabled = currentSettings.nightModeEnabled,
+        )
     }
 
     TodayScreen(
@@ -340,6 +358,7 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
             showAds = !isPro && !currentSettings.nightModeEnabled,
             nightModeEnabled = currentSettings.nightModeEnabled,
             unitType = unitType,
+            showRatingPrompt = showRatingPrompt,
         ),
         onSelectBaby = { viewModel.selectBaby(it.id) },
         onAddBaby = {
@@ -363,6 +382,12 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
                 viewModel.endSleep()
             }
         },
+        onRatingPromptRate = {
+            viewModel.markRatingPromptRateClicked()
+            launchInAppReviewOrStore(context)
+        },
+        onRatingPromptMaybeLater = viewModel::dismissRatingPromptForMaybeLater,
+        onRatingPromptNoThanks = viewModel::dismissRatingPromptPermanently,
     )
 }
 
@@ -654,6 +679,32 @@ private fun guidelineSourceName(region: GuidelineRegion?): String = when (region
     GuidelineRegion.UK -> "NHS"
     GuidelineRegion.CUSTOM -> "Custom"
     null -> ""
+}
+
+private fun launchInAppReviewOrStore(context: Context) {
+    val activity = context.findActivity()
+    if (activity == null) {
+        openPlayStorePage(context)
+        return
+    }
+
+    val reviewManager = ReviewManagerFactory.create(context)
+    reviewManager.requestReviewFlow()
+        .addOnSuccessListener { reviewInfo ->
+            reviewManager.launchReviewFlow(activity, reviewInfo)
+                .addOnFailureListener { openPlayStorePage(context) }
+        }
+        .addOnFailureListener { openPlayStorePage(context) }
+}
+
+private fun openPlayStorePage(context: Context) {
+    val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_APP_URL)).apply {
+        setPackage("com.android.vending")
+    }
+    runCatching { context.startActivity(marketIntent) }
+        .onFailure {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_APP_WEB_URL)))
+        }
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {

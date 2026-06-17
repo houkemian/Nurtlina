@@ -32,9 +32,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BabyChangingStation
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.LocalDrink
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -47,6 +49,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -80,6 +83,7 @@ import com.nurtlina.app.domain.model.BottleStatus
 import com.nurtlina.app.domain.model.MilkType
 import com.nurtlina.app.domain.model.TodaySummary
 import com.nurtlina.app.domain.model.UnitType
+import com.nurtlina.app.ui.NurtlinaDialog
 import com.nurtlina.app.ui.theme.BottleStatusColors
 import com.nurtlina.app.ui.theme.NurtlinaTheme
 import kotlinx.coroutines.delay
@@ -117,6 +121,7 @@ data class TodayUiState(
     val showAds: Boolean = true,
     val nightModeEnabled: Boolean = false,
     val unitType: UnitType = UnitType.ML,
+    val showRatingPrompt: Boolean = false,
 )
 
 data class FeedingStatusUiState(
@@ -153,6 +158,9 @@ fun TodayScreen(
     onBottleDetail: (Bottle) -> Unit,
     onQuickDiaper: () -> Unit,
     onQuickSleep: () -> Unit,
+    onRatingPromptRate: () -> Unit,
+    onRatingPromptMaybeLater: () -> Unit,
+    onRatingPromptNoThanks: () -> Unit,
     modifier: Modifier = Modifier,
     adUnitId: String = "ca-app-pub-3940256099942544/6300978111", // AdMob test banner ID
 ) {
@@ -177,6 +185,14 @@ fun TodayScreen(
         if (state.feedingStatus.isNextFeedDue) {
             showFeedback(QuickLogFeedbackType.NEXT_FEED_DUE)
         }
+    }
+
+    if (state.showRatingPrompt) {
+        RatingPromptDialog(
+            onRate = onRatingPromptRate,
+            onMaybeLater = onRatingPromptMaybeLater,
+            onNoThanks = onRatingPromptNoThanks,
+        )
     }
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -344,6 +360,47 @@ private enum class QuickLogFeedbackType {
     SLEEP_STARTED,
     SLEEP_STOPPED,
     NEXT_FEED_DUE,
+}
+
+@Composable
+private fun RatingPromptDialog(
+    onRate: () -> Unit,
+    onMaybeLater: () -> Unit,
+    onNoThanks: () -> Unit,
+) {
+    NurtlinaDialog(
+        onDismissRequest = onMaybeLater,
+        title = stringResource(R.string.rating_prompt_title),
+        icon = Icons.Default.Star,
+    ) {
+        Text(
+            text = stringResource(R.string.rating_prompt_body),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(Modifier.height(20.dp))
+        Button(
+            onClick = onRate,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.rating_prompt_rate))
+        }
+        Spacer(Modifier.height(8.dp))
+        TextButton(
+            onClick = onMaybeLater,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.rating_prompt_maybe_later))
+        }
+        TextButton(
+            onClick = onNoThanks,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.rating_prompt_no_thanks))
+        }
+    }
 }
 
 @Composable
@@ -1423,6 +1480,9 @@ private fun PreviewTodayWithBottle() {
             onBottleDetail = {},
             onQuickDiaper = {},
             onQuickSleep = {},
+            onRatingPromptRate = {},
+            onRatingPromptMaybeLater = {},
+            onRatingPromptNoThanks = {},
         )
     }
 }
@@ -1454,6 +1514,9 @@ private fun PreviewTodayEmptyDark() {
             onBottleDetail = {},
             onQuickDiaper = {},
             onQuickSleep = {},
+            onRatingPromptRate = {},
+            onRatingPromptMaybeLater = {},
+            onRatingPromptNoThanks = {},
         )
     }
 }
@@ -1483,6 +1546,9 @@ private fun PreviewTodayNightMode() {
             onBottleDetail = {},
             onQuickDiaper = {},
             onQuickSleep = {},
+            onRatingPromptRate = {},
+            onRatingPromptMaybeLater = {},
+            onRatingPromptNoThanks = {},
         )
     }
 }

@@ -8,6 +8,7 @@ import com.nurtlina.app.domain.model.BottleStatus
 import com.nurtlina.app.domain.model.GuidelineRegion
 import com.nurtlina.app.domain.model.MilkType
 import com.nurtlina.app.domain.repository.BottleRepository
+import com.nurtlina.app.domain.repository.RatingPromptRepository
 import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
@@ -15,6 +16,7 @@ import javax.inject.Inject
 class CreateBottleUseCase @Inject constructor(
     private val bottleRepository: BottleRepository,
     private val notificationScheduler: BottleNotificationScheduler,
+    private val ratingPromptRepository: RatingPromptRepository,
 ) {
     suspend operator fun invoke(
         babyId: String,
@@ -45,6 +47,7 @@ class CreateBottleUseCase @Inject constructor(
         ).let { it.copy(expiresAt = ExpiryCalculator.calculate(it, rule)) }
 
         bottleRepository.upsert(bottle)
+        ratingPromptRepository.incrementBottleTimerCreated()
         notificationScheduler.schedule(bottle)
         return bottle
     }

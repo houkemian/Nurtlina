@@ -70,6 +70,7 @@ class NotificationReceiver : BroadcastReceiver() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             bottleId?.let { putExtra(EXTRA_BOTTLE_ID, it) }
             babyId?.let { putExtra(EXTRA_BABY_ID, it) }
+            putExtra(EXTRA_NOTIF_TYPE, notifType)
         }
         val tapPi = PendingIntent.getActivity(
             context, notifId, tapIntent,

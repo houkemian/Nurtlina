@@ -12,6 +12,7 @@ import com.nurtlina.app.domain.model.FeedType
 import com.nurtlina.app.domain.model.GuidelineRegion
 import com.nurtlina.app.domain.model.MilkType
 import com.nurtlina.app.domain.repository.BottleRepository
+import com.nurtlina.app.domain.repository.RatingPromptRepository
 import com.nurtlina.app.domain.usecase.bottle.CreateBottleUseCase
 import com.nurtlina.app.domain.usecase.bottle.TransitionBottleUseCase
 import com.nurtlina.app.domain.usecase.feed.LogFeedUseCase
@@ -58,6 +59,7 @@ class BottleViewModel @Inject constructor(
     private val transitionBottleUseCase: TransitionBottleUseCase,
     private val logFeedUseCase: LogFeedUseCase,
     private val bottleRepository: BottleRepository,
+    private val ratingPromptRepository: RatingPromptRepository,
     private val nextFeedNotificationScheduler: NextFeedNotificationScheduler,
 ) : ViewModel() {
 
@@ -144,12 +146,18 @@ class BottleViewModel @Inject constructor(
                     _uiEvents.send(BottleUiEvent.ShowError(RuntimeException(result.reason)))
                 }
                 is BottleTransitionResult.Success -> {
-                    if (transition is BottleTransition.MarkFed) {
-                        runCatching {
-                            logFeedFromBottle(result.bottle)
-                        }.onFailure { error ->
-                            _uiEvents.send(BottleUiEvent.ShowError(error))
+                    when (transition) {
+                        is BottleTransition.MarkFed -> {
+                            runCatching {
+                                logFeedFromBottle(result.bottle)
+                                ratingPromptRepository.incrementPositiveAction()
+                            }.onFailure { error ->
+                                _uiEvents.send(BottleUiEvent.ShowError(error))
+                            }
                         }
+                        is BottleTransition.Discard,
+                        is BottleTransition.Cancel -> ratingPromptRepository.recordNegativeAction(Instant.now())
+                        else -> Unit
                     }
                 }
             }

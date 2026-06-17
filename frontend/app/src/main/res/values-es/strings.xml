@@ -296,4 +296,11 @@
     <string name="new_feed_disclaimer">Esto solo guarda un registro de alimentación. No es consejo médico.</string>
 
     <string name="cd_new_bottle_fab">Agregar registro de alimentación</string>
+    <!-- ===== Rating Prompt ===== -->
+    <string name="rating_prompt_title">¿Te gusta Nurtlina?</string>
+    <string name="rating_prompt_body">Si Nurtlina te ayuda a registrar temporizadores de biberones y cuidados del bebé, ¿quieres valorarla?</string>
+    <string name="rating_prompt_rate">Valorar Nurtlina</string>
+    <string name="rating_prompt_maybe_later">Quizá más tarde</string>
+    <string name="rating_prompt_no_thanks">No, gracias</string>
+
 </resources>

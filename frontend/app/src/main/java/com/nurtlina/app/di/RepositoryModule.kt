@@ -2,6 +2,7 @@ package com.nurtlina.app.di
 
 import com.nurtlina.app.data.datastore.DataStoreSettingsRepository
 import com.nurtlina.app.data.datastore.DataStoreSessionRepository
+import com.nurtlina.app.data.rating.DataStoreRatingPromptRepository
 import com.nurtlina.app.data.repository.RoomBabyRepository
 import com.nurtlina.app.data.repository.RoomBottleRepository
 import com.nurtlina.app.data.repository.RoomDiaperLogRepository
@@ -12,6 +13,7 @@ import com.nurtlina.app.domain.repository.BabyRepository
 import com.nurtlina.app.domain.repository.BottleRepository
 import com.nurtlina.app.domain.repository.DiaperLogRepository
 import com.nurtlina.app.domain.repository.FeedLogRepository
+import com.nurtlina.app.domain.repository.RatingPromptRepository
 import com.nurtlina.app.domain.repository.SettingsRepository
 import com.nurtlina.app.domain.repository.SessionRepository
 import com.nurtlina.app.domain.repository.SleepLogRepository
@@ -49,6 +51,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSettingsRepository(impl: DataStoreSettingsRepository): SettingsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindRatingPromptRepository(impl: DataStoreRatingPromptRepository): RatingPromptRepository
 
     @Binds
     @Singleton

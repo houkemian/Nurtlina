@@ -106,6 +106,13 @@
     <string name="today_amount_ml">%.0f ml</string>
     <string name="today_amount_oz">%.1f oz</string>
 
+    <!-- ===== Rating Prompt ===== -->
+    <string name="rating_prompt_title">Enjoying Nurtlina?</string>
+    <string name="rating_prompt_body">If Nurtlina has been helpful for tracking bottle timers and baby care, would you like to rate it?</string>
+    <string name="rating_prompt_rate">Rate Nurtlina</string>
+    <string name="rating_prompt_maybe_later">Maybe later</string>
+    <string name="rating_prompt_no_thanks">No thanks</string>
+
     <!-- ===== Actions ===== -->
     <string name="action_start_feeding">Start Feeding</string>
     <string name="action_refrigerate">Refrigerate</string>
