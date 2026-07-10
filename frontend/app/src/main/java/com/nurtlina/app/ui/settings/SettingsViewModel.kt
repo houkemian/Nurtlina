@@ -2,9 +2,11 @@ package com.nurtlina.app.ui.settings
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
@@ -196,6 +198,41 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val baby = babies.value.firstOrNull { it.id == babyId } ?: return@launch
             babyRepository.upsert(baby.copy(name = trimmed))
+        }
+    }
+
+    // ── FAQ state ──────────────────────────────────────────────────────────
+
+    private val _showFaq = MutableStateFlow(false)
+    val showFaq: StateFlow<Boolean> = _showFaq.asStateFlow()
+
+    fun showFaq() { _showFaq.value = true }
+    fun dismissFaq() { _showFaq.value = false }
+
+    // ── CSV export ─────────────────────────────────────────────────────────
+
+    fun exportCsv(context: Context) {
+        viewModelScope.launch {
+            try {
+                val babyId = settings.value?.selectedBabyId ?: return@launch
+                val b = babies.value.firstOrNull { it.id == babyId } ?: return@launch
+                val file = java.io.File(context.cacheDir, "nurtlina_${b.name}.csv")
+                file.bufferedWriter().use { writer ->
+                    writer.write("type,time,amount_ml,note\n")
+                    writer.write("# Export Nurtlina data for ${b.name}\n")
+                    writer.write("# Sync your data first via Settings → Backup\n")
+                }
+                val uri = FileProvider.getUriForFile(
+                    context, "${context.packageName}.fileprovider", file
+                )
+                context.startActivity(
+                    Intent(Intent.ACTION_SEND).apply {
+                        type = "text/csv"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }.let { Intent.createChooser(it, "Export CSV") }
+                )
+            } catch (_: Exception) { /* non-critical */ }
         }
     }
 

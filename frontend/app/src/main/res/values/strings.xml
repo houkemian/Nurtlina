@@ -578,7 +578,21 @@
     <string name="signin_forgot_password">Forgot password?</string>
     <string name="signin_show_password_cd">Show password</string>
     <string name="signin_hide_password_cd">Hide password</string>
-    <string name="signin_disclaimer">Your bottle timer data is always saved locally. Signing in enables optional cloud backup.</string>
+    <string name="signin_disclaimer">Your feeding data is always saved locally. Signing in enables optional cloud backup.</string>
     <string name="firebase_web_client_id" translatable="false">225993962515-8pn0agaia8r04kqatkksmgan4n2jmppu.apps.googleusercontent.com</string>
+
+    <!-- FAQ -->
+    <string name="faq_title">Frequently Asked Questions</string>
+    <string name="faq_q1">Is this app medical advice?</string>
+    <string name="faq_a1">No. Nurtlina provides tracking and reminder tools based on public guidelines. It does not provide medical advice and cannot determine whether milk is safe. Always follow your formula label, local health guidance, and your pediatrician\'s advice.</string>
+    <string name="faq_q2">What should I do if I am unsure about milk safety?</string>
+    <string name="faq_a2">When in doubt, discard the milk. Always follow your pediatrician\'s advice and the instructions on your formula packaging.</string>
+    <string name="faq_q3">Does the app work offline?</string>
+    <string name="faq_a3">Yes. All core tracking and logging works offline. Backup and sync features require an internet connection.</string>
+    <string name="faq_q4">Can I track more than one baby?</string>
+    <string name="faq_a4">Yes! Multi-baby tracking is available with a Nurtlina Pro subscription.</string>
+    <string name="faq_q5">How do I export my data?</string>
+    <string name="faq_a5">You can export your feeding, diaper, and sleep records as a CSV file from Settings. Pro subscribers have access to full data export.</string>
+    <string name="common_ok">OK</string>
 
 </resources>

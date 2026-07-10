@@ -143,6 +143,60 @@ class LogsViewModel @Inject constructor(
     fun deleteSleepLog(sleepLogId: String) {
         viewModelScope.launch { sleepLogRepository.delete(sleepLogId) }
     }
+
+    fun goToDate(date: LocalDate) {
+        _selectedDate.value = date
+    }
+
+    fun updateEntry(target: LogEditTarget) {
+        viewModelScope.launch {
+            when (target) {
+                is LogEditTarget.Feed -> {
+                    val draft = target.draft
+                    val amountMl = draft.amountMl.toDoubleOrNull()
+                    feedLogRepository.upsert(
+                        target.original.copy(
+                            feedType = draft.feedType,
+                            amountMl = amountMl,
+                            startedAt = draft.time,
+                            endedAt = draft.time,
+                            note = draft.note.ifBlank { null },
+                        )
+                    )
+                }
+                is LogEditTarget.Diaper -> {
+                    val draft = target.draft
+                    diaperLogRepository.upsert(
+                        target.original.copy(
+                            diaperType = draft.diaperType,
+                            changedAt = draft.time,
+                            note = draft.note.ifBlank { null },
+                        )
+                    )
+                }
+                is LogEditTarget.Sleep -> {
+                    val draft = target.draft
+                    sleepLogRepository.upsert(
+                        target.original.copy(
+                            startedAt = draft.startedAt,
+                            endedAt = draft.endedAt,
+                            note = draft.note.ifBlank { null },
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    fun deleteEntry(target: LogEditTarget) {
+        viewModelScope.launch {
+            when (target) {
+                is LogEditTarget.Feed -> feedLogRepository.delete(target.original.id)
+                is LogEditTarget.Diaper -> diaperLogRepository.delete(target.original.id)
+                is LogEditTarget.Sleep -> sleepLogRepository.delete(target.original.id)
+            }
+        }
+    }
 }
 
 // ── Filter predicate ──────────────────────────────────────────────────────────

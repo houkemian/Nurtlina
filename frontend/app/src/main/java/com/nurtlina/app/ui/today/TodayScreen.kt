@@ -131,6 +131,7 @@ fun TodayScreen(
     onSelectBaby: (Baby) -> Unit,
     onAddBaby: () -> Unit,
     onNewFeed: () -> Unit,
+    onQuickFeedAmount: (Double) -> Unit,
     onQuickDiaper: () -> Unit,
     onQuickSleep: () -> Unit,
     onRatingPromptRate: () -> Unit,
@@ -222,6 +223,16 @@ fun TodayScreen(
                     state = state.feedingStatus,
                     nightModeEnabled = state.nightModeEnabled,
                     onNewFeed = onNewFeed,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                )
+
+                Spacer(Modifier.height(16.dp))
+                QuickFeedPresets(
+                    unitType = state.unitType,
+                    nightModeEnabled = state.nightModeEnabled,
+                    onAmount = onQuickFeedAmount,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
@@ -785,6 +796,47 @@ private fun formatSleepElapsedClock(startedAtMillis: Long): String {
 }
 
 // --------------------------------------------------------------------------
+// Quick Feed preset buttons
+// --------------------------------------------------------------------------
+
+@Composable
+private fun QuickFeedPresets(
+    unitType: UnitType,
+    nightModeEnabled: Boolean,
+    onAmount: (Double) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val presetsMl = listOf(60.0, 90.0, 120.0, 150.0, 180.0)
+    val btnHeight = if (nightModeEnabled) 56.dp else 44.dp
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        presetsMl.forEach { ml ->
+            val label = when (unitType) {
+                UnitType.ML -> "%.0f ml".format(ml)
+                UnitType.OZ -> "%.1f oz".format(ml / ML_PER_OUNCE)
+            }
+            FilledTonalButton(
+                onClick = { onAmount(ml) },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(btnHeight),
+                contentPadding = PaddingValues(horizontal = 4.dp),
+            ) {
+                Text(
+                    text = label,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+        }
+    }
+}
+
+// --------------------------------------------------------------------------
 // Quick log row
 // --------------------------------------------------------------------------
 
@@ -1052,6 +1104,7 @@ private fun PreviewTodayLight() {
             onSelectBaby = {},
             onAddBaby = {},
             onNewFeed = {},
+            onQuickFeedAmount = {},
             onQuickDiaper = {},
             onQuickSleep = {},
             onRatingPromptRate = {},

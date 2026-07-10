@@ -10,28 +10,42 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.annotation.StringRes
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -60,10 +74,17 @@ import com.nurtlina.app.ui.feed.NewFeedSheet
 import com.nurtlina.app.ui.feed.NewFeedUiState
 import com.nurtlina.app.ui.insights.InsightsDateRange
 import com.nurtlina.app.ui.insights.InsightsScreen
+import com.nurtlina.app.domain.model.FeedType
+import com.nurtlina.app.domain.model.NursingSide
+import com.nurtlina.app.ui.logs.DiaperEditState
+import com.nurtlina.app.ui.logs.FeedEditState
+import com.nurtlina.app.ui.logs.LogEditSheet
+import com.nurtlina.app.ui.logs.LogEditTarget
 import com.nurtlina.app.ui.logs.LogEntry
 import com.nurtlina.app.ui.logs.LogItem
 import com.nurtlina.app.ui.logs.LogsScreen
 import com.nurtlina.app.ui.logs.LogsViewModel
+import com.nurtlina.app.ui.logs.SleepEditState
 import com.nurtlina.app.ui.onboarding.OnboardingScreen
 import com.nurtlina.app.ui.onboarding.OnboardingViewModel
 import com.nurtlina.app.ui.paywall.PaywallScreen
@@ -82,6 +103,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -239,6 +261,10 @@ fun NurtlinaNavHost(modifier: Modifier = Modifier) {
 @Composable
 private fun OnboardingRoute(navController: NavController) {
     val viewModel: OnboardingViewModel = hiltViewModel()
+    val context = LocalContext.current
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { /* granted or denied — either way, proceed */ }
 
     OnboardingScreen(
         onComplete = { babyInput, region ->
@@ -253,7 +279,11 @@ private fun OnboardingRoute(navController: NavController) {
                 }
             }
         },
-        onRequestNotificationPermission = {},
+        onRequestNotificationPermission = {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        },
     )
 }
 
@@ -320,6 +350,7 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
             }
         },
         onNewFeed = { navController.navigate(NavRoutes.NewFeed.route) },
+        onQuickFeedAmount = { ml -> viewModel.quickLogFeed(ml) },
         onQuickDiaper = { viewModel.quickLogDiaper(DiaperType.WET) },
         onQuickSleep = {
             if (todaySummary?.activeSleepStartedAt == null) {
@@ -381,6 +412,8 @@ private fun LogsRoute() {
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
     val selectedFilter by viewModel.selectedFilter.collectAsStateWithLifecycle()
     val logItems by viewModel.logItems.collectAsStateWithLifecycle()
+    var showDatePicker by remember { mutableStateOf(false) }
+    var editingTarget by remember { mutableStateOf<LogEditTarget?>(null) }
 
     LogsScreen(
         selectedDate = selectedDate,
@@ -389,9 +422,9 @@ private fun LogsRoute() {
         useOz = false,
         onPrevDay = viewModel::goToPreviousDay,
         onNextDay = viewModel::goToNextDay,
-        onPickDate = {},
+        onPickDate = { showDatePicker = true },
         onFilterSelected = viewModel::setFilter,
-        onEntryClick = {},
+        onEntryClick = { entry -> editingTarget = entry.toEditTarget() },
         onEntryDelete = { entry ->
             when (entry) {
                 is LogEntry.Feed -> viewModel.deleteFeedLog(entry.id)
@@ -400,20 +433,63 @@ private fun LogsRoute() {
             }
         },
     )
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        viewModel.goToDate(Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate())
+                    }
+                    showDatePicker = false
+                }) { Text(stringResource(android.R.string.ok)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            },
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    editingTarget?.let { target ->
+        LogEditSheet(
+            target = target,
+            useOz = false,
+            onDismiss = { editingTarget = null },
+            onSave = { updated ->
+                viewModel.updateEntry(updated)
+                editingTarget = null
+            },
+            onDelete = {
+                viewModel.deleteEntry(target)
+                editingTarget = null
+            },
+        )
+    }
 }
 
 @Composable
 private fun InsightsRoute(navController: NavController, isPro: Boolean) {
     val todayViewModel: TodayViewModel = hiltViewModel()
+    val settingsViewModel: SettingsViewModel = hiltViewModel()
     val todaySummary by todayViewModel.todaySummary.collectAsStateWithLifecycle()
+    val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
     var selectedRange by remember { mutableStateOf(InsightsDateRange.SEVEN) }
+    val useOz = settings?.unit == UnitType.OZ
 
     InsightsScreen(
         todaySummary = todaySummary ?: emptyTodaySummary(),
         isPro = isPro,
-        useOz = false,
+        useOz = useOz,
         selectedRange = selectedRange,
-        proData = null,
+        proData = null, // Pro trend data requires date-range repository queries (future)
         onRangeSelected = { selectedRange = it },
         onUpgradeTapped = { navController.navigate(NavRoutes.Paywall.route) },
     )
@@ -434,9 +510,31 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
         viewModel.updateNotificationEnabled(granted)
     }
 
+    val showFaq by viewModel.showFaq.collectAsStateWithLifecycle()
     val currentSettings = settings ?: UserSettings()
     val selectedBaby = babies.firstOrNull { it.id == currentSettings.selectedBabyId }
         ?: babies.firstOrNull()
+
+    if (showFaq) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissFaq() },
+            title = { Text(stringResource(R.string.faq_title)) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    FaqItem(R.string.faq_q1, R.string.faq_a1)
+                    FaqItem(R.string.faq_q2, R.string.faq_a2)
+                    FaqItem(R.string.faq_q3, R.string.faq_a3)
+                    FaqItem(R.string.faq_q4, R.string.faq_a4)
+                    FaqItem(R.string.faq_q5, R.string.faq_a5)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.dismissFaq() }) {
+                    Text(stringResource(R.string.common_ok))
+                }
+            },
+        )
+    }
 
     LaunchedEffect(settings?.notificationEnabled) {
         val persistedSettings = settings ?: return@LaunchedEffect
@@ -478,11 +576,13 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
             )
         },
         onUpgradeTapped = { navController.navigate(NavRoutes.Paywall.route) },
-        onExportCsv = {},
+        onExportCsv = {
+            viewModel.exportCsv(context)
+        },
         onBackupClick = { viewModel.requestFullSync() },
         onSignInClick = { navController.navigate(NavRoutes.SignIn.route) },
         onSignOutClick = { viewModel.signOut() },
-        onFaqClick = {},
+        onFaqClick = { viewModel.showFaq() },
         onPrivacyPolicyClick = {
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_URL)))
         },
@@ -676,5 +776,65 @@ private fun NurtlinaBottomBar(
                 label = { Text(stringResource(item.labelResId)) },
             )
         }
+    }
+}
+
+// ── LogEntry → LogEditTarget converter ─────────────────────────────────────────
+
+private fun LogEntry.toEditTarget(): LogEditTarget = when (this) {
+    is LogEntry.Feed -> {
+        val log = this.log
+        LogEditTarget.Feed(
+            original = log,
+            draft = FeedEditState(
+                feedType = log.feedType,
+                amountMl = log.amountMl?.let { "%.0f".format(it) } ?: "",
+                nursingSide = log.side,
+                time = log.startedAt,
+                note = log.note ?: "",
+            ),
+        )
+    }
+    is LogEntry.Diaper -> {
+        val log = this.log
+        LogEditTarget.Diaper(
+            original = log,
+            draft = DiaperEditState(
+                diaperType = log.diaperType,
+                time = log.changedAt,
+                note = log.note ?: "",
+            ),
+        )
+    }
+    is LogEntry.Sleep -> {
+        val log = this.log
+        LogEditTarget.Sleep(
+            original = log,
+            draft = SleepEditState(
+                startedAt = log.startedAt,
+                endedAt = log.endedAt,
+                note = log.note ?: "",
+            ),
+        )
+    }
+}
+
+// ── FAQ item composable ───────────────────────────────────────────────────────
+
+@Composable
+private fun FaqItem(@StringRes questionRes: Int, @StringRes answerRes: Int) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = stringResource(questionRes),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = stringResource(answerRes),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
