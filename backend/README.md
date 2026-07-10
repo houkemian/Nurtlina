@@ -1,6 +1,6 @@
 # Nurtlina Backend
 
-FastAPI + PostgreSQL backend for Nurtlina: Baby Feeding Timer.
+FastAPI + PostgreSQL backend for Nurtlina: Baby Feeding Tracker.
 
 ## Stack
 
@@ -95,8 +95,10 @@ gcloud run deploy nurtlina-backend \
 
 ## Architecture Notes
 
-- All timer countdowns happen **on the Android client**, never on the server.
+- All feeding records are created **on the Android client**, never dependent on the server.
 - The server provides backup/sync, billing verification, and account management.
 - All writes are **local-first** on Android; the backend is an eventual sync target.
-- Backend failures must **never** block bottle timer creation or state changes.
+- Backend failures must **never** block feeding log creation or notification scheduling.
 - See `Tech_Architecture.md` in the root for the full architecture specification.
+
+> **v2.0**: Bottle entity, `bottles` table, and `/sync/bottles` endpoint have been removed. The data model now uses FeedLog as the primary feeding record.

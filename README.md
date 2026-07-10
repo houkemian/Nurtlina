@@ -1,15 +1,15 @@
-# Nurtlina: Baby Feeding Timer
+# Nurtlina: Baby Feeding Tracker
 
-An Android baby bottle timer and care tracking app for overseas parents and caregivers.
+An Android baby feeding tracker and care logging app for overseas parents and caregivers.
 
 ## Product Overview
 
 Nurtlina helps parents and caregivers:
-- Track baby bottle freshness with timers based on CDC/AAP/NHS public guidelines
-- Distinguish bottle states: Not Started → Feeding Started → Refrigerated → Expired/Fed/Discarded
-- Log formula feeds, breast milk feeds, diapers, and sleep
-- Receive calm reminders before bottles expire
-- View daily summaries and trends (Pro)
+- Quickly log formula feeds, breast milk feeds, diapers, and sleep with minimal taps
+- View feeding history and daily summaries
+- Receive calm reminders for next feeding time
+- Track multiple babies (Pro)
+- Export and backup data (Pro)
 
 **This app is a tracking and reminder tool, not medical advice.**
 
@@ -47,13 +47,12 @@ app/src/main/java/com/nurtlina/app/
 │   ├── local/          Room entities, DAOs, database
 │   └── repository/     Room repository implementations
 ├── domain/
-│   ├── guideline/      Bottle timer rules, state machine, expiry calculator
-│   ├── model/          Domain models (Baby, Bottle, FeedLog, etc.)
+│   ├── model/          Domain models (Baby, FeedLog, DiaperLog, SleepLog, etc.)
 │   ├── repository/     Repository interfaces
 │   └── usecase/        Business logic use cases
 ├── di/                 Hilt modules
 └── ui/
-    ├── bottle/         Bottle screens and ViewModel
+    ├── feed/           Feeding log screens and ViewModel
     ├── insights/       Insights screen
     ├── logs/           Logs screen
     ├── navigation/     Nav host and routes
@@ -66,22 +65,19 @@ app/src/main/java/com/nurtlina/app/
 
 ---
 
-## Bottle Timer Rules
+## Feeding Guidelines Reference
 
-MVP defaults (based on CDC/AAP):
+The app references public guidelines for informational purposes only. These are NOT medical advice:
 
-| State | Rule |
+| Milk Type | General Reference (informational) |
 |---|---|
-| Formula, not started, room temp | Expires in 2 hours from preparedAt |
-| Formula, feeding started | Expires in 1 hour from feedingStartedAt |
-| Formula, refrigerated | Expires in 24 hours from preparedAt |
-| Breast milk, room temp | Expires in 4 hours from preparedAt |
-| Breast milk, refrigerated | Expires in 4 days from preparedAt |
+| Formula, room temp | Generally use within 2 hours of preparation |
+| Formula, after feeding starts | Generally use within 1 hour |
+| Formula, refrigerated | Generally use within 24 hours |
+| Breast milk, room temp | Generally use within 4 hours |
+| Breast milk, refrigerated | Generally use within 4 days |
 
-Rules are versioned in `DefaultGuidelineRules.kt`. Do not change durations without:
-1. Incrementing `RULE_VERSION`
-2. Updating tests
-3. Adding migration notes
+**Always follow your formula label, local health guidance, and your pediatrician's advice. When in doubt, discard the milk.**
 
 ---
 
@@ -96,8 +92,8 @@ Never add user-facing text that says:
 - "doctor recommended"
 
 Always use:
-- "Based on your selected guideline"
-- "This app provides reminders and tracking only"
+- "Based on public guidelines"
+- "This app provides tracking and reminders only"
 - "Not medical advice"
 - "When in doubt, discard the milk"
 
@@ -127,13 +123,13 @@ Detailed RevenueCat dashboard setup: [`docs/revenuecat-setup.md`](docs/revenueca
 
 ## Monetization
 
-- **Free**: 1 baby, basic bottle timer, basic logs, ads, default widget
+- **Free**: 1 baby, basic feeding/diaper/sleep logs, ads, default widget
 - **Pro** ($2.99/mo, $19.99/yr, $29.99 lifetime): No ads, multiple babies, full history, export, backup, custom reminders, widget themes
 
 ---
 
 ## Compliance Statement
 
-> This app provides reminders and tracking tools based on selected public guidelines. It does not provide medical advice and cannot determine whether milk is safe. Always follow your formula label, local health guidance, and your pediatrician's advice. When in doubt, discard the milk.
+> This app provides tracking tools based on public guidelines. It does not provide medical advice and cannot determine whether milk is safe. Always follow your formula label, local health guidance, and your pediatrician's advice. When in doubt, discard the milk.
 
 Sources: CDC, AAP/HealthyChildren, NHS. Referenced for guideline durations only — no endorsement claimed.

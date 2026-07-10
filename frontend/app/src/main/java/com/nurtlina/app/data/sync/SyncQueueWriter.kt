@@ -3,13 +3,11 @@ package com.nurtlina.app.data.sync
 import com.google.gson.Gson
 import com.nurtlina.app.data.local.dao.SyncQueueDao
 import com.nurtlina.app.data.local.entity.BabyEntity
-import com.nurtlina.app.data.local.entity.BottleEntity
 import com.nurtlina.app.data.local.entity.DiaperLogEntity
 import com.nurtlina.app.data.local.entity.FeedLogEntity
 import com.nurtlina.app.data.local.entity.SleepLogEntity
 import com.nurtlina.app.data.local.entity.SyncQueueEntity
 import com.nurtlina.app.data.remote.api.BabyChangeDto
-import com.nurtlina.app.data.remote.api.BottleChangeDto
 import com.nurtlina.app.data.remote.api.DiaperLogChangeDto
 import com.nurtlina.app.data.remote.api.FeedLogChangeDto
 import com.nurtlina.app.data.remote.api.SleepLogChangeDto
@@ -38,37 +36,6 @@ class SyncQueueWriter @Inject constructor(
                 name = entity.name,
                 birthDate = entity.birthDate,
                 avatarColor = entity.avatarColor,
-                clientId = entity.clientId ?: session.clientId,
-                schemaVersion = entity.syncVersion,
-                createdAt = entity.createdAt.iso(),
-                updatedAt = entity.updatedAt.iso(),
-                deletedAt = entity.deletedAt.isoOrNull(),
-            ),
-        )
-    }
-
-    suspend fun enqueueBottle(entity: BottleEntity, operation: String = SyncOperations.UPSERT_BOTTLE) {
-        val session = sessionRepository.get()
-        enqueue(
-            entityType = SyncEntityTypes.BOTTLE,
-            entityId = entity.id,
-            operation = operation,
-            payload = BottleChangeDto(
-                id = entity.id,
-                familyId = entity.familyId ?: session.defaultFamilyId.orEmpty(),
-                babyId = entity.babyId,
-                milkType = entity.milkType,
-                amountMl = entity.amountMl,
-                preparedAt = entity.preparedAt.iso(),
-                feedingStartedAt = entity.feedingStartedAt.isoOrNull(),
-                refrigeratedAt = entity.refrigeratedAt.isoOrNull(),
-                status = entity.status,
-                guidelineRegion = entity.guidelineRegion,
-                ruleVersion = DEFAULT_RULE_VERSION,
-                expiresAt = entity.expiresAt.isoOrNull(),
-                discardedAt = entity.discardedAt.isoOrNull(),
-                fedAt = entity.fedAt.isoOrNull(),
-                note = entity.note,
                 clientId = entity.clientId ?: session.clientId,
                 schemaVersion = entity.syncVersion,
                 createdAt = entity.createdAt.iso(),
@@ -172,8 +139,4 @@ class SyncQueueWriter @Inject constructor(
     private fun Long.iso(): String = Instant.ofEpochMilli(this).toString()
 
     private fun Long?.isoOrNull(): String? = this?.let { Instant.ofEpochMilli(it).toString() }
-
-    companion object {
-        private const val DEFAULT_RULE_VERSION = "default_v1"
-    }
 }

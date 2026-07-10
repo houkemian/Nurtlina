@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import com.nurtlina.app.domain.model.BottleStatus
 
 // --------------------------------------------------------------------------
 // Light color scheme
@@ -100,10 +99,6 @@ private val DarkColorScheme = darkColorScheme(
 
 /**
  * Main app theme. Wraps [MaterialTheme] with Nurtlina branding.
- *
- * @param darkTheme      Whether to apply the dark color scheme.
- * @param dynamicColor   Use Android 12+ dynamic color. Falls back to
- *                       Nurtlina palette on older devices.
  */
 @Composable
 fun NurtlinaTheme(
@@ -120,7 +115,6 @@ fun NurtlinaTheme(
         else -> LightColorScheme
     }
 
-    // Make status bar transparent and use edge-to-edge rendering.
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
@@ -136,63 +130,4 @@ fun NurtlinaTheme(
         shapes = NurtlinaShapes,
         content = content,
     )
-}
-
-// --------------------------------------------------------------------------
-// BottleStatusColors – semantic color tokens per BottleStatus
-// --------------------------------------------------------------------------
-
-/**
- * Provides content color and container color for each [BottleStatus].
- * Use [contentColor] for text/icons and [containerColor] for card backgrounds.
- */
-data class StatusColorPair(
-    val contentColor: Color,
-    val containerColor: Color,
-)
-
-object BottleStatusColors {
-
-    @Composable
-    fun colorsFor(status: BottleStatus, darkTheme: Boolean = isSystemInDarkTheme()): StatusColorPair =
-        when (status) {
-            BottleStatus.NOT_STARTED -> StatusColorPair(
-                contentColor = if (darkTheme) StatusNotStartedDark else StatusNotStartedLight,
-                containerColor = if (darkTheme) StatusNotStartedContainerDark else StatusNotStartedContainerLight,
-            )
-            BottleStatus.FEEDING_STARTED -> StatusColorPair(
-                contentColor = if (darkTheme) StatusFeedingStartedDark else StatusFeedingStartedLight,
-                containerColor = if (darkTheme) StatusFeedingStartedContainerDark else StatusFeedingStartedContainerLight,
-            )
-            BottleStatus.REFRIGERATED -> StatusColorPair(
-                contentColor = if (darkTheme) StatusRefrigeratedDark else StatusRefrigeratedLight,
-                containerColor = if (darkTheme) StatusRefrigeratedContainerDark else StatusRefrigeratedContainerLight,
-            )
-            BottleStatus.EXPIRED -> StatusColorPair(
-                contentColor = if (darkTheme) StatusExpiredDark else StatusExpiredLight,
-                containerColor = if (darkTheme) StatusExpiredContainerDark else StatusExpiredContainerLight,
-            )
-            BottleStatus.FED -> StatusColorPair(
-                contentColor = if (darkTheme) StatusFedDark else StatusFedLight,
-                containerColor = if (darkTheme) StatusFedContainerDark else StatusFedContainerLight,
-            )
-            BottleStatus.DISCARDED -> StatusColorPair(
-                contentColor = if (darkTheme) StatusDiscardedDark else StatusDiscardedLight,
-                containerColor = if (darkTheme) StatusDiscardedContainerDark else StatusDiscardedContainerLight,
-            )
-            BottleStatus.CANCELED -> StatusColorPair(
-                contentColor = if (darkTheme) StatusCanceledDark else StatusCanceledLight,
-                containerColor = if (darkTheme) StatusCanceledContainerDark else StatusCanceledContainerLight,
-            )
-        }
-
-    /** Convenience: content color only. */
-    @Composable
-    fun contentColorFor(status: BottleStatus, darkTheme: Boolean = isSystemInDarkTheme()): Color =
-        colorsFor(status, darkTheme).contentColor
-
-    /** Convenience: container/background color only. */
-    @Composable
-    fun containerColorFor(status: BottleStatus, darkTheme: Boolean = isSystemInDarkTheme()): Color =
-        colorsFor(status, darkTheme).containerColor
 }

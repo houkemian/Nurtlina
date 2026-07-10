@@ -24,7 +24,7 @@ class DataStoreRatingPromptRepository @Inject constructor(
         val DISMISSED_PERMANENTLY = booleanPreferencesKey("rating_prompt_dismissed_permanently")
         val RATED_AT = longPreferencesKey("rating_prompt_rated_at")
         val POSITIVE_ACTION_COUNT = intPreferencesKey("rating_prompt_positive_action_count")
-        val BOTTLE_TIMER_CREATED_COUNT = intPreferencesKey("rating_prompt_bottle_timer_created_count")
+        val FEED_LOGGED_COUNT = intPreferencesKey("rating_prompt_feed_logged_count")
         val FIRST_LAUNCH_AT = longPreferencesKey("rating_prompt_first_launch_at")
         val LAST_NOTIFICATION_OPEN_AT = longPreferencesKey("rating_prompt_last_notification_open_at")
         val LAST_NEGATIVE_ACTION_AT = longPreferencesKey("rating_prompt_last_negative_action_at")
@@ -37,7 +37,7 @@ class DataStoreRatingPromptRepository @Inject constructor(
             ratingPromptDismissedPermanently = prefs[Keys.DISMISSED_PERMANENTLY] ?: false,
             ratingPromptRatedAt = prefs[Keys.RATED_AT]?.toInstant(),
             eligiblePositiveActionCount = prefs[Keys.POSITIVE_ACTION_COUNT] ?: 0,
-            bottleTimerCreatedCount = prefs[Keys.BOTTLE_TIMER_CREATED_COUNT] ?: 0,
+            feedLoggedCount = prefs[Keys.FEED_LOGGED_COUNT] ?: 0,
             firstLaunchAt = prefs[Keys.FIRST_LAUNCH_AT]?.toInstant(),
             lastNotificationOpenAt = prefs[Keys.LAST_NOTIFICATION_OPEN_AT]?.toInstant(),
             lastNegativeActionAt = prefs[Keys.LAST_NEGATIVE_ACTION_AT]?.toInstant(),
@@ -54,9 +54,9 @@ class DataStoreRatingPromptRepository @Inject constructor(
         }
     }
 
-    override suspend fun incrementBottleTimerCreated() {
+    override suspend fun incrementFeedLogged() {
         dataStore.edit { prefs ->
-            prefs[Keys.BOTTLE_TIMER_CREATED_COUNT] = (prefs[Keys.BOTTLE_TIMER_CREATED_COUNT] ?: 0) + 1
+            prefs[Keys.FEED_LOGGED_COUNT] = (prefs[Keys.FEED_LOGGED_COUNT] ?: 0) + 1
         }
     }
 

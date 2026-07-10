@@ -1,6 +1,6 @@
 # ADR: Backend Sync Source Of Truth
 
-Date: 2026-06-07
+Date: 2026-07-10 (updated for v2.0)
 
 ## English
 
@@ -19,7 +19,9 @@ Firebase remains in scope for:
 - Remote Config for non-safety UI, paywall, and rollout settings only.
 - Optional Cloud Functions support jobs where they do not become the baby care record source of truth.
 
-Firestore is not the product sync source of truth for Baby, Bottle, FeedLog, DiaperLog, or SleepLog records.
+Firestore is not the product sync source of truth for Baby, FeedLog, DiaperLog, or SleepLog records.
+
+> **v2.0 update**: Bottle entity has been removed from the product. The data model is simplified to FeedLog-based feeding records. The `bottles` table and `/sync/bottles` endpoint are deprecated and should be removed.
 
 ## Rationale
 
@@ -36,10 +38,10 @@ Keeping Firestore direct sync in parallel creates data-splitting and conflict-po
 
 ## Consequences
 
-- Android local Room remains the source of truth for active timers.
+- Android local Room remains the source of truth for all baby care records.
 - FastAPI/Postgres is the cloud backup/sync target.
-- Backend failures must not block bottle timer creation, state changes, or notifications.
-- Remote Config must not silently change safety timer rules.
+- Backend failures must not block feeding log creation or notification scheduling.
+- Remote Config must not silently change safety-related content.
 - Firestore business-sync code should be removed or kept only as clearly deprecated reference code.
 
 ## Follow-Up
@@ -65,7 +67,9 @@ Firebase 仍保留以下职责：
 - Remote Config 仅用于非安全相关 UI、paywall 和 rollout 设置。
 - 可选 Cloud Functions 后台辅助任务，前提是这些任务不成为 baby care 记录的可信源。
 
-Firestore 不是 Baby、Bottle、FeedLog、DiaperLog 或 SleepLog 记录的产品同步可信源。
+Firestore 不是 Baby、FeedLog、DiaperLog 或 SleepLog 记录的产品同步可信源。
+
+> **v2.0 更新**：Bottle 实体已从产品中移除。数据模型简化为以 FeedLog 为主的喂奶记录。`bottles` 表和 `/sync/bottles` 端点已废弃，应移除。
 
 ## 理由
 
@@ -82,10 +86,10 @@ Firestore 不是 Baby、Bottle、FeedLog、DiaperLog 或 SleepLog 记录的产�
 
 ## 影响
 
-- Android 本地 Room 仍是 active timers 的 source of truth。
+- Android 本地 Room 仍是所有 baby care 记录的 source of truth。
 - FastAPI/Postgres 是云端备份/同步目标。
-- 后端失败不得阻塞 bottle timer 创建、状态变更或通知。
-- Remote Config 不得静默改变安全相关 timer rules。
+- 后端失败不得阻塞喂奶记录创建或通知调度。
+- Remote Config 不得静默改变安全相关内容。
 - Firestore 业务同步代码应删除，或仅作为明确 deprecated 的参考代码保留。
 
 ## 后续事项

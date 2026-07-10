@@ -6,20 +6,6 @@ enum class MilkType {
     CUSTOM,
 }
 
-enum class BottleStatus {
-    NOT_STARTED,
-    FEEDING_STARTED,
-    REFRIGERATED,
-    EXPIRED,
-    FED,
-    DISCARDED,
-    CANCELED,
-    ;
-
-    val isTerminal: Boolean
-        get() = this == FED || this == DISCARDED || this == CANCELED
-}
-
 enum class FeedType {
     FORMULA,
     BREAST_MILK,

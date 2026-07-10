@@ -1,7 +1,5 @@
 package com.nurtlina.app.domain.rating
 
-import com.nurtlina.app.domain.model.Bottle
-import com.nurtlina.app.domain.model.BottleStatus
 import java.time.Duration
 import java.time.Instant
 import javax.inject.Inject
@@ -10,7 +8,6 @@ class RatingPromptEligibility @Inject constructor() {
 
     fun evaluate(
         state: RatingPromptState,
-        activeBottles: List<Bottle>,
         nightModeEnabled: Boolean,
         alreadyShownThisSession: Boolean,
         now: Instant,
@@ -29,16 +26,12 @@ class RatingPromptEligibility @Inject constructor() {
                 RatingPromptDecision.Blocked(RatingPromptBlockedReason.MAX_SHOWN)
             Duration.between(firstLaunchAt, now) < MIN_TIME_AFTER_FIRST_LAUNCH ->
                 RatingPromptDecision.Blocked(RatingPromptBlockedReason.TOO_SOON_AFTER_FIRST_LAUNCH)
-            state.bottleTimerCreatedCount < MIN_BOTTLE_TIMERS_CREATED ->
-                RatingPromptDecision.Blocked(RatingPromptBlockedReason.NOT_ENOUGH_BOTTLE_TIMERS)
+            state.feedLoggedCount < MIN_FEEDS_LOGGED ->
+                RatingPromptDecision.Blocked(RatingPromptBlockedReason.NOT_ENOUGH_FEEDS)
             state.eligiblePositiveActionCount < MIN_POSITIVE_ACTIONS ->
                 RatingPromptDecision.Blocked(RatingPromptBlockedReason.NOT_ENOUGH_POSITIVE_ACTIONS)
             nightModeEnabled ->
                 RatingPromptDecision.Blocked(RatingPromptBlockedReason.NIGHT_MODE)
-            activeBottles.any { it.status == BottleStatus.EXPIRED || it.expiresAt?.isBefore(now) == true } ->
-                RatingPromptDecision.Blocked(RatingPromptBlockedReason.ACTIVE_EXPIRED_BOTTLE)
-            activeBottles.any { it.status == BottleStatus.FEEDING_STARTED } ->
-                RatingPromptDecision.Blocked(RatingPromptBlockedReason.ACTIVE_FEEDING)
             state.ratingPromptLastShownAt?.let { Duration.between(it, now) < PROMPT_COOLDOWN } == true ->
                 RatingPromptDecision.Blocked(RatingPromptBlockedReason.COOLDOWN)
             state.lastNotificationOpenAt?.let { Duration.between(it, now) < NOTIFICATION_SESSION_SUPPRESSION } == true ->
@@ -50,7 +43,7 @@ class RatingPromptEligibility @Inject constructor() {
     }
 
     companion object {
-        private const val MIN_BOTTLE_TIMERS_CREATED = 5
+        private const val MIN_FEEDS_LOGGED = 5
         private const val MIN_POSITIVE_ACTIONS = 3
         private const val MAX_SHOWN_COUNT = 2
         private val MIN_TIME_AFTER_FIRST_LAUNCH: Duration = Duration.ofDays(3)

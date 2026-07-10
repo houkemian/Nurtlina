@@ -3,7 +3,6 @@ package com.nurtlina.app.data.sync
 import androidx.room.withTransaction
 import com.google.gson.Gson
 import com.nurtlina.app.data.local.dao.BabyDao
-import com.nurtlina.app.data.local.dao.BottleDao
 import com.nurtlina.app.data.local.dao.DiaperLogDao
 import com.nurtlina.app.data.local.dao.FeedLogDao
 import com.nurtlina.app.data.local.dao.SleepLogDao
@@ -13,7 +12,6 @@ import com.nurtlina.app.data.local.entity.SyncQueueEntity
 import com.nurtlina.app.data.local.entity.SyncStatus
 import com.nurtlina.app.data.remote.api.BackendApiService
 import com.nurtlina.app.data.remote.api.BabyChangeDto
-import com.nurtlina.app.data.remote.api.BottleChangeDto
 import com.nurtlina.app.data.remote.api.DiaperLogChangeDto
 import com.nurtlina.app.data.remote.api.FeedLogChangeDto
 import com.nurtlina.app.data.remote.api.SleepLogChangeDto
@@ -29,7 +27,6 @@ class SyncQueueProcessor @Inject constructor(
     private val database: NurtlinaDatabase,
     private val syncQueueDao: SyncQueueDao,
     private val babyDao: BabyDao,
-    private val bottleDao: BottleDao,
     private val feedLogDao: FeedLogDao,
     private val diaperLogDao: DiaperLogDao,
     private val sleepLogDao: SleepLogDao,
@@ -64,10 +61,6 @@ class SyncQueueProcessor @Inject constructor(
             SyncOperations.UPSERT_BABY,
             SyncOperations.DELETE_BABY -> api.pushBabies(
                 SyncPushRequest(familyId, clientId, listOf(gson.fromJson(item.payloadJson, BabyChangeDto::class.java))),
-            ).ensureAccepted(item)
-            SyncOperations.UPSERT_BOTTLE,
-            SyncOperations.DELETE_BOTTLE -> api.pushBottles(
-                SyncPushRequest(familyId, clientId, listOf(gson.fromJson(item.payloadJson, BottleChangeDto::class.java))),
             ).ensureAccepted(item)
             SyncOperations.UPSERT_FEED_LOG,
             SyncOperations.DELETE_FEED_LOG -> api.pushFeedLogs(
@@ -126,7 +119,6 @@ class SyncQueueProcessor @Inject constructor(
     ) {
         when (item.entityType) {
             SyncEntityTypes.BABY -> babyDao.updateSyncState(item.entityId, status.name, lastSyncedAt)
-            SyncEntityTypes.BOTTLE -> bottleDao.updateSyncState(item.entityId, status.name, lastSyncedAt)
             SyncEntityTypes.FEED_LOG -> feedLogDao.updateSyncState(item.entityId, status.name, lastSyncedAt)
             SyncEntityTypes.DIAPER_LOG -> diaperLogDao.updateSyncState(item.entityId, status.name, lastSyncedAt)
             SyncEntityTypes.SLEEP_LOG -> sleepLogDao.updateSyncState(item.entityId, status.name, lastSyncedAt)

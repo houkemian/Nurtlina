@@ -5,7 +5,6 @@ import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.nurtlina.app.data.local.dao.BabyDao
-import com.nurtlina.app.data.local.dao.BottleDao
 import com.nurtlina.app.data.local.dao.DiaperLogDao
 import com.nurtlina.app.data.local.dao.FeedLogDao
 import com.nurtlina.app.data.local.dao.SleepLogDao
@@ -26,14 +25,11 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): NurtlinaDatabase =
         Room.databaseBuilder(context, NurtlinaDatabase::class.java, NurtlinaDatabase.DATABASE_NAME)
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
 
     @Provides
     fun provideBabyDao(db: NurtlinaDatabase): BabyDao = db.babyDao()
-
-    @Provides
-    fun provideBottleDao(db: NurtlinaDatabase): BottleDao = db.bottleDao()
 
     @Provides
     fun provideFeedLogDao(db: NurtlinaDatabase): FeedLogDao = db.feedLogDao()
@@ -47,6 +43,7 @@ object DatabaseModule {
     @Provides
     fun provideSyncQueueDao(db: NurtlinaDatabase): SyncQueueDao = db.syncQueueDao()
 
+    /** v1 → v2: add sync/family columns to core tables + create sync_queue table. */
     private val MIGRATION_1_2 = object : Migration(1, 2) {
         override fun migrate(db: SupportSQLiteDatabase) {
             listOf("babies", "bottles", "feed_logs", "diaper_logs", "sleep_logs").forEach { table ->
@@ -74,6 +71,13 @@ object DatabaseModule {
             )
             db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_queue_nextRetryAt ON sync_queue(nextRetryAt)")
             db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_queue_entityType_entityId ON sync_queue(entityType, entityId)")
+        }
+    }
+
+    /** v2 → v3: drop the bottles table (Bottle entity removed in v2.0). */
+    private val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS bottles")
         }
     }
 }

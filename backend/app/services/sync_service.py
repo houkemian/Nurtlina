@@ -2,7 +2,6 @@
 
 Push (local → server):
   - Accept change if incoming.updated_at >= existing.updated_at
-  - For Bottle: apply status priority rules when timestamps tie
   - Return accepted / rejected / conflicts per record ID
 
 Pull (server → local):
@@ -19,12 +18,10 @@ from app.core.clock import ensure_utc, utcnow
 from app.repositories.sync_repository import (
     get_or_create_cursor,
     pull_babies,
-    pull_bottles,
     pull_diaper_logs,
     pull_feed_logs,
     pull_sleep_logs,
     upsert_baby,
-    upsert_bottle,
     upsert_diaper_log,
     upsert_feed_log,
     upsert_sleep_log,
@@ -32,8 +29,6 @@ from app.repositories.sync_repository import (
 from app.schemas.sync import (
     BabyChange,
     BabySyncRequest,
-    BottleChange,
-    BottleSyncRequest,
     DiaperLogChange,
     DiaperLogSyncRequest,
     FeedLogChange,
@@ -55,21 +50,6 @@ async def push_babies(db: AsyncSession, req: BabySyncRequest, user_id: str) -> S
         row = change.model_dump()
         _normalise_timestamps(row)
         record_id, outcome = await upsert_baby(db, row, req.family_id)
-        _bucket(record_id, outcome, accepted, rejected, conflicts)
-    await _update_cursor_push(db, user_id, req.family_id, req.client_id, now)
-    return SyncPushResponse(
-        server_time=now, accepted=accepted, rejected=rejected, conflicts=conflicts
-    )
-
-
-async def push_bottles(db: AsyncSession, req: BottleSyncRequest, user_id: str) -> SyncPushResponse:
-    await _assert_family_access(db, req.family_id, user_id)
-    now = utcnow()
-    accepted, rejected, conflicts = [], [], []
-    for change in req.changes:
-        row = change.model_dump()
-        _normalise_timestamps(row)
-        record_id, outcome = await upsert_bottle(db, row, req.family_id)
         _bucket(record_id, outcome, accepted, rejected, conflicts)
     await _update_cursor_push(db, user_id, req.family_id, req.client_id, now)
     return SyncPushResponse(
@@ -139,12 +119,7 @@ async def pull_changes(
     now = utcnow()
     since_utc = ensure_utc(since)
 
-    # MVP stability choice: return a complete change set for the requested cursor.
-    # The previous timestamp-only pagination could skip records when more than
-    # one page shared the same updated_at value. Until the API exposes a richer
-    # per-entity cursor, do not paginate this endpoint.
     babies = await pull_babies(db, family_id, since_utc, None)
-    bottles = await pull_bottles(db, family_id, since_utc, None)
     feed_logs = await pull_feed_logs(db, family_id, since_utc, None)
     diaper_logs = await pull_diaper_logs(db, family_id, since_utc, None)
     sleep_logs = await pull_sleep_logs(db, family_id, since_utc, None)
@@ -159,7 +134,6 @@ async def pull_changes(
         next_cursor=next_cursor,
         has_more=has_more,
         babies=[_baby_to_change(b) for b in babies],
-        bottles=[_bottle_to_change(b) for b in bottles],
         feed_logs=[_feed_log_to_change(f) for f in feed_logs],
         diaper_logs=[_diaper_log_to_change(d) for d in diaper_logs],
         sleep_logs=[_sleep_log_to_change(s) for s in sleep_logs],
@@ -236,34 +210,6 @@ def _baby_to_change(b: object) -> BabyChange:
         name=b.name,
         birth_date=b.birth_date,
         avatar_color=b.avatar_color,
-        client_id=b.client_id,
-        schema_version=b.schema_version,
-        created_at=b.created_at,
-        updated_at=b.updated_at,
-        deleted_at=b.deleted_at,
-    )
-
-
-def _bottle_to_change(b: object) -> BottleChange:
-    from app.models.bottle import Bottle as BottleModel
-
-    assert isinstance(b, BottleModel)
-    return BottleChange(
-        id=b.id,
-        family_id=b.family_id,
-        baby_id=b.baby_id,
-        milk_type=b.milk_type,
-        amount_ml=b.amount_ml,
-        prepared_at=b.prepared_at,
-        feeding_started_at=b.feeding_started_at,
-        refrigerated_at=b.refrigerated_at,
-        status=b.status,
-        guideline_region=b.guideline_region,
-        rule_version=b.rule_version,
-        expires_at=b.expires_at,
-        discarded_at=b.discarded_at,
-        fed_at=b.fed_at,
-        note=b.note,
         client_id=b.client_id,
         schema_version=b.schema_version,
         created_at=b.created_at,

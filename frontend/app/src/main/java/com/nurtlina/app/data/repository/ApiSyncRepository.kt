@@ -6,20 +6,17 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.room.withTransaction
 import com.nurtlina.app.data.local.dao.BabyDao
-import com.nurtlina.app.data.local.dao.BottleDao
 import com.nurtlina.app.data.local.dao.DiaperLogDao
 import com.nurtlina.app.data.local.dao.FeedLogDao
 import com.nurtlina.app.data.local.dao.SleepLogDao
 import com.nurtlina.app.data.local.db.NurtlinaDatabase
 import com.nurtlina.app.data.local.entity.BabyEntity
-import com.nurtlina.app.data.local.entity.BottleEntity
 import com.nurtlina.app.data.local.entity.DiaperLogEntity
 import com.nurtlina.app.data.local.entity.FeedLogEntity
 import com.nurtlina.app.data.local.entity.SleepLogEntity
 import com.nurtlina.app.data.local.entity.SyncStatus
 import com.nurtlina.app.data.remote.api.BabyChangeDto
 import com.nurtlina.app.data.remote.api.BackendApiService
-import com.nurtlina.app.data.remote.api.BottleChangeDto
 import com.nurtlina.app.data.remote.api.DiaperLogChangeDto
 import com.nurtlina.app.data.remote.api.FeedLogChangeDto
 import com.nurtlina.app.data.remote.api.SleepLogChangeDto
@@ -51,7 +48,6 @@ class ApiSyncRepository @Inject constructor(
     private val syncQueueProcessor: SyncQueueProcessor,
     private val sessionRepository: SessionRepository,
     private val babyDao: BabyDao,
-    private val bottleDao: BottleDao,
     private val feedLogDao: FeedLogDao,
     private val diaperLogDao: DiaperLogDao,
     private val sleepLogDao: SleepLogDao,
@@ -126,7 +122,6 @@ class ApiSyncRepository @Inject constructor(
         val syncedAt = response.serverTime.toInstantMillis()
         database.withTransaction {
             response.babies.forEach { applyBaby(it, syncedAt) }
-            response.bottles.forEach { applyBottle(it, syncedAt) }
             response.feedLogs.forEach { applyFeedLog(it, syncedAt) }
             response.diaperLogs.forEach { applyDiaperLog(it, syncedAt) }
             response.sleepLogs.forEach { applySleepLog(it, syncedAt) }
@@ -152,43 +147,6 @@ class ApiSyncRepository @Inject constructor(
                 createdAt = dto.createdAt.toInstantMillis(),
                 updatedAt = remoteUpdatedAt,
                 archivedAt = null,
-                familyId = dto.familyId,
-                deletedAt = null,
-                syncStatus = SyncStatus.SYNCED.name,
-                syncVersion = dto.schemaVersion,
-                clientId = dto.clientId,
-                lastSyncedAt = syncedAt,
-            ),
-        )
-    }
-
-    private suspend fun applyBottle(dto: BottleChangeDto, syncedAt: Long) {
-        val remoteUpdatedAt = dto.updatedAt.toInstantMillis()
-        val local = bottleDao.getById(dto.id)
-        if (local != null && local.updatedAt >= remoteUpdatedAt) return
-
-        if (dto.deletedAt != null) {
-            bottleDao.delete(dto.id)
-            return
-        }
-
-        bottleDao.upsert(
-            BottleEntity(
-                id = dto.id,
-                babyId = dto.babyId,
-                milkType = dto.milkType,
-                amountMl = dto.amountMl,
-                preparedAt = dto.preparedAt.toInstantMillis(),
-                feedingStartedAt = dto.feedingStartedAt.toInstantMillisOrNull(),
-                refrigeratedAt = dto.refrigeratedAt.toInstantMillisOrNull(),
-                status = dto.status,
-                guidelineRegion = dto.guidelineRegion,
-                expiresAt = dto.expiresAt.toInstantMillisOrNull(),
-                discardedAt = dto.discardedAt.toInstantMillisOrNull(),
-                fedAt = dto.fedAt.toInstantMillisOrNull(),
-                note = dto.note,
-                createdAt = dto.createdAt.toInstantMillis(),
-                updatedAt = remoteUpdatedAt,
                 familyId = dto.familyId,
                 deletedAt = null,
                 syncStatus = SyncStatus.SYNCED.name,

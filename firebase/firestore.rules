@@ -75,14 +75,6 @@ service cloud.firestore {
         allow delete: if isFamilyMember(familyId);
       }
 
-      // ── bottles ──────────────────────────────
-      match /bottles/{bottleId} {
-        allow read: if isFamilyMember(familyId);
-        allow create: if isFamilyMember(familyId) && isValidSyncRecord();
-        allow update: if isFamilyMember(familyId) && isValidSyncRecord() && isNotStale();
-        allow delete: if isFamilyMember(familyId);
-      }
-
       // ── feedLogs ─────────────────────────────
       match /feedLogs/{feedLogId} {
         allow read: if isFamilyMember(familyId);

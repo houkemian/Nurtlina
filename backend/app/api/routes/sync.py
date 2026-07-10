@@ -8,7 +8,6 @@ from app.core.security import CurrentUser
 from app.db.session import get_db
 from app.schemas.sync import (
     BabySyncRequest,
-    BottleSyncRequest,
     DiaperLogSyncRequest,
     FeedLogSyncRequest,
     SleepLogSyncRequest,
@@ -27,15 +26,6 @@ async def push_babies(
     db: AsyncSession = Depends(get_db),
 ) -> SyncPushResponse:
     return await sync_service.push_babies(db, req, current_user.user_id)
-
-
-@router.post("/bottles", response_model=SyncPushResponse)
-async def push_bottles(
-    req: BottleSyncRequest,
-    current_user: CurrentUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-) -> SyncPushResponse:
-    return await sync_service.push_bottles(db, req, current_user.user_id)
 
 
 @router.post("/feed-logs", response_model=SyncPushResponse)

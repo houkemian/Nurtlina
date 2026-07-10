@@ -22,8 +22,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,30 +38,24 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavType
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.nurtlina.app.R
 import com.nurtlina.app.core.notification.FeedReminderConfig
 import com.nurtlina.app.data.billing.EntitlementManager
 import com.nurtlina.app.data.billing.ProStatus
-import com.nurtlina.app.domain.model.BottleTransition
 import com.nurtlina.app.domain.model.DiaperType
 import com.nurtlina.app.domain.model.FeedLog
-import com.nurtlina.app.domain.model.GuidelineRegion
 import com.nurtlina.app.domain.model.TodaySummary
 import com.nurtlina.app.domain.model.UnitType
 import com.nurtlina.app.domain.model.UserSettings
 import com.nurtlina.app.domain.repository.SettingsRepository
-import com.nurtlina.app.ui.bottle.BottleDetailScreen
-import com.nurtlina.app.ui.bottle.BottleDetailUiState
-import com.nurtlina.app.ui.bottle.BottleViewModel
+import com.nurtlina.app.ui.auth.SignInScreen
 import com.nurtlina.app.ui.bottle.NewBottleSheet
 import com.nurtlina.app.ui.bottle.NewBottleUiState
 import com.nurtlina.app.ui.insights.InsightsDateRange
@@ -72,7 +66,6 @@ import com.nurtlina.app.ui.logs.LogsScreen
 import com.nurtlina.app.ui.logs.LogsViewModel
 import com.nurtlina.app.ui.onboarding.OnboardingScreen
 import com.nurtlina.app.ui.onboarding.OnboardingViewModel
-import com.nurtlina.app.ui.auth.SignInScreen
 import com.nurtlina.app.ui.paywall.PaywallScreen
 import com.nurtlina.app.ui.paywall.PaywallViewModel
 import com.nurtlina.app.ui.settings.SettingsScreen
@@ -96,22 +89,12 @@ import javax.inject.Inject
 
 // ── App-level ViewModel ──────────────────────────────────────────────────────
 
-/**
- * Lightweight ViewModel scoped to the activity that resolves the start
- * destination and exposes app-wide Pro / sync state before the NavHost
- * is first composed.
- *
- * Emits `null` for [onboardingComplete] while the settings DataStore is
- * still loading, which causes [NurtlinaNavHost] to render an empty
- * placeholder rather than flash the wrong screen.
- */
 @HiltViewModel
 class AppViewModel @Inject constructor(
     settingsRepository: SettingsRepository,
     entitlementManager: EntitlementManager,
 ) : ViewModel() {
 
-    /** `null` = loading, `true` = completed, `false` = not yet completed. */
     val onboardingComplete: StateFlow<Boolean?> = settingsRepository
         .observe()
         .map { it.onboardingCompleted }
@@ -121,7 +104,6 @@ class AppViewModel @Inject constructor(
             initialValue = null,
         )
 
-    /** `true` when the user holds an active Pro subscription or lifetime purchase. */
     val isPro: StateFlow<Boolean> = entitlementManager.proStatus
         .map { it != ProStatus.FREE && it != ProStatus.UNKNOWN }
         .stateIn(
@@ -130,7 +112,6 @@ class AppViewModel @Inject constructor(
             initialValue = false,
         )
 
-    /** Low-stimulation mode for nighttime use. It also suppresses ads on care screens. */
     val nightModeEnabled: StateFlow<Boolean> = settingsRepository
         .observe()
         .map { it.nightModeEnabled }
@@ -151,15 +132,6 @@ private const val PLAY_STORE_APP_URL = "market://details?id=com.nurtlina.app"
 private const val PLAY_STORE_APP_WEB_URL =
     "https://play.google.com/store/apps/details?id=com.nurtlina.app"
 
-/**
- * Root composable that owns the [NavHostController] and the app-level
- * [Scaffold].  The bottom navigation bar is visible only while the user is
- * on a main-tab destination (Today / Logs / Insights / Settings).
- *
- * Screen composables are wired here; each delegates its own ViewModel
- * retrieval to [hiltViewModel] so each back-stack entry gets a correctly
- * scoped instance.
- */
 @Composable
 fun NurtlinaNavHost(modifier: Modifier = Modifier) {
 
@@ -168,7 +140,6 @@ fun NurtlinaNavHost(modifier: Modifier = Modifier) {
     val onboardingComplete by appViewModel.onboardingComplete.collectAsStateWithLifecycle()
     val isPro by appViewModel.isPro.collectAsStateWithLifecycle()
 
-    // Hold off rendering until settings are loaded to avoid a destination flash.
     if (onboardingComplete == null) {
         Box(modifier.fillMaxSize())
         return
@@ -243,21 +214,10 @@ fun NurtlinaNavHost(modifier: Modifier = Modifier) {
                 SettingsRoute(navController, isPro)
             }
 
-            // ── Bottle screens ───────────────────────────────────────────
+            // ── Feed screens ─────────────────────────────────────────────
 
-            composable(NavRoutes.NewBottle.route) {
-                NewBottleRoute(navController)
-            }
-
-            composable(
-                route = NavRoutes.BottleDetail.route,
-                arguments = listOf(
-                    navArgument(NavRoutes.BottleDetail.ARG_BOTTLE_ID) {
-                        type = NavType.StringType
-                    },
-                ),
-            ) {
-                BottleDetailRoute(navController)
+            composable(NavRoutes.NewFeed.route) {
+                NewFeedRoute(navController)
             }
 
             // ── Paywall ──────────────────────────────────────────────────
@@ -293,9 +253,7 @@ private fun OnboardingRoute(navController: NavController) {
                 }
             }
         },
-        onRequestNotificationPermission = {
-            // Permission prompting is handled later; core onboarding remains non-blocking.
-        },
+        onRequestNotificationPermission = {},
     )
 }
 
@@ -305,14 +263,12 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val babies by viewModel.babies.collectAsStateWithLifecycle()
     val selectedBaby by viewModel.selectedBaby.collectAsStateWithLifecycle()
-    val activeBottles by viewModel.activeBottles.collectAsStateWithLifecycle()
     val latestFeed by viewModel.latestFeed.collectAsStateWithLifecycle()
     val todaySummary by viewModel.todaySummary.collectAsStateWithLifecycle()
     val showRatingPrompt by viewModel.showRatingPrompt.collectAsStateWithLifecycle()
     val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
     var now by remember { mutableStateOf(Instant.now()) }
     val context = LocalContext.current
-    val activeBottle = activeBottles.firstOrNull()
     val summary = todaySummary ?: emptyTodaySummary()
     val currentSettings = settings ?: UserSettings()
     val unitType = currentSettings.unit
@@ -330,12 +286,10 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
 
     LaunchedEffect(
         summary.totalFeedCount,
-        activeBottles.map { it.id to it.status },
         currentSettings.nightModeEnabled,
     ) {
         delay(7_000L)
         viewModel.maybeShowRatingPrompt(
-            activeBottles = activeBottles,
             nightModeEnabled = currentSettings.nightModeEnabled,
         )
     }
@@ -351,9 +305,6 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
                 unitType = unitType,
                 now = now,
             ),
-            activeBottle = activeBottle,
-            countdownText = formatRemaining(activeBottle?.expiresAt),
-            isExpiringSoon = isExpiringSoon(activeBottle?.expiresAt),
             todaySummary = summary,
             showAds = !isPro && !currentSettings.nightModeEnabled,
             nightModeEnabled = currentSettings.nightModeEnabled,
@@ -368,12 +319,7 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
                 navController.navigate(NavRoutes.Paywall.route)
             }
         },
-        onNewBottle = { navController.navigate(NavRoutes.NewBottle.route) },
-        onStartFeeding = { viewModel.transitionBottle(it, BottleTransition.StartFeeding) },
-        onRefrigerate = { viewModel.transitionBottle(it, BottleTransition.Refrigerate) },
-        onDiscard = { viewModel.transitionBottle(it, BottleTransition.Discard) },
-        onMarkFed = { viewModel.transitionBottle(it, BottleTransition.MarkFed) },
-        onBottleDetail = { navController.navigate(NavRoutes.BottleDetail.createRoute(it.id)) },
+        onNewFeed = { navController.navigate(NavRoutes.NewFeed.route) },
         onQuickDiaper = { viewModel.quickLogDiaper(DiaperType.WET) },
         onQuickSleep = {
             if (todaySummary?.activeSleepStartedAt == null) {
@@ -392,7 +338,7 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
 }
 
 @Composable
-private fun NewBottleRoute(navController: NavController) {
+private fun NewFeedRoute(navController: NavController) {
     val todayViewModel: TodayViewModel = hiltViewModel()
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val selectedBaby by todayViewModel.selectedBaby.collectAsStateWithLifecycle()
@@ -426,30 +372,6 @@ private fun NewBottleRoute(navController: NavController) {
         createButtonRes = R.string.action_save_feed,
         disclaimerRes = R.string.new_feed_disclaimer,
         onDismiss = { navController.popBackStack() },
-    )
-}
-
-@Composable
-private fun BottleDetailRoute(navController: NavController) {
-    val viewModel: BottleViewModel = hiltViewModel()
-    val bottle by viewModel.bottle.collectAsStateWithLifecycle()
-
-    BottleDetailScreen(
-        state = BottleDetailUiState(
-            bottle = bottle,
-            countdownText = formatRemaining(bottle?.expiresAt),
-            elapsedText = "",
-            isExpired = bottle?.expiresAt?.isBefore(Instant.now()) == true,
-            isExpiringSoon = isExpiringSoon(bottle?.expiresAt),
-            guidelineSourceName = guidelineSourceName(bottle?.guidelineRegion),
-            unitType = UnitType.ML,
-        ),
-        onBack = { navController.popBackStack() },
-        onStartFeeding = { viewModel.transitionBottle(BottleTransition.StartFeeding) },
-        onRefrigerate = { viewModel.transitionBottle(BottleTransition.Refrigerate) },
-        onMarkFed = { viewModel.transitionBottle(BottleTransition.MarkFed) },
-        onDiscard = { viewModel.transitionBottle(BottleTransition.Discard) },
-        onEditPreparedTime = {},
     )
 }
 
@@ -612,7 +534,6 @@ private fun emptyTodaySummary(): TodaySummary = TodaySummary(
     activeSleepStartedAt = null,
 )
 
-// Soft home-screen prompt for interval awareness; this is not a safety or medical rule.
 private val feedAttentionInterval: Duration
     get() = FeedReminderConfig.nextFeedAttentionInterval
 
@@ -657,28 +578,6 @@ private fun formatCompactDuration(duration: Duration): String {
 private fun formatAmount(amountMl: Double, unitType: UnitType): String = when (unitType) {
     UnitType.ML -> "%.0f ml".format(amountMl)
     UnitType.OZ -> "%.1f oz".format(amountMl / 29.5735)
-}
-
-private fun formatRemaining(expiresAt: Instant?): String {
-    if (expiresAt == null) return ""
-    val remaining = Duration.between(Instant.now(), expiresAt)
-    if (remaining.isNegative || remaining.isZero) return "Expired"
-    val hours = remaining.toHours()
-    val minutes = remaining.minusHours(hours).toMinutes().coerceAtLeast(1)
-    return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
-}
-
-private fun isExpiringSoon(expiresAt: Instant?): Boolean {
-    if (expiresAt == null) return false
-    val remaining = Duration.between(Instant.now(), expiresAt)
-    return !remaining.isNegative && remaining <= Duration.ofMinutes(15)
-}
-
-private fun guidelineSourceName(region: GuidelineRegion?): String = when (region) {
-    GuidelineRegion.US -> "CDC"
-    GuidelineRegion.UK -> "NHS"
-    GuidelineRegion.CUSTOM -> "Custom"
-    null -> ""
 }
 
 private fun launchInAppReviewOrStore(context: Context) {
@@ -761,8 +660,6 @@ private fun NurtlinaBottomBar(
                 selected = selected,
                 onClick = {
                     navController.navigate(item.route) {
-                        // Pop up to the start destination to avoid building up a
-                        // large back stack when re-selecting tabs.
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
                         }

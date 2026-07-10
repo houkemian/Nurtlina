@@ -5,25 +5,19 @@ import androidx.lifecycle.viewModelScope
 import com.nurtlina.app.core.analytics.Analytics
 import com.nurtlina.app.core.notification.NextFeedNotificationScheduler
 import com.nurtlina.app.domain.model.Baby
-import com.nurtlina.app.domain.model.Bottle
-import com.nurtlina.app.domain.model.BottleStatus
-import com.nurtlina.app.domain.model.BottleTransition
-import com.nurtlina.app.domain.model.BottleTransitionResult
 import com.nurtlina.app.domain.model.DiaperType
 import com.nurtlina.app.domain.model.FeedLog
 import com.nurtlina.app.domain.model.FeedType
 import com.nurtlina.app.domain.model.MilkType
 import com.nurtlina.app.domain.model.TodaySummary
-import com.nurtlina.app.domain.repository.BabyRepository
-import com.nurtlina.app.domain.repository.BottleRepository
-import com.nurtlina.app.domain.repository.FeedLogRepository
 import com.nurtlina.app.domain.rating.RatingPromptBlockedReason
 import com.nurtlina.app.domain.rating.RatingPromptDecision
 import com.nurtlina.app.domain.rating.RatingPromptEligibility
+import com.nurtlina.app.domain.repository.BabyRepository
+import com.nurtlina.app.domain.repository.FeedLogRepository
 import com.nurtlina.app.domain.repository.RatingPromptRepository
 import com.nurtlina.app.domain.repository.SettingsRepository
 import com.nurtlina.app.domain.usecase.bottle.GetTodaySummaryUseCase
-import com.nurtlina.app.domain.usecase.bottle.TransitionBottleUseCase
 import com.nurtlina.app.domain.usecase.diaper.LogDiaperUseCase
 import com.nurtlina.app.domain.usecase.feed.LogFeedUseCase
 import com.nurtlina.app.domain.usecase.sleep.SleepUseCase
@@ -41,20 +35,11 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import javax.inject.Inject
 
-/** Terminal statuses that should not appear in the active-bottle list. */
-private val terminalStatuses = setOf(
-    BottleStatus.FED,
-    BottleStatus.DISCARDED,
-    BottleStatus.CANCELED,
-)
-
 @HiltViewModel
 class TodayViewModel @Inject constructor(
     private val babyRepository: BabyRepository,
-    private val bottleRepository: BottleRepository,
     private val feedLogRepository: FeedLogRepository,
     private val getTodaySummaryUseCase: GetTodaySummaryUseCase,
-    private val transitionBottleUseCase: TransitionBottleUseCase,
     private val logFeedUseCase: LogFeedUseCase,
     private val logDiaperUseCase: LogDiaperUseCase,
     private val sleepUseCase: SleepUseCase,
@@ -65,7 +50,7 @@ class TodayViewModel @Inject constructor(
     private val analytics: Analytics,
 ) : ViewModel() {
 
-    // ── All babies (for the switcher UI) ────────────────────────────────────
+    // ── All babies ──────────────────────────────────────────────────────────
 
     val babies: StateFlow<List<Baby>> = babyRepository
         .observeAll()
@@ -75,7 +60,7 @@ class TodayViewModel @Inject constructor(
             initialValue = emptyList(),
         )
 
-    // ── Selected baby ────────────────────────────────────────────────────────
+    // ── Selected baby ───────────────────────────────────────────────────────
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val selectedBaby: StateFlow<Baby?> = settingsRepository
@@ -93,25 +78,7 @@ class TodayViewModel @Inject constructor(
             initialValue = null,
         )
 
-    // ── Active bottles for the selected baby ─────────────────────────────────
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val activeBottles: StateFlow<List<Bottle>> = selectedBaby
-        .flatMapLatest { baby ->
-            if (baby == null) {
-                flowOf(emptyList())
-            } else {
-                bottleRepository.observeActive(baby.id)
-                    .map { bottles -> bottles.filter { it.status !in terminalStatuses } }
-            }
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000L),
-            initialValue = emptyList(),
-        )
-
-    // ── Latest feed for the selected baby ───────────────────────────────────
+    // ── Latest feed ─────────────────────────────────────────────────────────
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val latestFeed: StateFlow<FeedLog?> = selectedBaby
@@ -129,7 +96,7 @@ class TodayViewModel @Inject constructor(
             initialValue = null,
         )
 
-    // ── Today's summary ──────────────────────────────────────────────────────
+    // ── Today's summary ─────────────────────────────────────────────────────
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val todaySummary: StateFlow<TodaySummary?> = selectedBaby
@@ -142,7 +109,7 @@ class TodayViewModel @Inject constructor(
             initialValue = null,
         )
 
-    // ── Error state for quick-action failures ────────────────────────────────
+    // ── Error state ─────────────────────────────────────────────────────────
 
     private val _actionError = MutableStateFlow<Throwable?>(null)
     val actionError: StateFlow<Throwable?> = _actionError.asStateFlow()
@@ -152,44 +119,12 @@ class TodayViewModel @Inject constructor(
 
     private var ratingPromptShownThisSession = false
 
-    // ── Public actions ───────────────────────────────────────────────────────
+    // ── Public actions ──────────────────────────────────────────────────────
 
     fun selectBaby(babyId: String) {
         viewModelScope.launch {
             val current = settingsRepository.get()
             settingsRepository.update(current.copy(selectedBabyId = babyId))
-        }
-    }
-
-    fun transitionBottle(bottle: Bottle, transition: BottleTransition) {
-        viewModelScope.launch {
-            val result = runCatching {
-                transitionBottleUseCase(bottle, transition)
-            }.getOrElse { error ->
-                _actionError.value = error
-                return@launch
-            }
-
-            when (result) {
-                is BottleTransitionResult.Error -> {
-                    _actionError.value = IllegalStateException(result.reason)
-                }
-                is BottleTransitionResult.Success -> {
-                    when (transition) {
-                        is BottleTransition.MarkFed -> {
-                            runCatching {
-                                logFeedFromBottle(result.bottle)
-                                ratingPromptRepository.incrementPositiveAction()
-                            }.onFailure { error ->
-                                _actionError.value = error
-                            }
-                        }
-                        is BottleTransition.Discard,
-                        is BottleTransition.Cancel -> ratingPromptRepository.recordNegativeAction(Instant.now())
-                        else -> Unit
-                    }
-                }
-            }
         }
     }
 
@@ -213,6 +148,7 @@ class TodayViewModel @Inject constructor(
                 )
                 nextFeedNotificationScheduler.schedule(log.babyId, log.startedAt)
                 ratingPromptRepository.incrementPositiveAction()
+                ratingPromptRepository.incrementFeedLogged()
                 onLogged()
             }.onFailure { _actionError.value = it }
         }
@@ -220,13 +156,6 @@ class TodayViewModel @Inject constructor(
 
     fun quickLogFeed(amountMl: Double) {
         val babyId = selectedBaby.value?.id ?: return
-        val activeBottle = activeBottles.value.firstOrNull { bottle ->
-            bottle.status == BottleStatus.FEEDING_STARTED || bottle.status == BottleStatus.NOT_STARTED
-        }
-        if (activeBottle != null) {
-            transitionBottle(activeBottle.copy(amountMl = amountMl), BottleTransition.MarkFed)
-            return
-        }
 
         val now = Instant.now()
         viewModelScope.launch {
@@ -240,6 +169,7 @@ class TodayViewModel @Inject constructor(
                 )
                 nextFeedNotificationScheduler.schedule(log.babyId, log.startedAt)
                 ratingPromptRepository.incrementPositiveAction()
+                ratingPromptRepository.incrementFeedLogged()
             }.onFailure { _actionError.value = it }
         }
     }
@@ -282,14 +212,13 @@ class TodayViewModel @Inject constructor(
         _actionError.value = null
     }
 
-    fun maybeShowRatingPrompt(activeBottles: List<Bottle>, nightModeEnabled: Boolean) {
+    fun maybeShowRatingPrompt(nightModeEnabled: Boolean) {
         viewModelScope.launch {
             val now = Instant.now()
             ratingPromptRepository.ensureFirstLaunchAt(now)
             val state = ratingPromptRepository.get()
             when (val decision = ratingPromptEligibility.evaluate(
                 state = state,
-                activeBottles = activeBottles,
                 nightModeEnabled = nightModeEnabled,
                 alreadyShownThisSession = ratingPromptShownThisSession,
                 now = now,
@@ -312,7 +241,6 @@ class TodayViewModel @Inject constructor(
     private fun logRatingPromptBlocked(reason: RatingPromptBlockedReason) {
         when (reason) {
             RatingPromptBlockedReason.NIGHT_MODE -> analytics.logRatingPromptBlockedNightMode()
-            RatingPromptBlockedReason.ACTIVE_EXPIRED_BOTTLE -> analytics.logRatingPromptBlockedActiveExpiredBottle()
             RatingPromptBlockedReason.RECENT_NOTIFICATION_SESSION -> analytics.logRatingPromptBlockedNotificationSession()
             RatingPromptBlockedReason.RECENT_NEGATIVE_ACTION -> analytics.logRatingPromptBlockedNegativeAction()
             else -> Unit
@@ -341,19 +269,6 @@ class TodayViewModel @Inject constructor(
             _showRatingPrompt.value = false
             analytics.logRatingPromptRateClicked()
         }
-    }
-
-    private suspend fun logFeedFromBottle(bottle: Bottle) {
-        val fedAt = bottle.fedAt ?: Instant.now()
-        val log = logFeedUseCase(
-            babyId = bottle.babyId,
-            feedType = bottle.milkType.toFeedType(),
-            amountMl = bottle.amountMl,
-            startedAt = bottle.feedingStartedAt ?: fedAt,
-            endedAt = fedAt,
-            bottleId = bottle.id,
-        )
-        nextFeedNotificationScheduler.schedule(log.babyId, log.startedAt)
     }
 }
 

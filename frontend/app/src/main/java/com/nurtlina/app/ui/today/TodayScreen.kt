@@ -33,7 +33,6 @@ import androidx.compose.material.icons.filled.BabyChangingStation
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.LocalDrink
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
@@ -72,19 +71,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.zIndex
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.nurtlina.app.R
 import com.nurtlina.app.domain.model.Baby
-import com.nurtlina.app.domain.model.Bottle
-import com.nurtlina.app.domain.model.BottleStatus
-import com.nurtlina.app.domain.model.MilkType
 import com.nurtlina.app.domain.model.TodaySummary
 import com.nurtlina.app.domain.model.UnitType
 import com.nurtlina.app.ui.NurtlinaDialog
-import com.nurtlina.app.ui.theme.BottleStatusColors
 import com.nurtlina.app.ui.theme.NurtlinaTheme
 import kotlinx.coroutines.delay
 import java.time.Instant
@@ -97,20 +91,10 @@ private const val ML_PER_OUNCE = 29.5735
 // UI state
 // --------------------------------------------------------------------------
 
-/**
- * Snapshot of data the Today screen needs to render.
- *
- * Most time-sensitive values are pre-formatted by the route layer. The active
- * sleep timer is the exception so only that card recomposes every second.
- */
 data class TodayUiState(
     val babies: List<Baby> = emptyList(),
     val selectedBaby: Baby? = null,
     val feedingStatus: FeedingStatusUiState = FeedingStatusUiState(),
-    val activeBottle: Bottle? = null,
-    /** Human-readable countdown, e.g. "1h 24m", "45m", or use R.string.today_time_expired. */
-    val countdownText: String = "",
-    val isExpiringSoon: Boolean = false,
     val todaySummary: TodaySummary = TodaySummary(
         totalFeedCount = 0,
         totalAmountMl = 0.0,
@@ -139,30 +123,20 @@ data class FeedingStatusUiState(
 // Root composable
 // --------------------------------------------------------------------------
 
-/**
- * Today screen — the primary home tab.
- *
- * Stateless: all mutable state is owned by [TodayViewModel] and passed in.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodayScreen(
     state: TodayUiState,
     onSelectBaby: (Baby) -> Unit,
     onAddBaby: () -> Unit,
-    onNewBottle: () -> Unit,
-    onStartFeeding: (Bottle) -> Unit,
-    onRefrigerate: (Bottle) -> Unit,
-    onDiscard: (Bottle) -> Unit,
-    onMarkFed: (Bottle) -> Unit,
-    onBottleDetail: (Bottle) -> Unit,
+    onNewFeed: () -> Unit,
     onQuickDiaper: () -> Unit,
     onQuickSleep: () -> Unit,
     onRatingPromptRate: () -> Unit,
     onRatingPromptMaybeLater: () -> Unit,
     onRatingPromptNoThanks: () -> Unit,
     modifier: Modifier = Modifier,
-    adUnitId: String = "ca-app-pub-3940256099942544/6300978111", // AdMob test banner ID
+    adUnitId: String = "ca-app-pub-3940256099942544/6300978111",
 ) {
     var quickLogFeedback by remember { mutableStateOf<QuickLogFeedback?>(null) }
     var isQuickLogFeedbackVisible by remember { mutableStateOf(false) }
@@ -246,35 +220,11 @@ fun TodayScreen(
                 FeedingStatusCard(
                     state = state.feedingStatus,
                     nightModeEnabled = state.nightModeEnabled,
-                    onNewBottle = onNewBottle,
+                    onNewFeed = onNewFeed,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                 )
-
-                if (state.activeBottle != null) {
-                    Spacer(Modifier.height(16.dp))
-                    SectionHeader(
-                        title = stringResource(R.string.today_active_bottle_timer_title),
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    ActiveBottleCard(
-                        bottle = state.activeBottle,
-                        countdownText = state.countdownText,
-                        isExpiringSoon = state.isExpiringSoon,
-                        unitType = state.unitType,
-                        nightModeEnabled = state.nightModeEnabled,
-                        onStartFeeding = onStartFeeding,
-                        onRefrigerate = onRefrigerate,
-                        onDiscard = onDiscard,
-                        onMarkFed = onMarkFed,
-                        onCardClick = onBottleDetail,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                    )
-                }
 
                 if (state.todaySummary.activeSleepStartedAt != null) {
                     Spacer(Modifier.height(16.dp))
@@ -299,7 +249,7 @@ fun TodayScreen(
                 Spacer(Modifier.height(8.dp))
                 QuickLogRow(
                     nightModeEnabled = state.nightModeEnabled,
-                    onQuickFeed = onNewBottle,
+                    onQuickFeed = onNewFeed,
                     onQuickDiaper = {
                         onQuickDiaper()
                         showFeedback(QuickLogFeedbackType.DIAPER)
@@ -599,7 +549,7 @@ private fun BabySwitcher(
 private fun FeedingStatusCard(
     state: FeedingStatusUiState,
     nightModeEnabled: Boolean,
-    onNewBottle: () -> Unit,
+    onNewFeed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     ElevatedCard(
@@ -629,12 +579,11 @@ private fun FeedingStatusCard(
                     modifier = Modifier.weight(1f),
                 )
                 Spacer(Modifier.width(12.dp))
-                val cdNewBottle = stringResource(R.string.cd_new_bottle_fab)
                 FilledTonalButton(
-                    onClick = onNewBottle,
+                    onClick = onNewFeed,
                     modifier = Modifier
                         .height(if (nightModeEnabled) 48.dp else 40.dp)
-                        .semantics { contentDescription = cdNewBottle },
+                        .semantics { contentDescription = stringResource(R.string.cd_new_bottle_fab) },
                     colors = ButtonDefaults.filledTonalButtonColors(
                         containerColor = MaterialTheme.colorScheme.surface,
                         contentColor = MaterialTheme.colorScheme.primary,
@@ -648,7 +597,7 @@ private fun FeedingStatusCard(
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        text = stringResource(R.string.today_new_bottle),
+                        text = stringResource(R.string.today_new_feed),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -830,335 +779,6 @@ private fun formatSleepElapsedClock(startedAtMillis: Long): String {
     val minutes = (totalSeconds % 3_600) / 60
     val seconds = totalSeconds % 60
     return "%02d:%02d:%02d".format(hours, minutes, seconds)
-}
-
-// --------------------------------------------------------------------------
-// Active bottle card
-// --------------------------------------------------------------------------
-
-@Composable
-private fun ActiveBottleCard(
-    bottle: Bottle,
-    countdownText: String,
-    isExpiringSoon: Boolean,
-    unitType: UnitType,
-    nightModeEnabled: Boolean,
-    onStartFeeding: (Bottle) -> Unit,
-    onRefrigerate: (Bottle) -> Unit,
-    onDiscard: (Bottle) -> Unit,
-    onMarkFed: (Bottle) -> Unit,
-    onCardClick: (Bottle) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val statusColors = BottleStatusColors.colorsFor(bottle.status)
-    val cdStatus = stringResource(R.string.cd_bottle_status, bottle.status.name)
-    val cdCountdown = stringResource(R.string.cd_countdown_timer, countdownText)
-
-    ElevatedCard(
-        onClick = { onCardClick(bottle) },
-        modifier = modifier,
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = statusColors.containerColor,
-        ),
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = bottle.milkType.icon(),
-                    contentDescription = null,
-                    tint = statusColors.contentColor,
-                    modifier = Modifier.size(20.dp),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = bottle.milkType.label(),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = statusColors.contentColor,
-                )
-                Spacer(Modifier.weight(1f))
-                StatusBadge(
-                    status = bottle.status,
-                    modifier = Modifier.semantics { contentDescription = cdStatus },
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            if (bottle.status == BottleStatus.EXPIRED) {
-                Text(
-                    text = stringResource(R.string.today_time_expired),
-                    style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
-                    color = statusColors.contentColor,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { contentDescription = cdCountdown },
-                )
-            } else if (!bottle.status.isTerminal) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.today_expires_in),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = statusColors.contentColor.copy(alpha = 0.7f),
-                    )
-                    Text(
-                        text = countdownText,
-                        style = if (nightModeEnabled)
-                            MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold)
-                        else
-                            MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
-                        color = statusColors.contentColor,
-                        modifier = Modifier.semantics { contentDescription = cdCountdown },
-                    )
-                }
-            }
-
-            bottle.amountMl?.let { ml ->
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = ml.formatAmount(unitType),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = statusColors.contentColor.copy(alpha = 0.8f),
-                )
-            }
-
-            if (!bottle.status.isTerminal) {
-                Spacer(Modifier.height(16.dp))
-                BottleActionButtons(
-                    status = bottle.status,
-                    nightModeEnabled = nightModeEnabled,
-                    onStartFeeding = { onStartFeeding(bottle) },
-                    onRefrigerate = { onRefrigerate(bottle) },
-                    onDiscard = { onDiscard(bottle) },
-                    onMarkFed = { onMarkFed(bottle) },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatusBadge(
-    status: BottleStatus,
-    modifier: Modifier = Modifier,
-) {
-    val statusColors = BottleStatusColors.colorsFor(status)
-    Surface(
-        shape = MaterialTheme.shapes.small,
-        color = statusColors.contentColor.copy(alpha = 0.15f),
-        modifier = modifier,
-    ) {
-        Text(
-            text = status.label(),
-            style = MaterialTheme.typography.labelSmall,
-            color = statusColors.contentColor,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-        )
-    }
-}
-
-@Composable
-private fun BottleActionButtons(
-    status: BottleStatus,
-    nightModeEnabled: Boolean,
-    onStartFeeding: () -> Unit,
-    onRefrigerate: () -> Unit,
-    onDiscard: () -> Unit,
-    onMarkFed: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val btnHeight = if (nightModeEnabled) 52.dp else 44.dp
-
-    when (status) {
-        BottleStatus.NOT_STARTED -> {
-            Row(
-                modifier = modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                FilledTonalButton(
-                    onClick = onStartFeeding,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(btnHeight),
-                ) {
-                    Text(
-                        text = stringResource(R.string.action_start_feeding),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                OutlinedButton(
-                    onClick = onRefrigerate,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(btnHeight),
-                ) {
-                    Text(
-                        text = stringResource(R.string.action_refrigerate),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-            OutlinedButton(
-                onClick = onDiscard,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(btnHeight),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error,
-                ),
-            ) {
-                Text(stringResource(R.string.action_discard))
-            }
-        }
-        BottleStatus.REFRIGERATED -> {
-            Row(
-                modifier = modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                FilledTonalButton(
-                    onClick = onStartFeeding,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(btnHeight),
-                ) {
-                    Text(
-                        text = stringResource(R.string.action_start_feeding),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                OutlinedButton(
-                    onClick = onDiscard,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(btnHeight),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error,
-                    ),
-                ) {
-                    Text(
-                        text = stringResource(R.string.action_discard),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        }
-        BottleStatus.FEEDING_STARTED -> {
-            Row(
-                modifier = modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                FilledTonalButton(
-                    onClick = onMarkFed,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(btnHeight),
-                ) {
-                    Text(
-                        text = stringResource(R.string.action_mark_fed),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                OutlinedButton(
-                    onClick = onDiscard,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(btnHeight),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error,
-                    ),
-                ) {
-                    Text(
-                        text = stringResource(R.string.action_discard),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        }
-        BottleStatus.EXPIRED -> {
-            OutlinedButton(
-                onClick = onDiscard,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(btnHeight),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error,
-                ),
-            ) {
-                Text(stringResource(R.string.action_discard))
-            }
-        }
-        else -> Unit
-    }
-}
-
-// --------------------------------------------------------------------------
-// Empty state card
-// --------------------------------------------------------------------------
-
-@Composable
-private fun EmptyBottleCard(
-    onNewBottle: () -> Unit,
-    nightModeEnabled: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Icon(
-                imageVector = Icons.Default.LocalDrink,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(12.dp))
-            Text(
-                text = stringResource(R.string.today_no_active_bottle),
-                style = if (nightModeEnabled)
-                    MaterialTheme.typography.titleLarge
-                else
-                    MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = stringResource(R.string.today_no_active_bottle_cta),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(20.dp))
-            FilledTonalButton(
-                onClick = onNewBottle,
-                modifier = Modifier.height(if (nightModeEnabled) 52.dp else 44.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.today_new_bottle))
-            }
-        }
-    }
 }
 
 // --------------------------------------------------------------------------
@@ -1362,32 +982,8 @@ fun AdBannerView(
 }
 
 // --------------------------------------------------------------------------
-// Extension helpers (UI layer only — formatting for display)
+// Extension helpers
 // --------------------------------------------------------------------------
-
-@Composable
-private fun MilkType.label(): String = when (this) {
-    MilkType.FORMULA -> stringResource(R.string.milk_type_formula)
-    MilkType.BREAST_MILK -> stringResource(R.string.milk_type_breast_milk)
-    MilkType.CUSTOM -> stringResource(R.string.milk_type_custom)
-}
-
-private fun MilkType.icon(): ImageVector = when (this) {
-    MilkType.FORMULA -> Icons.Default.LocalDrink
-    MilkType.BREAST_MILK -> Icons.Default.WaterDrop
-    MilkType.CUSTOM -> Icons.Default.LocalDrink
-}
-
-@Composable
-private fun BottleStatus.label(): String = when (this) {
-    BottleStatus.NOT_STARTED -> stringResource(R.string.bottle_status_not_started)
-    BottleStatus.FEEDING_STARTED -> stringResource(R.string.bottle_status_feeding_started)
-    BottleStatus.REFRIGERATED -> stringResource(R.string.bottle_status_refrigerated)
-    BottleStatus.EXPIRED -> stringResource(R.string.bottle_status_expired)
-    BottleStatus.FED -> stringResource(R.string.bottle_status_fed)
-    BottleStatus.DISCARDED -> stringResource(R.string.bottle_status_discarded)
-    BottleStatus.CANCELED -> stringResource(R.string.bottle_status_canceled)
-}
 
 internal fun Double.formatAmount(unit: UnitType): String = when (unit) {
     UnitType.ML -> "%.0f ml".format(this)
@@ -1438,46 +1034,21 @@ private fun previewFeedingStatus(
     nextFeedInMillis = nextFeedInMillis,
 )
 
-private fun previewBottle(status: BottleStatus = BottleStatus.NOT_STARTED) = Bottle(
-    id = "b1",
-    babyId = "1",
-    milkType = MilkType.FORMULA,
-    amountMl = 120.0,
-    preparedAt = Instant.now(),
-    feedingStartedAt = null,
-    refrigeratedAt = null,
-    status = status,
-    guidelineRegion = com.nurtlina.app.domain.model.GuidelineRegion.US,
-    expiresAt = Instant.now().plusSeconds(5400),
-    discardedAt = null,
-    fedAt = null,
-    note = null,
-    createdAt = Instant.now(),
-    updatedAt = Instant.now(),
-)
-
-@Preview(name = "Today – with active bottle (Light)", showBackground = true, showSystemUi = true)
+@Preview(name = "Today – Light", showBackground = true, showSystemUi = true)
 @Composable
-private fun PreviewTodayWithBottle() {
+private fun PreviewTodayLight() {
     NurtlinaTheme {
         TodayScreen(
             state = TodayUiState(
                 babies = listOf(previewBaby()),
                 selectedBaby = previewBaby(),
                 feedingStatus = previewFeedingStatus(),
-                activeBottle = previewBottle(),
-                countdownText = "1h 30m",
                 todaySummary = TodaySummary(3, 360.0, 5, 12_600_000L, null),
                 showAds = false,
             ),
             onSelectBaby = {},
             onAddBaby = {},
-            onNewBottle = {},
-            onStartFeeding = {},
-            onRefrigerate = {},
-            onDiscard = {},
-            onMarkFed = {},
-            onBottleDetail = {},
+            onNewFeed = {},
             onQuickDiaper = {},
             onQuickSleep = {},
             onRatingPromptRate = {},
@@ -1506,44 +1077,7 @@ private fun PreviewTodayEmptyDark() {
             ),
             onSelectBaby = {},
             onAddBaby = {},
-            onNewBottle = {},
-            onStartFeeding = {},
-            onRefrigerate = {},
-            onDiscard = {},
-            onMarkFed = {},
-            onBottleDetail = {},
-            onQuickDiaper = {},
-            onQuickSleep = {},
-            onRatingPromptRate = {},
-            onRatingPromptMaybeLater = {},
-            onRatingPromptNoThanks = {},
-        )
-    }
-}
-
-@Preview(name = "Today – Night Mode", showBackground = true, showSystemUi = true)
-@Composable
-private fun PreviewTodayNightMode() {
-    NurtlinaTheme(darkTheme = true) {
-        TodayScreen(
-            state = TodayUiState(
-                babies = listOf(previewBaby()),
-                selectedBaby = previewBaby(),
-                feedingStatus = previewFeedingStatus(),
-                activeBottle = previewBottle(BottleStatus.FEEDING_STARTED),
-                countdownText = "45m",
-                todaySummary = TodaySummary(3, 360.0, 5, 12_600_000L, Instant.now().toEpochMilli()),
-                nightModeEnabled = true,
-                showAds = false,
-            ),
-            onSelectBaby = {},
-            onAddBaby = {},
-            onNewBottle = {},
-            onStartFeeding = {},
-            onRefrigerate = {},
-            onDiscard = {},
-            onMarkFed = {},
-            onBottleDetail = {},
+            onNewFeed = {},
             onQuickDiaper = {},
             onQuickSleep = {},
             onRatingPromptRate = {},

@@ -18,11 +18,6 @@ class Analytics @Inject constructor(
     fun logGuidelineSelected(region: String) = log("guideline_selected", bundle("region" to region))
     fun logNotificationPermissionShown() = log("notification_permission_shown", null)
     fun logNotificationPermissionGranted() = log("notification_permission_granted", null)
-    fun logBottleCreated(milkType: String) = log("bottle_created", bundle("milk_type" to milkType))
-    fun logBottleStartedFeeding(milkType: String) = log("bottle_started_feeding", bundle("milk_type" to milkType))
-    fun logBottleRefrigerated(milkType: String) = log("bottle_refrigerated", bundle("milk_type" to milkType))
-    fun logBottleExpired(milkType: String) = log("bottle_expired", bundle("milk_type" to milkType))
-    fun logBottleDiscarded(milkType: String) = log("bottle_discarded", bundle("milk_type" to milkType))
     fun logFeedLogged(feedType: String, amountMl: Double?) = log("feed_logged", bundle(
         "feed_type" to feedType,
         "has_amount" to (amountMl != null).toString()
@@ -47,7 +42,6 @@ class Analytics @Inject constructor(
     fun logRatingPromptMaybeLaterClicked() = log("rating_prompt_maybe_later_clicked", null)
     fun logRatingPromptNoThanksClicked() = log("rating_prompt_no_thanks_clicked", null)
     fun logRatingPromptBlockedNightMode() = log("rating_prompt_blocked_night_mode", null)
-    fun logRatingPromptBlockedActiveExpiredBottle() = log("rating_prompt_blocked_active_expired_bottle", null)
     fun logRatingPromptBlockedNotificationSession() = log("rating_prompt_blocked_notification_session", null)
     fun logRatingPromptBlockedNegativeAction() = log("rating_prompt_blocked_negative_action", null)
 

@@ -8,7 +8,7 @@ interface RatingPromptRepository {
     fun observe(): Flow<RatingPromptState>
     suspend fun get(): RatingPromptState
     suspend fun ensureFirstLaunchAt(now: Instant)
-    suspend fun incrementBottleTimerCreated()
+    suspend fun incrementFeedLogged()
     suspend fun incrementPositiveAction()
     suspend fun recordShown(now: Instant)
     suspend fun recordMaybeLater(now: Instant)

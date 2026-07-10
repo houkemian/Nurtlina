@@ -3,7 +3,6 @@ package com.nurtlina.app.data.remote
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.nurtlina.app.data.remote.dto.RemoteBabyDto
-import com.nurtlina.app.data.remote.dto.RemoteBottleDto
 import com.nurtlina.app.data.remote.dto.RemoteDiaperLogDto
 import com.nurtlina.app.data.remote.dto.RemoteFeedLogDto
 import com.nurtlina.app.data.remote.dto.RemoteSleepLogDto
@@ -16,9 +15,6 @@ import javax.inject.Singleton
  *
  * All writes use [SetOptions.merge] so partial updates don't wipe fields that
  * the server may have set (e.g. entitlement flags).
- *
- * Conflict strategy: the caller is responsible for checking updatedAt before
- * calling upsert. The Firestore security rule also enforces isNotStale().
  */
 @Singleton
 class FirestoreSource @Inject constructor(
@@ -41,31 +37,6 @@ class FirestoreSource @Inject constructor(
             .await()
             .documents
             .mapNotNull { it.data?.let(RemoteBabyDto::fromMap) }
-
-    // ── Bottles ───────────────────────────────────────────────────────────────
-
-    suspend fun upsertBottle(familyId: String, dto: RemoteBottleDto) {
-        familyCollection(familyId, BOTTLES)
-            .document(dto.id)
-            .set(dto.toMap(), SetOptions.merge())
-            .await()
-    }
-
-    suspend fun fetchBottlesSince(familyId: String, sinceMillis: Long): List<RemoteBottleDto> =
-        familyCollection(familyId, BOTTLES)
-            .whereGreaterThan("updatedAt", sinceMillis)
-            .get()
-            .await()
-            .documents
-            .mapNotNull { it.data?.let(RemoteBottleDto::fromMap) }
-
-    suspend fun fetchBottle(familyId: String, bottleId: String): RemoteBottleDto? =
-        familyCollection(familyId, BOTTLES)
-            .document(bottleId)
-            .get()
-            .await()
-            .data
-            ?.let(RemoteBottleDto::fromMap)
 
     // ── FeedLogs ──────────────────────────────────────────────────────────────
 
@@ -144,7 +115,6 @@ class FirestoreSource @Inject constructor(
         const val FAMILIES = "families"
         const val ENTITLEMENTS = "entitlements"
         const val BABIES = "babies"
-        const val BOTTLES = "bottles"
         const val FEED_LOGS = "feedLogs"
         const val DIAPER_LOGS = "diaperLogs"
         const val SLEEP_LOGS = "sleepLogs"

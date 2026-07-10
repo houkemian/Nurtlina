@@ -2,16 +2,15 @@
 
 ## Project
 
-Nurtlina: Baby Feeding Timer
+Nurtlina: Baby Feeding Tracker
 
-Android-only baby bottle timer and baby care tracking app for overseas parents and caregivers.
+Android-only baby feeding tracker and care logging app for overseas parents and caregivers.
 
 Core purpose:
 
-- Track baby bottle freshness timers.
-- Distinguish between bottles that have not been started, have been used, are refrigerated, expired, fed, discarded, or canceled.
-- Track formula feeding, breast milk feeding, diapers, and sleep.
-- Provide calm reminders and logs.
+- Track baby feeding records (formula, breast milk, mixed, nursing).
+- Quick logging of feeds, diapers, and sleep with minimal taps.
+- Provide calm reminders for next feeding time.
 - Avoid medical claims.
 - Support monetization through ads, Pro subscription, and lifetime purchase.
 
@@ -25,7 +24,34 @@ Primary platform:
 Primary business model:
 
 - Free with ads.
-- Pro unlocks no ads, multiple babies, full history, exports, backup, advanced stats, custom reminders, custom rules, and widget themes.
+- Pro unlocks no ads, multiple babies, full history, exports, backup, advanced stats, custom reminders, and widget themes.
+
+## Current Implementation State (2026-07-10)
+
+**Feeding record management is the primary path and is implemented:**
+
+- `NewBottleSheet` (`ui/bottle/NewBottleSheet.kt`) now creates FeedLogs directly via `TodayViewModel.logFeed()` — see `NurtlinaNavHost.kt:415-429`
+- `FeedingStatusCard` in `TodayScreen.kt:598-700` shows last feed info + next feed countdown
+- `NextFeedNotificationScheduler` handles feed interval reminders
+- `TodayViewModel.logFeed()` / `quickLogFeed()` are the main feeding record methods
+
+**Bottle system is LEGACY (still present, to be removed):**
+
+Bottle-related code still exists throughout the codebase but is no longer the primary user path:
+- Domain: `Bottle.kt`, `BottleStatus`, `BottleTransition`, `BottleStateMachine.kt`, `ExpiryCalculator.kt`
+- Data: `BottleEntity.kt`, `BottleDao.kt`, `RoomBottleRepository.kt`, `RemoteBottleDto.kt`
+- UI: `ActiveBottleCard` (TodayScreen), `BottleDetailScreen.kt`, `BottleViewModel.kt`
+- Notifications: `BottleNotificationScheduler.kt`
+- UseCases: `CreateBottleUseCase`, `TransitionBottleUseCase`, `ObserveBottlesUseCase`, `CheckAndExpireBottlesUseCase`
+- Backend: `bottles` table, `/sync/bottles` endpoint
+- Tests: `BottleStateMachineTest.kt`, `ExpiryCalculatorTest.kt`
+- Bridge: `TodayViewModel.logFeedFromBottle()` auto-creates FeedLog when bottle is marked Fed
+
+**When modifying code:**
+- DO NOT add new Bottle features or extend Bottle state machine
+- DO add/improve FeedLog-based feeding record features
+- Bottle removal tasks are documented in `Nurtlina_PRD_Evaluation_and_Task_Plan.md` (Phase 0, ~11h)
+- Prefer removing Bottle references over adding new ones
 
 ---
 
@@ -37,22 +63,23 @@ Always optimize for:
    - Parents may use this app at night while tired.
    - Common actions should require as few taps as possible.
    - Prefer clear buttons over clever UI.
+   - No complex state machines or timers — just log what happened.
 
 2. Trust
    - Do not make safety guarantees.
    - Do not imply medical authority.
-   - Always treat timers as reminders based on selected public guidance.
+   - Always treat guidelines as informational, not prescriptive.
 
 3. Speed
-   - The main bottle timer flow must be fast.
+   - Logging a feeding must be fast (1-2 taps).
    - App startup should be quick.
    - Avoid unnecessary network dependency.
 
 4. Local-first with backend from MVP
-   - Core timer and logs must work without internet.
+   - Core logging must work without internet.
    - MVP should directly include a lightweight backend for account identity, backup/sync foundation, entitlement verification, remote config, and future caregiver sharing.
-   - Local Room data remains the source of truth for active timers.
-   - Backend sync must never block bottle timer creation, state changes, or reminders.
+   - Local Room data remains the source of truth for baby care records.
+   - Backend sync must never block feeding log creation or reminders.
    - Network failures must degrade gracefully.
    - Sync should be eventual, not blocking.
 
@@ -86,54 +113,19 @@ Never write or generate user-facing text that says or implies:
 
 Preferred wording:
 
-- "timer expired"
-- "based on your selected guideline"
-- "this app provides reminders and tracking only"
+- "based on public guidelines"
+- "this app provides tracking and reminders only"
 - "not medical advice"
 - "follow your formula label, local guidance, and pediatrician's advice"
 - "when in doubt, discard the milk"
 
 Required disclaimer concept:
 
-> This app provides reminders and tracking tools based on selected public guidelines. It does not provide medical advice and cannot determine whether milk is safe. Always follow your formula label, local health guidance, and your pediatrician's advice. When in doubt, discard the milk.
+> This app provides tracking tools based on public guidelines. It does not provide medical advice and cannot determine whether milk is safe. Always follow your formula label, local health guidance, and your pediatrician's advice. When in doubt, discard the milk.
 
 Do not claim endorsement by CDC, AAP, NHS, WHO, hospitals, pediatricians, or any health authority.
 
 Guidelines may be referenced as public sources, but never as endorsement.
-
----
-
-## Guideline Source Handling
-
-Public sources used for app copy, FAQ, and timer rule explanations:
-
-- CDC: Infant Formula Preparation and Storage
-- CDC: Breast Milk Storage and Preparation
-- NHS: Formula milk common questions
-- NHS: How to make up baby formula
-- AAP / HealthyChildren: safe formula preparation guidance
-
-Rules must be versioned in code.
-
-Do not silently change timer durations without:
-
-- Updating rule version.
-- Updating source text if needed.
-- Adding migration notes if behavior changes existing active timers.
-- Adding tests.
-
-Default formula timer rules for MVP:
-
-- Prepared formula, not started, room temperature: 2 hours from prepared time.
-- Formula after feeding starts: 1 hour from feeding start.
-- Prepared formula refrigerated before feeding starts: 24 hours from prepared time.
-
-Default breast milk timer rules for MVP:
-
-- Fresh expressed breast milk at room temperature: 4 hours from expressed/prepared time.
-- Refrigerated fresh breast milk: 4 days from expressed/prepared time.
-
-If there is uncertainty between sources or regions, show cautious wording and allow region/custom settings rather than hard medical claims.
 
 ---
 
@@ -145,7 +137,7 @@ Current working brand:
 
 Current Google Play display name:
 
-- Nurtlina: Baby Feeding Timer
+- Nurtlina: Baby Feeding Tracker
 
 Future expansion name:
 
@@ -192,7 +184,7 @@ domain
 ui
   onboarding
   today
-  bottle
+  feed
   logs
   insights
   settings
@@ -263,9 +255,8 @@ Default recommendation for one-person Android MVP:
 
 Backend constraints:
 
-- Do not make bottle timer usage dependent on network availability.
-- Do not calculate active countdowns only on the server.
-- Persist active timers locally.
+- Do not make feeding log creation dependent on network availability.
+- Persist all records locally.
 - Sync should be eventual, not blocking.
 - Use deterministic client-generated IDs for offline-created records.
 - Implement conflict handling with `updatedAt`, `deletedAt`, `clientId`, and `schemaVersion`.
@@ -279,7 +270,6 @@ Backend constraints:
 - Add deletion/export paths before broad launch.
 - Do not use synced baby care records for advertising targeting.
 - Keep analytics separate from personal baby records.
-- Safety timer rules must be versioned and should not be silently changed by Remote Config.
 
 Suggested cloud collections/tables:
 
@@ -288,7 +278,6 @@ users/{userId}
 families/{familyId}
 families/{familyId}/members/{memberId}
 families/{familyId}/babies/{babyId}
-families/{familyId}/bottles/{bottleId}
 families/{familyId}/feedLogs/{feedLogId}
 families/{familyId}/diaperLogs/{diaperLogId}
 families/{familyId}/sleepLogs/{sleepLogId}
@@ -319,7 +308,7 @@ Backend Definition of Done:
 - User can disable backup/sync if implemented as optional.
 - User can request or perform data deletion.
 - Purchase entitlement restore does not rely only on local client state.
-- Backend failure does not break bottle timer flow.
+- Backend failure does not break feeding log flow.
 
 ---
 
@@ -339,7 +328,7 @@ General rules:
 
 - No hardcoded user-facing strings in Kotlin files.
 - Put user-facing strings in localized resources.
-- Do not hardcode magic timer values outside guideline/rule classes.
+- Do not hardcode magic values outside guideline/reference classes.
 - Do not use floating-point values for timestamps.
 - Store timestamps consistently.
 - Prefer `Instant` for absolute time and convert only at UI boundaries.
@@ -364,33 +353,14 @@ Compose rules:
 Important entities:
 
 - Baby
-- Bottle
-- FeedLog
+- FeedLog (primary feeding record)
 - DiaperLog
 - SleepLog
 - UserSettings
-- GuidelineRule
-- SubscriptionEntitlement
 - UserAccount
 - Family
 - FamilyMember
 - SyncState
-
-Bottle statuses:
-
-- NotStarted
-- FeedingStarted
-- Refrigerated
-- Expired
-- Fed
-- Discarded
-- Canceled
-
-Milk types:
-
-- Formula
-- BreastMilk
-- Custom
 
 Feed types:
 
@@ -407,74 +377,24 @@ Diaper types:
 - Mixed
 - Dry
 
-Guideline regions:
-
-- US
-- UK
-- Custom
-
----
-
-## Bottle Timer State Machine
-
-Allowed transitions:
-
-```text
-NotStarted -> FeedingStarted
-NotStarted -> Refrigerated
-NotStarted -> Discarded
-NotStarted -> Canceled
-NotStarted -> Expired
-
-Refrigerated -> FeedingStarted
-Refrigerated -> Discarded
-Refrigerated -> Expired
-
-FeedingStarted -> Fed
-FeedingStarted -> Discarded
-FeedingStarted -> Expired
-
-Expired -> Discarded
-
-Fed -> terminal
-Discarded -> terminal
-Canceled -> terminal
-```
-
-Rules:
-
-- `FeedingStarted` should not silently return to `NotStarted`.
-- `Fed`, `Discarded`, and `Canceled` cancel all scheduled bottle notifications.
-- `Expired` should not be marked as `Fed` without explicit user confirmation such as "record anyway".
-- Editing times must recalculate expiry.
-- Active timers must survive app restart.
-- Pending notifications must be rescheduled after device reboot.
-- UI countdown must be derived from persisted `expiresAt - now`, not from in-memory timers.
-- Remote sync must not override a newer local timer state with stale cloud data.
-
 ---
 
 ## Notification Rules
 
 Core reminders:
 
-- Before expiry, default 15 minutes before.
-- At expiry.
-- Optional feeding-started reminder around 45 minutes.
-- At feeding-started expiry around 60 minutes.
+- Optional next feeding reminder based on user-configured interval.
+- Calm, non-intrusive notification text.
 
 Notification text rules:
 
-- Say "timer expired", not "milk is unsafe".
-- Include calm action guidance.
 - Do not use fear-based language.
+- Include calm action guidance.
 - Do not show disruptive ads immediately after reminder click.
 
 Required behavior:
 
-- When bottle status changes, cancel previous notifications and schedule new ones.
-- When bottle is terminal, cancel notifications.
-- When phone restarts, restore active timer notifications from local data.
+- When phone restarts, restore active reminders from local data.
 - When notification permission is denied, app must still work and show a non-blocking explanation.
 - Notification scheduling must not rely on the backend.
 
@@ -492,9 +412,8 @@ Primary tabs:
 Today screen must prioritize:
 
 - Current baby selector.
-- Active bottle card.
-- New Bottle button.
-- Quick Feed.
+- Last feeding status / next feeding reminder.
+- Quick Feed (1-tap logging).
 - Quick Diaper.
 - Quick Sleep.
 - Today summary.
@@ -511,8 +430,8 @@ Accessibility:
 
 - Support TalkBack labels.
 - Support large font.
-- Do not rely on color alone to communicate bottle status.
-- Provide text labels for warning/expired states.
+- Do not rely on color alone to communicate status.
+- Provide text labels for all states.
 
 ---
 
@@ -521,8 +440,7 @@ Accessibility:
 Free tier:
 
 - 1 baby.
-- Basic bottle timer.
-- Basic feed, diaper, and sleep logs.
+- Basic feeding, diaper, and sleep logs.
 - Today summary.
 - Ads.
 - Default widget.
@@ -537,7 +455,6 @@ Pro tier:
 - Export.
 - Backup.
 - Custom reminders.
-- Custom timer rules.
 - Widget themes.
 
 Suggested prices:
@@ -551,7 +468,6 @@ Ads:
 - Do not show interstitial ads in MVP unless explicitly requested.
 - Do not show disruptive ads during active feeding flow.
 - Do not show disruptive ads in night mode.
-- Do not show disruptive ads immediately after a bottle expiry notification.
 - Pro users must see no ads.
 
 ---
@@ -564,14 +480,6 @@ Suggested events:
 
 - onboarding_started
 - baby_created
-- guideline_selected
-- notification_permission_shown
-- notification_permission_granted
-- bottle_created
-- bottle_started_feeding
-- bottle_refrigerated
-- bottle_expired
-- bottle_discarded
 - feed_logged
 - diaper_logged
 - sleep_started
@@ -651,13 +559,8 @@ Rules:
 
 Must include unit tests for:
 
-- Formula room-temperature expiry.
-- Formula feeding-started expiry.
-- Formula refrigerated expiry.
-- Breast milk room-temperature expiry.
-- Breast milk refrigerated expiry.
-- State transitions.
-- Notification scheduling and cancellation.
+- Feed log CRUD operations.
+- Feed type and amount validation.
 - Unit conversion.
 - Today summary.
 - Cross-day logs.
@@ -702,16 +605,15 @@ When editing this project:
 
 1. Read this file first.
 2. Preserve compliance language.
-3. Preserve timer rule tests.
-4. Do not add medical claims.
-5. Use the MVP backend only for clear product needs: account, backup/sync foundation, entitlement verification, remote config, and future caregiver sharing. Avoid backend complexity beyond that.
-6. Prefer small, reviewable changes.
-7. Explain non-obvious tradeoffs in comments or commit notes.
-8. When adding user-facing text, add localization keys.
-9. When changing bottle timer logic, update tests.
-10. When changing paywall or ad behavior, ensure night mode and reminder flows stay non-disruptive.
-11. When changing backend/sync logic, verify offline behavior still works.
-12. When changing backend data shape, update security rules/RLS and migration notes.
+3. Do not add medical claims.
+4. Use the MVP backend only for clear product needs: account, backup/sync foundation, entitlement verification, remote config, and future caregiver sharing. Avoid backend complexity beyond that.
+5. Prefer small, reviewable changes.
+6. Explain non-obvious tradeoffs in comments or commit notes.
+7. When adding user-facing text, add localization keys.
+8. When changing feeding log logic, update tests.
+9. When changing paywall or ad behavior, ensure night mode and reminder flows stay non-disruptive.
+10. When changing backend/sync logic, verify offline behavior still works.
+11. When changing backend data shape, update security rules/RLS and migration notes.
 
 ---
 
@@ -726,9 +628,9 @@ A task is done only when:
 - Compliance language is preserved.
 - No medical/safety guarantee is introduced.
 - Analytics do not collect unnecessary sensitive data.
-- Existing bottle timer behavior is not broken.
+- Existing feeding log behavior is not broken.
 - UI works in light and dark mode.
-- Backend failure does not break core local timer flows.
+- Backend failure does not break core local logging flows.
 - Security rules/RLS are updated for new backend data.
 - Sync changes include offline/retry behavior.
 
@@ -745,6 +647,7 @@ Do not build these unless explicitly requested:
 - Baby photo analysis
 - Growth abnormality detection
 - Vaccine schedule advice
+- Bottle freshness timer / state machine (REMOVED — replaced by simple feeding records)
 - Real-time family sharing in MVP unless explicitly requested
 - Complex custom account system beyond lightweight Auth
 - Hardware integration
@@ -757,12 +660,12 @@ Do not build these unless explicitly requested:
 
 Use these patterns:
 
-- "Start bottle timer"
-- "Bottle timer expired"
-- "Feeding started"
-- "Mark as discarded"
-- "Based on your selected guideline"
-- "This app is a reminder tool, not medical advice."
+- "Log feeding"
+- "Record feeding"
+- "Quick feed — 120 ml"
+- "Last feeding: 25 min ago"
+- "Based on public guidelines"
+- "This app is a tracking tool, not medical advice."
 - "When in doubt, discard the milk."
 
 Avoid:
