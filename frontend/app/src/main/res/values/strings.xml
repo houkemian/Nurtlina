@@ -60,6 +60,7 @@
     <string name="today_no_active_bottle">No feed logged yet</string>
     <string name="today_no_active_bottle_cta">Tap Add Feed to save a feeding record</string>
     <string name="today_new_bottle">Feed</string>
+    <string name="today_new_feed">Feed</string>
     <string name="today_expires_in">Expires in</string>
     <string name="today_time_expired">EXPIRED</string>
     <string name="today_add_baby_pro">Add a baby</string>
@@ -134,6 +135,12 @@
     <string name="new_bottle_disclaimer">Timers are based on your selected guideline. Not medical advice.</string>
     <string name="new_feed_title">Add Feed</string>
     <string name="new_feed_disclaimer">This saves a feeding record only. Not medical advice.</string>
+    <string name="new_feed_amount_label">Amount</string>
+    <string name="new_feed_prepared_at_label">Feed time</string>
+    <string name="new_feed_prepared_just_now">Just now</string>
+    <string name="new_feed_prepared_pick_time">Pick time</string>
+    <string name="new_feed_note_label">Note (optional)</string>
+    <string name="new_feed_note_hint">Add a note…</string>
 
     <!-- ===== Bottle Detail Screen ===== -->
     <string name="bottle_detail_title">Bottle</string>
@@ -165,6 +172,7 @@
     <string name="cd_bottle_status">Bottle status: %1$s</string>
     <string name="cd_countdown_timer">Time remaining: %1$s</string>
     <string name="cd_new_bottle_fab">Add feed record</string>
+    <string name="cd_new_feed_fab">Add feed record</string>
     <string name="cd_select_baby">Select baby: %1$s</string>
     <string name="cd_add_baby">Add another baby</string>
     <string name="cd_avatar_color">Avatar color: %1$s</string>
