@@ -583,7 +583,7 @@ private fun FeedingStatusCard(
                     onClick = onNewFeed,
                     modifier = Modifier
                         .height(if (nightModeEnabled) 48.dp else 40.dp)
-                        .semantics { contentDescription = stringResource(R.string.cd_new_bottle_fab) },
+                        .semantics { contentDescription = stringResource(R.string.cd_new_feed_fab) },
                     colors = ButtonDefaults.filledTonalButtonColors(
                         containerColor = MaterialTheme.colorScheme.surface,
                         contentColor = MaterialTheme.colorScheme.primary,

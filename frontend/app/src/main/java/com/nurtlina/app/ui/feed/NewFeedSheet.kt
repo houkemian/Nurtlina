@@ -1,4 +1,4 @@
-package com.nurtlina.app.ui.bottle
+package com.nurtlina.app.ui.feed
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
@@ -64,12 +64,12 @@ import java.time.format.FormatStyle
 // --------------------------------------------------------------------------
 
 /**
- * State for the New Bottle bottom sheet.
+ * State for the New Feed bottom sheet.
  *
  * [amountMl] is always stored in millilitres. Convert for display only.
  * [isJustNow] controls whether [preparedAt] is treated as "now" or a custom time.
  */
-data class NewBottleUiState(
+data class NewFeedUiState(
     val milkType: MilkType = MilkType.FORMULA,
     val amountMl: Double? = null,
     val preparedAt: Instant = Instant.now(),
@@ -87,15 +87,12 @@ private val OZ_PRESETS_ML = listOf(59.15, 88.72, 118.29, 147.87, 177.44) // 2,3,
 // --------------------------------------------------------------------------
 
 /**
- * Bottom sheet for creating a new bottle timer.
- *
- * The sheet is shown by the caller; pass [onDismiss] to let it close.
- * All state changes are relayed via callbacks; the composable is stateless.
+ * Bottom sheet for creating a new feeding record.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewBottleSheet(
-    state: NewBottleUiState,
+fun NewFeedSheet(
+    state: NewFeedUiState,
     onMilkTypeChange: (MilkType) -> Unit,
     onAmountChange: (Double?) -> Unit,
     onPreparedAtChange: (Instant) -> Unit,
@@ -104,9 +101,9 @@ fun NewBottleSheet(
     onCreate: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
-    @StringRes titleRes: Int = R.string.new_bottle_title,
-    @StringRes createButtonRes: Int = R.string.action_create_bottle,
-    @StringRes disclaimerRes: Int = R.string.new_bottle_disclaimer,
+    @StringRes titleRes: Int = R.string.new_feed_title,
+    @StringRes createButtonRes: Int = R.string.action_save_feed,
+    @StringRes disclaimerRes: Int = R.string.new_feed_disclaimer,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showTimePicker by remember { mutableStateOf(false) }
@@ -140,7 +137,7 @@ fun NewBottleSheet(
 
             // Amount
             Text(
-                text = stringResource(R.string.new_bottle_amount_label),
+                text = stringResource(R.string.new_feed_amount_label),
                 style = MaterialTheme.typography.labelLarge,
             )
             Spacer(Modifier.height(8.dp))
@@ -152,9 +149,9 @@ fun NewBottleSheet(
             )
             Spacer(Modifier.height(20.dp))
 
-            // Prepared at
+            // Time
             Text(
-                text = stringResource(R.string.new_bottle_prepared_at_label),
+                text = stringResource(R.string.new_feed_prepared_at_label),
                 style = MaterialTheme.typography.labelLarge,
             )
             Spacer(Modifier.height(8.dp))
@@ -171,8 +168,8 @@ fun NewBottleSheet(
             OutlinedTextField(
                 value = state.note,
                 onValueChange = onNoteChange,
-                label = { Text(stringResource(R.string.new_bottle_note_label)) },
-                placeholder = { Text(stringResource(R.string.new_bottle_note_hint)) },
+                label = { Text(stringResource(R.string.new_feed_note_label)) },
+                placeholder = { Text(stringResource(R.string.new_feed_note_hint)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
                 maxLines = 4,
@@ -201,7 +198,7 @@ fun NewBottleSheet(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-            // Create button
+            // Save button
             Button(
                 onClick = onCreate,
                 enabled = !state.isCreating,
@@ -245,7 +242,7 @@ fun NewBottleSheet(
 }
 
 // --------------------------------------------------------------------------
-// Milk type selector (segmented buttons)
+// Milk type selector
 // --------------------------------------------------------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -269,7 +266,7 @@ private fun MilkTypeSelector(
 }
 
 // --------------------------------------------------------------------------
-// Amount selector (presets + manual)
+// Amount selector
 // --------------------------------------------------------------------------
 
 @Composable
@@ -287,9 +284,7 @@ private fun AmountSelector(
     }
 
     Column(modifier = modifier) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             presets.forEachIndexed { index, presetMl ->
                 FilterChip(
                     selected = amountMl != null && kotlin.math.abs(amountMl - presetMl) < 1.0,
@@ -318,7 +313,7 @@ private fun AmountSelector(
                     onAmountChange(null)
                 }
             },
-            label = { Text(stringResource(R.string.new_bottle_amount_label) + unitSuffix) },
+            label = { Text(stringResource(R.string.new_feed_amount_label) + unitSuffix) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -327,7 +322,7 @@ private fun AmountSelector(
 }
 
 // --------------------------------------------------------------------------
-// Prepared at selector
+// Time selector
 // --------------------------------------------------------------------------
 
 @Composable
@@ -349,7 +344,7 @@ private fun PreparedAtSelector(
     ) {
         SuggestionChip(
             onClick = { onIsJustNowChange(true) },
-            label = { Text(stringResource(R.string.new_bottle_prepared_just_now)) },
+            label = { Text(stringResource(R.string.new_feed_prepared_just_now)) },
             enabled = !isJustNow,
         )
         SuggestionChip(
@@ -364,7 +359,7 @@ private fun PreparedAtSelector(
                     Spacer(Modifier.width(4.dp))
                     Text(
                         text = if (!isJustNow) formattedTime
-                        else stringResource(R.string.new_bottle_prepared_pick_time),
+                        else stringResource(R.string.new_feed_prepared_pick_time),
                     )
                 }
             },
@@ -374,7 +369,7 @@ private fun PreparedAtSelector(
 }
 
 // --------------------------------------------------------------------------
-// Time picker dialog wrapper
+// Time picker dialog
 // --------------------------------------------------------------------------
 
 @Composable
@@ -415,12 +410,12 @@ private fun MilkType.label(): String = when (this) {
 // --------------------------------------------------------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(name = "NewBottleSheet (Light)", showBackground = true)
+@Preview(name = "NewFeedSheet (Light)", showBackground = true)
 @Composable
-private fun PreviewNewBottleSheetLight() {
+private fun PreviewNewFeedSheetLight() {
     NurtlinaTheme {
-        NewBottleSheet(
-            state = NewBottleUiState(
+        NewFeedSheet(
+            state = NewFeedUiState(
                 milkType = MilkType.FORMULA,
                 amountMl = 120.0,
                 unitType = UnitType.ML,
@@ -437,16 +432,12 @@ private fun PreviewNewBottleSheetLight() {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(
-    name = "NewBottleSheet (Dark)",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-)
+@Preview(name = "NewFeedSheet (Dark)", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewNewBottleSheetDark() {
+private fun PreviewNewFeedSheetDark() {
     NurtlinaTheme(darkTheme = true) {
-        NewBottleSheet(
-            state = NewBottleUiState(
+        NewFeedSheet(
+            state = NewFeedUiState(
                 milkType = MilkType.BREAST_MILK,
                 amountMl = null,
                 unitType = UnitType.OZ,

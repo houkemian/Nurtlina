@@ -1,4 +1,4 @@
-"""Ownership guards for FastAPI/Postgres sync writes."""
+"""Ownership guards for FastAPI/Postgres sync writes (v2.0 — Bottle removed)."""
 
 import datetime
 from decimal import Decimal
@@ -7,10 +7,8 @@ from typing import Any
 import pytest
 
 from app.models.baby import Baby
-from app.models.bottle import Bottle
 from app.repositories.sync_repository import (
     upsert_baby,
-    upsert_bottle,
     upsert_diaper_log,
     upsert_feed_log,
     upsert_sleep_log,
@@ -74,26 +72,10 @@ async def test_rejects_existing_record_from_another_family() -> None:
 
 
 @pytest.mark.asyncio
-async def test_rejects_bottle_when_baby_belongs_to_another_family() -> None:
+async def test_rejects_feed_log_when_baby_belongs_to_another_family() -> None:
     db = FakeSession([baby_record(family_id="family-2")])
 
-    _, outcome = await upsert_bottle(db, bottle_data(), "family-1")
-
-    assert outcome == "rejected"
-    assert db.added == []
-    assert not db.flushed
-
-
-@pytest.mark.asyncio
-async def test_rejects_feed_log_when_bottle_belongs_to_another_family() -> None:
-    db = FakeSession(
-        [
-            baby_record(family_id="family-1"),
-            bottle_record(family_id="family-2"),
-        ]
-    )
-
-    _, outcome = await upsert_feed_log(db, feed_log_data(bottle_id="bottle-1"), "family-1")
+    _, outcome = await upsert_feed_log(db, feed_log_data(), "family-1")
 
     assert outcome == "rejected"
     assert db.added == []
@@ -102,16 +84,17 @@ async def test_rejects_feed_log_when_bottle_belongs_to_another_family() -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("upsert", "data"),
+    ("upsert_fn", "data"),
     [
         (upsert_diaper_log, lambda: diaper_log_data()),
         (upsert_sleep_log, lambda: sleep_log_data()),
+        (upsert_feed_log, lambda: feed_log_data()),
     ],
 )
-async def test_rejects_child_logs_when_baby_is_not_in_family(upsert: Any, data: Any) -> None:
+async def test_rejects_child_logs_when_baby_is_not_in_family(upsert_fn: Any, data: Any) -> None:
     db = FakeSession([baby_record(family_id="family-2")])
 
-    _, outcome = await upsert(db, data(), "family-1")
+    _, outcome = await upsert_fn(db, data(), "family-1")
 
     assert outcome == "rejected"
     assert db.added == []
@@ -119,20 +102,44 @@ async def test_rejects_child_logs_when_baby_is_not_in_family(upsert: Any, data: 
 
 
 @pytest.mark.asyncio
-async def test_delete_change_soft_deletes_existing_same_family_bottle() -> None:
+async def test_accepts_feed_log_in_same_family() -> None:
+    db = FakeSession([baby_record(family_id="family-1")])
+
+    _, outcome = await upsert_feed_log(db, feed_log_data(), "family-1")
+
+    assert outcome == "accepted"
+    assert len(db.added) == 1
+    assert db.flushed
+
+
+@pytest.mark.asyncio
+async def test_soft_delete_feed_log_same_family() -> None:
     deleted_at = ts(2)
-    existing = bottle_record(family_id="family-1", updated_at=ts(1), deleted_at=None)
+    from app.models.feed_log import FeedLog as FeedLogModel
+    existing = FeedLogModel(
+        id="feed-1",
+        family_id="family-1",
+        baby_id="baby-1",
+        bottle_id=None,
+        feed_type="FORMULA",
+        amount_ml=Decimal("120.00"),
+        started_at=ts(0),
+        ended_at=None,
+        note=None,
+        client_id="android-test",
+        schema_version=1,
+        created_at=ts(0),
+        updated_at=ts(1),
+        deleted_at=None,
+    )
     db = FakeSession([baby_record(family_id="family-1"), existing])
 
-    _, outcome = await upsert_bottle(
-        db,
-        bottle_data(updated_at=ts(2), deleted_at=deleted_at),
-        "family-1",
+    _, outcome = await upsert_feed_log(
+        db, feed_log_data(updated_at=ts(2), deleted_at=deleted_at), "family-1"
     )
 
     assert outcome == "accepted"
     assert existing.deleted_at == deleted_at
-    assert db.added == []
     assert db.flushed
 
 
@@ -159,17 +166,6 @@ def baby_record(
     )
 
 
-def bottle_record(
-    *,
-    record_id: str = "bottle-1",
-    family_id: str = "family-1",
-    baby_id: str = "baby-1",
-    updated_at: datetime.datetime | None = None,
-    deleted_at: datetime.datetime | None = None,
-) -> Bottle:
-    return Bottle(**bottle_data(record_id, family_id, baby_id, updated_at, deleted_at))
-
-
 def baby_data(
     *,
     record_id: str = "baby-1",
@@ -192,43 +188,14 @@ def baby_data(
     }
 
 
-def bottle_data(
-    record_id: str = "bottle-1",
-    family_id: str = "family-1",
-    baby_id: str = "baby-1",
-    updated_at: datetime.datetime | None = None,
-    deleted_at: datetime.datetime | None = None,
-) -> dict[str, Any]:
-    return {
-        "id": record_id,
-        "family_id": family_id,
-        "baby_id": baby_id,
-        "milk_type": "FORMULA",
-        "amount_ml": Decimal("120.00"),
-        "prepared_at": ts(0),
-        "feeding_started_at": None,
-        "refrigerated_at": None,
-        "status": "NOT_STARTED",
-        "guideline_region": "US",
-        "rule_version": "default_v1",
-        "expires_at": ts(2),
-        "discarded_at": None,
-        "fed_at": None,
-        "note": None,
-        "client_id": "android-test",
-        "schema_version": 1,
-        "created_at": ts(0),
-        "updated_at": updated_at or ts(1),
-        "deleted_at": deleted_at,
-    }
-
-
 def feed_log_data(
     *,
     record_id: str = "feed-1",
     family_id: str = "family-1",
     baby_id: str = "baby-1",
     bottle_id: str | None = None,
+    updated_at: datetime.datetime | None = None,
+    deleted_at: datetime.datetime | None = None,
 ) -> dict[str, Any]:
     return {
         "id": record_id,
@@ -243,8 +210,8 @@ def feed_log_data(
         "client_id": "android-test",
         "schema_version": 1,
         "created_at": ts(0),
-        "updated_at": ts(1),
-        "deleted_at": None,
+        "updated_at": updated_at or ts(1),
+        "deleted_at": deleted_at,
     }
 
 

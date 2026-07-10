@@ -1,4 +1,4 @@
-package com.nurtlina.app.domain.usecase.bottle
+package com.nurtlina.app.domain.usecase.summary
 
 import com.nurtlina.app.domain.model.TodaySummary
 import com.nurtlina.app.domain.repository.DiaperLogRepository

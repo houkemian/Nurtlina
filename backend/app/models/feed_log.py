@@ -16,7 +16,7 @@ class FeedLog(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True)
     family_id: Mapped[str] = mapped_column(String, ForeignKey("families.id"), nullable=False)
     baby_id: Mapped[str] = mapped_column(String, ForeignKey("babies.id"), nullable=False)
-    bottle_id: Mapped[str | None] = mapped_column(String, ForeignKey("bottles.id"), nullable=True)
+    bottle_id: Mapped[str | None] = mapped_column(String, nullable=True)
     feed_type: Mapped[str] = mapped_column(String, nullable=False)
     amount_ml: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
     started_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False)

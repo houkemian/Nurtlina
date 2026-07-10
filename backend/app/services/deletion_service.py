@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.clock import utcnow
 from app.integrations.firebase_admin import delete_user, revoke_refresh_tokens
 from app.models.baby import Baby
-from app.models.bottle import Bottle
 from app.models.diaper_log import DiaperLog
 from app.models.entitlement import Entitlement
 from app.models.family import Family, FamilyMember
@@ -21,12 +20,7 @@ logger = logging.getLogger("app")
 
 
 async def delete_account(db: AsyncSession, user_id: str) -> None:
-    """Soft-delete data owned by the user and revoke Firebase credentials.
-
-    The local database cleanup is authoritative for this backend. Firebase Auth
-    cleanup is best-effort so a provider outage does not leave personal records
-    active in Postgres.
-    """
+    """Soft-delete data owned by the user and revoke Firebase credentials."""
     now = utcnow()
 
     user = await db.get(User, user_id)
@@ -74,7 +68,7 @@ async def _member_family_ids(db: AsyncSession, user_id: str) -> list[str]:
 
 
 async def _soft_delete_family(db: AsyncSession, family_id: str, now) -> None:
-    for model in (Baby, Bottle, FeedLog, DiaperLog, SleepLog):
+    for model in (Baby, FeedLog, DiaperLog, SleepLog):
         await db.execute(
             update(model)
             .where(model.family_id == family_id, model.deleted_at.is_(None))

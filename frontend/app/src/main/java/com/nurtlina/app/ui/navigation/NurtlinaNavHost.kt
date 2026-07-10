@@ -56,8 +56,8 @@ import com.nurtlina.app.domain.model.UnitType
 import com.nurtlina.app.domain.model.UserSettings
 import com.nurtlina.app.domain.repository.SettingsRepository
 import com.nurtlina.app.ui.auth.SignInScreen
-import com.nurtlina.app.ui.bottle.NewBottleSheet
-import com.nurtlina.app.ui.bottle.NewBottleUiState
+import com.nurtlina.app.ui.feed.NewFeedSheet
+import com.nurtlina.app.ui.feed.NewFeedUiState
 import com.nurtlina.app.ui.insights.InsightsDateRange
 import com.nurtlina.app.ui.insights.InsightsScreen
 import com.nurtlina.app.ui.logs.LogEntry
@@ -343,10 +343,10 @@ private fun NewFeedRoute(navController: NavController) {
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val selectedBaby by todayViewModel.selectedBaby.collectAsStateWithLifecycle()
     val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
-    var sheetState by remember { mutableStateOf(NewBottleUiState()) }
+    var sheetState by remember { mutableStateOf(NewFeedUiState()) }
 
     Box(Modifier.fillMaxSize())
-    NewBottleSheet(
+    NewFeedSheet(
         state = sheetState.copy(unitType = settings?.unit ?: UnitType.ML),
         onMilkTypeChange = { sheetState = sheetState.copy(milkType = it) },
         onAmountChange = { sheetState = sheetState.copy(amountMl = it) },
@@ -359,7 +359,7 @@ private fun NewFeedRoute(navController: NavController) {
         },
         onNoteChange = { sheetState = sheetState.copy(note = it) },
         onCreate = {
-            selectedBaby ?: return@NewBottleSheet
+            selectedBaby ?: return@NewFeedSheet
             todayViewModel.logFeed(
                 milkType = sheetState.milkType,
                 amountMl = sheetState.amountMl,

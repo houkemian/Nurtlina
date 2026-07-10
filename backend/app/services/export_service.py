@@ -16,7 +16,6 @@ from app.core.clock import utcnow
 from app.core.errors import ForbiddenError, NotFoundError, ValidationError
 from app.core.ids import new_id
 from app.models.baby import Baby
-from app.models.bottle import Bottle
 from app.models.diaper_log import DiaperLog
 from app.models.feed_log import FeedLog
 from app.models.sleep_log import SleepLog
@@ -26,11 +25,7 @@ _EXPORT_TTL = datetime.timedelta(hours=1)
 
 
 async def create_export(db: AsyncSession, user_id: str, req: ExportRequest) -> ExportResponse:
-    """Generate an immediate one-family export and return a short-lived data URL.
-
-    MVP avoids storing export artifacts. The response is complete and scoped to a
-    family the authenticated user belongs to.
-    """
+    """Generate an immediate one-family export and return a short-lived data URL."""
     member = await repo.family_repository.get_member(db, req.family_id, user_id)
     if not member:
         raise ForbiddenError("Not a member of this family.")
@@ -65,7 +60,6 @@ async def get_export(db: AsyncSession, user_id: str, export_id: str) -> ExportRe
 async def _load_records(db: AsyncSession, req: ExportRequest) -> dict[str, list[dict[str, Any]]]:
     return {
         "babies": [_model_dict(x) for x in await _all(db, Baby, req)],
-        "bottles": [_model_dict(x) for x in await _all(db, Bottle, req)],
         "feed_logs": [_model_dict(x) for x in await _all(db, FeedLog, req)],
         "diaper_logs": [_model_dict(x) for x in await _all(db, DiaperLog, req)],
         "sleep_logs": [_model_dict(x) for x in await _all(db, SleepLog, req)],
@@ -88,7 +82,6 @@ async def _all(db: AsyncSession, model: type[Any], req: ExportRequest) -> list[A
 def _time_field(model: type[Any]) -> Any | None:
     return {
         Baby: Baby.created_at,
-        Bottle: Bottle.prepared_at,
         FeedLog: FeedLog.started_at,
         DiaperLog: DiaperLog.changed_at,
         SleepLog: SleepLog.started_at,

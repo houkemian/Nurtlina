@@ -17,7 +17,7 @@ import com.nurtlina.app.domain.repository.BabyRepository
 import com.nurtlina.app.domain.repository.FeedLogRepository
 import com.nurtlina.app.domain.repository.RatingPromptRepository
 import com.nurtlina.app.domain.repository.SettingsRepository
-import com.nurtlina.app.domain.usecase.bottle.GetTodaySummaryUseCase
+import com.nurtlina.app.domain.usecase.summary.GetTodaySummaryUseCase
 import com.nurtlina.app.domain.usecase.diaper.LogDiaperUseCase
 import com.nurtlina.app.domain.usecase.feed.LogFeedUseCase
 import com.nurtlina.app.domain.usecase.sleep.SleepUseCase
