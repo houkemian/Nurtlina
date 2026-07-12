@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,7 +43,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -248,43 +246,50 @@ fun TodayScreen(
                 // ── Quick Actions ───────────────────────────────────
 
                 Spacer(Modifier.height(24.dp))
-                SectionHeader(
-                    title = stringResource(R.string.today_quick_actions_title),
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
-                Spacer(Modifier.height(8.dp))
-                QuickLogRow(
-                    nightModeEnabled = state.nightModeEnabled,
-                    onQuickFeed = onNewFeed,
-                    onQuickDiaper = {
-                        onQuickDiaper()
-                        showFeedback(QuickLogFeedbackType.DIAPER)
-                    },
-                    onQuickSleep = {
-                        val wasSleepActive = state.todaySummary.activeSleepStartedAt != null
-                        onQuickSleep()
-                        showFeedback(
-                            if (wasSleepActive)
-                                QuickLogFeedbackType.SLEEP_STOPPED
-                            else
-                                QuickLogFeedbackType.SLEEP_STARTED,
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f),
+                    ),
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        SectionHeader(
+                            title = stringResource(R.string.today_quick_actions_title),
                         )
-                    },
-                    isSleepActive = state.todaySummary.activeSleepStartedAt != null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                )
+                        Spacer(Modifier.height(10.dp))
+                        QuickLogRow(
+                            nightModeEnabled = state.nightModeEnabled,
+                            onQuickFeed = onNewFeed,
+                            onQuickDiaper = {
+                                onQuickDiaper()
+                                showFeedback(QuickLogFeedbackType.DIAPER)
+                            },
+                            onQuickSleep = {
+                                val wasSleepActive = state.todaySummary.activeSleepStartedAt != null
+                                onQuickSleep()
+                                showFeedback(
+                                    if (wasSleepActive)
+                                        QuickLogFeedbackType.SLEEP_STOPPED
+                                    else
+                                        QuickLogFeedbackType.SLEEP_STARTED,
+                                )
+                            },
+                            isSleepActive = state.todaySummary.activeSleepStartedAt != null,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
 
-                Spacer(Modifier.height(12.dp))
-                QuickFeedPresets(
-                    unitType = state.unitType,
-                    nightModeEnabled = state.nightModeEnabled,
-                    onAmount = onQuickFeedAmount,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                )
+                        Spacer(Modifier.height(12.dp))
+                        QuickFeedPresets(
+                            unitType = state.unitType,
+                            nightModeEnabled = state.nightModeEnabled,
+                            onAmount = onQuickFeedAmount,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
 
                 // ── Today's Summary ─────────────────────────────────
 
@@ -898,17 +903,13 @@ private fun QuickLogButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val actionContentColor = MaterialTheme.colorScheme.primary
-    OutlinedButton(
+    FilledTonalButton(
         onClick = onClick,
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = 8.dp),
-        border = BorderStroke(
-            width = 1.dp,
-            color = actionContentColor.copy(alpha = 0.72f),
-        ),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = actionContentColor,
+        colors = ButtonDefaults.filledTonalButtonColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         ),
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {

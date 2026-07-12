@@ -290,7 +290,7 @@
     <string name="signin_disclaimer">Vos données de minuterie de biberon sont toujours enregistrées localement. La connexion active une sauvegarde cloud facultative.</string>
 
     <string name="today_new_bottle">Alimentation</string>
-    <string name="today_add_baby_pro">Ajouter un bébé</string>
+    <string name="today_add_baby_pro">Ajouter</string>
     <string name="action_save_feed">Enregistrer l\'alimentation</string>
     <string name="new_feed_title">Ajouter un suivi d\'alimentation</string>
     <string name="new_feed_disclaimer">Cela enregistre uniquement une alimentation. Ce n\'est pas un avis médical.</string>

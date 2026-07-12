@@ -290,7 +290,7 @@
     <string name="signin_disclaimer">Deine Flaschentimer-Daten werden immer lokal gespeichert. Durch die Anmeldung wird ein optionales Cloud-Backup aktiviert.</string>
 
     <string name="today_new_bottle">Fütterung</string>
-    <string name="today_add_baby_pro">Baby hinzufügen</string>
+    <string name="today_add_baby_pro">Hinzufügen</string>
     <string name="action_save_feed">Fütterung speichern</string>
     <string name="new_feed_title">Fütterung eintragen</string>
     <string name="new_feed_disclaimer">Dies speichert nur einen Fütterungseintrag. Kein medizinischer Rat.</string>

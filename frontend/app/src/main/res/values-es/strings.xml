@@ -290,7 +290,7 @@
     <string name="signin_disclaimer">Tus datos del temporizador de biberones siempre se guardan localmente. Iniciar sesión activa una copia de seguridad opcional en la nube.</string>
 
     <string name="today_new_bottle">Toma</string>
-    <string name="today_add_baby_pro">Agregar bebé</string>
+    <string name="today_add_baby_pro">Agregar</string>
     <string name="action_save_feed">Guardar toma</string>
     <string name="new_feed_title">Agregar registro de alimentación</string>
     <string name="new_feed_disclaimer">Esto solo guarda un registro de alimentación. No es consejo médico.</string>

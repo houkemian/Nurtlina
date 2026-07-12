@@ -290,7 +290,7 @@
     <string name="signin_disclaimer">您的奶瓶计时数据始终会保存在本地。登录后可启用可选的云端备份。</string>
 
     <string name="today_new_bottle">喂奶</string>
-    <string name="today_add_baby_pro">添加宝宝</string>
+    <string name="today_add_baby_pro">添加</string>
     <string name="action_save_feed">保存喂奶</string>
     <string name="new_feed_title">新增喂奶记录</string>
     <string name="new_feed_disclaimer">这里只保存喂奶记录，不构成医疗建议。</string>

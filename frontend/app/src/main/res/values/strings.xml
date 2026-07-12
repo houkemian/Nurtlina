@@ -63,7 +63,7 @@
     <string name="today_new_feed">Feed</string>
     <string name="today_expires_in">Expires in</string>
     <string name="today_time_expired">EXPIRED</string>
-    <string name="today_add_baby_pro">Add a baby</string>
+    <string name="today_add_baby_pro">Add</string>
     <string name="today_no_baby_selected">Baby</string>
     <string name="today_last_feed_label">Last feed</string>
     <string name="today_last_feed_value">%1$s ago · %2$s</string>
