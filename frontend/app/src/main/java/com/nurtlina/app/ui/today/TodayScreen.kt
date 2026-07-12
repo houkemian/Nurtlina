@@ -219,6 +219,8 @@ fun TodayScreen(
                 )
                 Spacer(Modifier.height(16.dp))
 
+                // ── Status ──────────────────────────────────────────
+
                 FeedingStatusCard(
                     state = state.feedingStatus,
                     nightModeEnabled = state.nightModeEnabled,
@@ -228,18 +230,8 @@ fun TodayScreen(
                         .padding(horizontal = 16.dp),
                 )
 
-                Spacer(Modifier.height(16.dp))
-                QuickFeedPresets(
-                    unitType = state.unitType,
-                    nightModeEnabled = state.nightModeEnabled,
-                    onAmount = onQuickFeedAmount,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                )
-
                 if (state.todaySummary.activeSleepStartedAt != null) {
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(12.dp))
                     ActiveSleepCard(
                         startedAtMillis = state.todaySummary.activeSleepStartedAt,
                         nightModeEnabled = state.nightModeEnabled,
@@ -252,6 +244,8 @@ fun TodayScreen(
                             .padding(horizontal = 16.dp),
                     )
                 }
+
+                // ── Quick Actions ───────────────────────────────────
 
                 Spacer(Modifier.height(24.dp))
                 SectionHeader(
@@ -281,6 +275,18 @@ fun TodayScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                 )
+
+                Spacer(Modifier.height(12.dp))
+                QuickFeedPresets(
+                    unitType = state.unitType,
+                    nightModeEnabled = state.nightModeEnabled,
+                    onAmount = onQuickFeedAmount,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                )
+
+                // ── Today's Summary ─────────────────────────────────
 
                 Spacer(Modifier.height(24.dp))
                 SectionHeader(
