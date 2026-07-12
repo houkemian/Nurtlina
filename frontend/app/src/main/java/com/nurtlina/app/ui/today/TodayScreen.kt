@@ -1134,6 +1134,7 @@ private fun PreviewTodayEmptyDark() {
             onSelectBaby = {},
             onAddBaby = {},
             onNewFeed = {},
+            onQuickFeedAmount = {},
             onQuickDiaper = {},
             onQuickSleep = {},
             onRatingPromptRate = {},
