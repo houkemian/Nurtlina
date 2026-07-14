@@ -503,7 +503,7 @@
     <string name="today_active_sleep">睡眠中…</string>
     <string name="today_feeding_window_label">喂奶时间参考</string>
     <string name="today_feeding_window_learning">再记录几次喂奶，以了解宝宝近期的喂奶规律</string>
-    <string name="today_feeding_window_value">约 %1$s – %2$s</string>
+    <string name="today_feeding_window_value">~%1$s – %2$s</string>
     <string name="today_new_feed">喂奶</string>
     <string name="today_summary_diapers">尿裤</string>
     <string name="today_summary_feeds">喂奶</string>
@@ -511,8 +511,8 @@
     <string name="today_title">今日</string>
 
     <!-- ===== Active locale and runtime messages ===== -->
-    <string name="today_feeding_window_approaching">可以留意宝宝近期是否出现想吃奶的表现</string>
-    <string name="today_feeding_window_later">稍后可以留意宝宝是否出现想吃奶的表现</string>
+    <string name="today_feeding_window_approaching">留意宝宝的饥饿信号</string>
+    <string name="today_feeding_window_later">下个窗口约 %1$s 开始</string>
     <string name="today_feeding_window_recent_pattern">基于近期喂奶记录</string>
     <string name="signin_error_microsoft_unavailable">无法启动 Microsoft 登录，请重试。</string>
     <string name="signin_error_email_required">请先输入电子邮箱地址。</string>

@@ -73,10 +73,10 @@
     <string name="today_feed_today_label">Today</string>
     <string name="today_feed_today_value">%1$d feeds · %2$s</string>
     <string name="today_feeding_window_label">Feeding window</string>
-    <string name="today_feeding_window_value">Around %1$s – %2$s</string>
+    <string name="today_feeding_window_value">~%1$s – %2$s</string>
     <string name="today_feeding_window_learning">Log a few feeds to learn your baby\'s pattern</string>
-    <string name="today_feeding_window_approaching">You may want to check feeding cues soon</string>
-    <string name="today_feeding_window_later">You may want to check feeding cues later</string>
+    <string name="today_feeding_window_approaching">Watch for feeding cues now</string>
+    <string name="today_feeding_window_later">Next window opens around %1$s</string>
     <string name="today_feeding_window_cues">%1$s · %2$s</string>
     <string name="today_active_bottle_timer_title">Active Bottle Timer</string>
     <string name="today_quick_actions_title">Quick Actions</string>

@@ -343,6 +343,13 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
         state = TodayUiState(
             babies = babies,
             selectedBaby = selectedBaby,
+            val windowStartTime = feedingPrediction?.windowStart?.let { time ->
+                java.time.format.DateTimeFormatter
+                    .ofLocalizedTime(java.time.format.FormatStyle.SHORT)
+                    .withZone(java.time.ZoneId.systemDefault())
+                    .format(time)
+            }
+
             feedingStatus = buildFeedingStatus(
                 babyName = selectedBaby?.name,
                 latestFeed = latestFeed,
@@ -350,7 +357,9 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
                 summary = summary,
                 unitType = unitType,
                 now = now,
-                windowLaterMessage = stringResource(R.string.today_feeding_window_later),
+                windowLaterMessage = windowStartTime?.let {
+                    stringResource(R.string.today_feeding_window_later, it)
+                },
                 windowSoonMessage = stringResource(R.string.today_feeding_window_approaching),
                 recentPatternMessage = stringResource(R.string.today_feeding_window_recent_pattern),
             ),
@@ -665,9 +674,9 @@ private fun buildFeedingStatus(
     summary: TodaySummary,
     unitType: UnitType,
     now: Instant,
-    windowLaterMessage: String,
-    windowSoonMessage: String,
-    recentPatternMessage: String,
+    windowLaterMessage: String? = null,
+    windowSoonMessage: String? = null,
+    recentPatternMessage: String? = null,
 ): FeedingStatusUiState {
     val elapsedSinceLastFeed = latestFeed?.startedAt?.let { startedAt ->
         val elapsed = Duration.between(startedAt, now)

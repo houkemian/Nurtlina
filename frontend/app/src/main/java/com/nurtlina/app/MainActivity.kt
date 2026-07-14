@@ -44,10 +44,21 @@ class MainActivity : AppCompatActivity() {
             val darkTheme = systemDark || nightModeEnabled
 
             androidx.compose.runtime.LaunchedEffect(language) {
-                val languageTag = when (val selectedLanguage = language) {
+                val languageTag = when (language) {
                     "zh" -> "zh-CN"
-                    "en", "es", "de", "fr" -> selectedLanguage
-                    else -> return@LaunchedEffect
+                    "en" -> {
+                        // Default — fall back to system locale on first launch
+                        val sysLang = java.util.Locale.getDefault().language
+                        when (sysLang) {
+                            "zh" -> "zh-CN"
+                            "es" -> "es"
+                            "de" -> "de"
+                            "fr" -> "fr"
+                            else -> "en"
+                        }
+                    }
+                    "es", "de", "fr" -> language
+                    else -> language ?: "en"
                 }
                 val locales = LocaleListCompat.forLanguageTags(languageTag)
                 if (AppCompatDelegate.getApplicationLocales() != locales) {
