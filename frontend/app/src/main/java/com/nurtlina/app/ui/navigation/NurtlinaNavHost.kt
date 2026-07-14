@@ -339,17 +339,17 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
         )
     }
 
+    val windowStartTime = feedingPrediction?.windowStart?.let { time ->
+        java.time.format.DateTimeFormatter
+            .ofLocalizedTime(java.time.format.FormatStyle.SHORT)
+            .withZone(java.time.ZoneId.systemDefault())
+            .format(time)
+    }
+
     TodayScreen(
         state = TodayUiState(
             babies = babies,
             selectedBaby = selectedBaby,
-            val windowStartTime = feedingPrediction?.windowStart?.let { time ->
-                java.time.format.DateTimeFormatter
-                    .ofLocalizedTime(java.time.format.FormatStyle.SHORT)
-                    .withZone(java.time.ZoneId.systemDefault())
-                    .format(time)
-            }
-
             feedingStatus = buildFeedingStatus(
                 babyName = selectedBaby?.name,
                 latestFeed = latestFeed,

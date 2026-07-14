@@ -119,9 +119,9 @@ class TodayViewModel @Inject constructor(
     val feedingPrediction: StateFlow<FeedingPrediction?> = selectedBaby
         .flatMapLatest { baby ->
             if (baby == null) {
-                flowOf(null)
+                flowOf<FeedingPrediction?>(null)
             } else {
-                flow { emit(generateFeedingPredictionUseCase(baby.id)) }
+                flowOf(generateFeedingPredictionUseCase(baby.id))
             }
         }
         .stateIn(
