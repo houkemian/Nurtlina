@@ -57,7 +57,7 @@ abstract class NurtlinaDatabase : RoomDatabase() {
                         FOREIGN KEY (babyId) REFERENCES babies(id) ON DELETE CASCADE
                     )
                 """.trimIndent())
-                db.execSQL("CREATE INDEX IF NOT EXISTS idx_feedback_baby ON feeding_reminder_feedback(babyId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_feeding_reminder_feedback_babyId ON feeding_reminder_feedback(babyId)")
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.nurtlina.app.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.ColumnInfo
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -28,8 +29,8 @@ data class FeedingReminderFeedbackEntity(
     val createdAt: Long,
     val familyId: String? = null,
     val clientId: String? = null,
-    val syncStatus: String = SyncStatus.PENDING.name,
-    val syncVersion: Int = 1,
+    @ColumnInfo(defaultValue = "'PENDING'") val syncStatus: String = SyncStatus.PENDING.name,
+    @ColumnInfo(defaultValue = "1") val syncVersion: Int = 1,
     val lastSyncedAt: Long? = null,
 ) {
     fun toDomain() = FeedingReminderFeedback(
