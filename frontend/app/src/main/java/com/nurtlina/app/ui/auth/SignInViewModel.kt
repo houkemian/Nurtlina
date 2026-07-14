@@ -1,16 +1,19 @@
 package com.nurtlina.app.ui.auth
 
 import android.app.Activity
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import com.google.firebase.auth.FirebaseAuthException
+import com.nurtlina.app.R
 import com.nurtlina.app.data.sync.SyncWorker
 import com.nurtlina.app.domain.model.UserAccount
 import com.nurtlina.app.domain.repository.AuthRepository
 import com.nurtlina.app.domain.repository.SyncRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +34,7 @@ data class SignInUiState(
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val authRepository: AuthRepository,
     private val syncRepository: SyncRepository,
     private val workManager: WorkManager,
@@ -68,7 +72,7 @@ class SignInViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 isLoading = false,
-                error = "Microsoft sign-in could not start. Please try again.",
+                error = appContext.getString(R.string.signin_error_microsoft_unavailable),
             )
         }
     }
@@ -89,7 +93,7 @@ class SignInViewModel @Inject constructor(
 
     fun sendPasswordResetEmail(email: String) {
         if (email.isBlank()) {
-            _uiState.update { it.copy(error = "Enter your email address first.") }
+            _uiState.update { it.copy(error = appContext.getString(R.string.signin_error_email_required)) }
             return
         }
         viewModelScope.launch {
@@ -99,7 +103,7 @@ class SignInViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            snackbarMessage = "Password reset email sent. Check your inbox.",
+                            snackbarMessage = appContext.getString(R.string.signin_password_reset_sent),
                         )
                     }
                 }
@@ -143,7 +147,7 @@ class SignInViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        error = "$providerName sign-in did not respond. Check the Firebase provider setup and try again.",
+                        error = appContext.getString(R.string.signin_error_timeout, providerName),
                     )
                 }
                 return@launch
@@ -169,26 +173,26 @@ class SignInViewModel @Inject constructor(
 
     private fun Throwable.toUserMessage(): String {
         if (this is FirebaseAuthException) {
-            return "Sign-in failed: $errorCode. ${message ?: "Please try again."}"
+            return appContext.getString(R.string.signin_error_with_code, errorCode)
         }
 
-        val msg = message ?: return "Sign-in failed. Please try again."
+        val msg = message ?: return appContext.getString(R.string.signin_error_generic)
         return when {
             "INVALID_EMAIL" in msg || "invalid-email" in msg ->
-                "Please enter a valid email address."
+                appContext.getString(R.string.signin_error_invalid_email)
             "WRONG_PASSWORD" in msg || "wrong-password" in msg ->
-                "Incorrect password. Try again or reset it."
+                appContext.getString(R.string.signin_error_wrong_password)
             "USER_NOT_FOUND" in msg || "user-not-found" in msg ->
-                "No account found with this email."
+                appContext.getString(R.string.signin_error_user_not_found)
             "EMAIL_ALREADY_IN_USE" in msg || "email-already-in-use" in msg ->
-                "This email is already in use."
+                appContext.getString(R.string.signin_error_email_in_use)
             "WEAK_PASSWORD" in msg || "weak-password" in msg ->
-                "Password must be at least 6 characters."
+                appContext.getString(R.string.signin_error_weak_password)
             "NETWORK_ERROR" in msg || "network-request-failed" in msg ->
-                "Network error. Check your connection and try again."
+                appContext.getString(R.string.signin_error_network)
             "CREDENTIAL_ALREADY_IN_USE" in msg || "credential-already-in-use" in msg ->
-                "This account is already linked to another profile."
-            else -> "Sign-in failed. Please try again."
+                appContext.getString(R.string.signin_error_credential_in_use)
+            else -> appContext.getString(R.string.signin_error_generic)
         }
     }
 

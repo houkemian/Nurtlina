@@ -271,7 +271,7 @@
     <string name="settings_data">Data</string>
     <string name="settings_about">About</string>
     <string name="settings_faq">FAQ</string>
-    <string name="settings_safety_sources">Safety Sources</string>
+    <string name="settings_safety_sources">Guideline Sources</string>
     <string name="settings_privacy">Privacy Policy</string>
     <string name="settings_terms">Terms of Use</string>
     <string name="settings_contact">Contact Support</string>
@@ -285,7 +285,7 @@
     <string name="logs_filter_sleep">Sleep</string>
 
     <!-- ===== Insights ===== -->
-    <string name="insights_tracking_note">This is a tracking summary, not a medical assessment. Talk to your pediatrician if you have concerns.</string>
+    <string name="insights_tracking_note">This summary only reflects logged data and is not medical advice.</string>
     <string name="insights_upgrade_banner">Upgrade to Pro for 14 and 30-day trends.</string>
 
     <!-- ===== Errors ===== -->
@@ -364,7 +364,7 @@
     <string name="source_cdc_breast_milk">CDC: Breast Milk Storage and Preparation</string>
     <string name="source_nhs_formula">NHS: Formula milk &#x2014; common questions</string>
     <string name="source_nhs_formula_make">NHS: How to make up baby formula</string>
-    <string name="source_aap_formula">AAP / HealthyChildren: Safe formula preparation guidance</string>
+    <string name="source_aap_formula">AAP / HealthyChildren: Formula preparation information</string>
     <string name="source_disclaimer">These sources are referenced for informational purposes only. Nurtlina is not endorsed by or affiliated with CDC, AAP, NHS, or any health authority.</string>
 
     <!-- ===== Empty States (spec keys) ===== -->
@@ -435,7 +435,7 @@
     <string name="insights_amount_label">Amount</string>
     <string name="insights_diapers_label">Diapers</string>
     <string name="insights_sleep_label">Sleep</string>
-    <string name="insights_disclaimer">This is a tracking summary, not a medical assessment.</string>
+    <string name="insights_disclaimer">This summary only reflects logged data and is not medical advice.</string>
     <string name="insights_range_7d">7 days</string>
     <string name="insights_range_14d">14 days</string>
     <string name="insights_range_30d">30 days</string>
@@ -554,12 +554,12 @@
     <string name="settings_theme_system">System default</string>
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_dark">Dark</string>
-    <string name="settings_sources_title">Safety Sources</string>
+    <string name="settings_sources_title">Guideline Sources</string>
     <string name="settings_sources_intro">Nurtlina\'s timer rules are based on the following public guidelines:</string>
     <string name="settings_sources_disclaimer">These sources are referenced for informational purposes only. Nurtlina is not endorsed by or affiliated with CDC, AAP, NHS, or any health authority.</string>
     <string name="settings_source_cdc_label">CDC: Infant Formula Preparation and Storage</string>
     <string name="settings_source_cdc_url" translatable="false">https://www.cdc.gov/nutrition/infantandtoddlernutrition/formula-feeding/infant-formula-preparation-and-storage.html</string>
-    <string name="settings_source_aap_label">AAP / HealthyChildren: Safe formula preparation</string>
+    <string name="settings_source_aap_label">AAP / HealthyChildren: Formula preparation information</string>
     <string name="settings_source_aap_url" translatable="false">https://www.healthychildren.org/English/ages-stages/baby/feeding-nutrition/Pages/Formula-Preparation-and-Storage.aspx</string>
     <string name="settings_source_nhs_label">NHS: Formula milk &#x2014; common questions</string>
     <string name="settings_source_nhs_url" translatable="false">https://www.nhs.uk/conditions/baby/breastfeeding-and-bottle-feeding/bottle-feeding/formula-milk-questions/</string>
@@ -601,7 +601,7 @@
     <string name="faq_title">Frequently Asked Questions</string>
     <string name="faq_q1">Is this app medical advice?</string>
     <string name="faq_a1">No. Nurtlina provides tracking and reminder tools based on public guidelines. It does not provide medical advice and cannot determine whether milk is safe. Always follow your formula label, local health guidance, and your pediatrician\'s advice.</string>
-    <string name="faq_q2">What should I do if I am unsure about milk safety?</string>
+    <string name="faq_q2">What should I do if I am unsure whether to keep milk?</string>
     <string name="faq_a2">When in doubt, discard the milk. Always follow your pediatrician\'s advice and the instructions on your formula packaging.</string>
     <string name="faq_q3">Does the app work offline?</string>
     <string name="faq_a3">Yes. All core tracking and logging works offline. Backup and sync features require an internet connection.</string>
@@ -610,5 +610,32 @@
     <string name="faq_q5">How do I export my data?</string>
     <string name="faq_a5">You can export your feeding, diaper, and sleep records as a CSV file from Settings. Pro subscribers have access to full data export.</string>
     <string name="common_ok">OK</string>
+
+    <!-- ===== Active locale and runtime messages ===== -->
+    <string name="today_next_feed_label">Next feed</string>
+    <string name="today_next_feed_watch_later">Watch again in about %1$s</string>
+    <string name="today_next_feed_now">You may want to check feeding cues now</string>
+    <string name="today_next_feed_after_first">Log a feed to start tracking the interval</string>
+    <string name="today_feeding_window_recent_pattern">Based on recent feeding patterns</string>
+    <string name="signin_error_microsoft_unavailable">Microsoft sign-in could not start. Please try again.</string>
+    <string name="signin_error_email_required">Enter your email address first.</string>
+    <string name="signin_password_reset_sent">Password reset email sent. Check your inbox.</string>
+    <string name="signin_error_timeout">%1$s sign-in did not respond. Check your connection and try again.</string>
+    <string name="signin_error_with_code">Sign-in failed (%1$s). Please try again.</string>
+    <string name="signin_error_generic">Sign-in failed. Please try again.</string>
+    <string name="signin_error_invalid_email">Please enter a valid email address.</string>
+    <string name="signin_error_wrong_password">Incorrect password. Try again or reset it.</string>
+    <string name="signin_error_user_not_found">No account found with this email.</string>
+    <string name="signin_error_email_in_use">This email is already in use.</string>
+    <string name="signin_error_weak_password">Password must be at least 6 characters.</string>
+    <string name="signin_error_network">Network error. Check your connection and try again.</string>
+    <string name="signin_error_credential_in_use">This account is already linked to another profile.</string>
+    <string name="signin_error_google_not_configured">Google sign-in is not configured yet.</string>
+    <string name="signin_error_google_no_token">Google sign-in did not return the required account token.</string>
+    <string name="signin_error_google_network">Google sign-in needs a network connection. Check your connection and try again.</string>
+    <string name="signin_error_google_developer">Google sign-in is not configured correctly.</string>
+    <string name="signin_error_google_failed">Google sign-in failed. Please try again.</string>
+    <string name="signin_error_google_in_progress">Google sign-in is already in progress.</string>
+    <string name="signin_error_google_with_code">Google sign-in failed (code %1$d). Please try again.</string>
 
 </resources>

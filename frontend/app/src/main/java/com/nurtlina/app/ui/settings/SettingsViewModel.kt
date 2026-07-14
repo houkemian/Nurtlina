@@ -10,6 +10,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
+import com.nurtlina.app.R
 import com.nurtlina.app.data.billing.EntitlementManager
 import com.nurtlina.app.data.billing.ProStatus
 import com.nurtlina.app.data.sync.SyncWorker
@@ -234,7 +235,7 @@ class SettingsViewModel @Inject constructor(
                         type = "text/csv"
                         putExtra(Intent.EXTRA_STREAM, uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }.let { Intent.createChooser(it, "Export CSV") }
+                    }.let { Intent.createChooser(it, appContext.getString(R.string.settings_export_csv)) }
                 )
             } catch (_: Exception) { /* non-critical */ }
         }

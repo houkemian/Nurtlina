@@ -147,6 +147,15 @@ class AppViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000L),
             initialValue = false,
         )
+
+    val language: StateFlow<String?> = settingsRepository
+        .observe()
+        .map { it.language }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = null,
+        )
 }
 
 // ── Navigation host ──────────────────────────────────────────────────────────
@@ -341,6 +350,9 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
                 summary = summary,
                 unitType = unitType,
                 now = now,
+                windowLaterMessage = stringResource(R.string.today_feeding_window_later),
+                windowSoonMessage = stringResource(R.string.today_feeding_window_approaching),
+                recentPatternMessage = stringResource(R.string.today_feeding_window_recent_pattern),
             ),
             todaySummary = summary,
             showAds = !isPro && !currentSettings.nightModeEnabled,
@@ -653,6 +665,9 @@ private fun buildFeedingStatus(
     summary: TodaySummary,
     unitType: UnitType,
     now: Instant,
+    windowLaterMessage: String,
+    windowSoonMessage: String,
+    recentPatternMessage: String,
 ): FeedingStatusUiState {
     val elapsedSinceLastFeed = latestFeed?.startedAt?.let { startedAt ->
         val elapsed = Duration.between(startedAt, now)
@@ -664,11 +679,9 @@ private fun buildFeedingStatus(
     val windowEndText: String? = prediction?.windowEnd?.let(::formatTime)
     val windowMessage: String? = when {
         prediction == null || prediction.isLearning -> null
-        now.isBefore(prediction.windowStart) ->
-            "You may want to check feeding cues later"
-        now.isBefore(prediction.windowEnd) ->
-            "You may want to check feeding cues soon"
-        else -> prediction.reason
+        now.isBefore(prediction.windowStart) -> windowLaterMessage
+        now.isBefore(prediction.windowEnd) -> windowSoonMessage
+        else -> recentPatternMessage
     }
 
     return FeedingStatusUiState(

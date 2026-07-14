@@ -58,6 +58,7 @@ fun SignInScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val focusManager = LocalFocusManager.current
     val firebaseWebClientId = stringResource(R.string.firebase_web_client_id)
+    val googleNotConfiguredMessage = stringResource(R.string.signin_error_google_not_configured)
 
     // Navigate back after successful sign-in
     LaunchedEffect(Unit) {
@@ -85,6 +86,7 @@ fun SignInScreen(
         contract = ActivityResultContracts.StartActivityForResult(),
     ) { result ->
         handleGoogleSignInResult(
+            context = context,
             data = result.data,
             onSuccess = viewModel::signInWithGoogle,
             onError = viewModel::onGoogleSignInError,
@@ -92,9 +94,7 @@ fun SignInScreen(
     }
     val onGoogleSignIn: () -> Unit = {
         if (firebaseWebClientId == FIREBASE_WEB_CLIENT_ID_PLACEHOLDER) {
-            viewModel.onGoogleSignInError(
-                "Google sign-in is not configured yet. Replace firebase_web_client_id with your Firebase Web client ID.",
-            )
+            viewModel.onGoogleSignInError(googleNotConfiguredMessage)
         } else {
             googleSignInLauncher.launch(googleSignInClient.signInIntent)
         }
@@ -450,6 +450,7 @@ private fun EmailPasswordForm(
 }
 
 private fun handleGoogleSignInResult(
+    context: Context,
     data: Intent?,
     onSuccess: (String) -> Unit,
     onError: (String) -> Unit,
@@ -461,26 +462,26 @@ private fun handleGoogleSignInResult(
         if (idToken != null) {
             onSuccess(idToken)
         } else {
-            onError("Google sign-in did not return an ID token.")
+            onError(context.getString(R.string.signin_error_google_no_token))
         }
     } catch (e: ApiException) {
         if (e.statusCode != GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
-            onError(e.toGoogleSignInMessage())
+            onError(e.toGoogleSignInMessage(context))
         }
     }
 }
 
-private fun ApiException.toGoogleSignInMessage(): String = when (statusCode) {
+private fun ApiException.toGoogleSignInMessage(context: Context): String = when (statusCode) {
     CommonStatusCodes.NETWORK_ERROR ->
-        "Google sign-in needs a network connection. Check your connection and try again."
+        context.getString(R.string.signin_error_google_network)
     CommonStatusCodes.DEVELOPER_ERROR ->
-        "Google sign-in is not configured correctly. Check the Web client ID and SHA certificate fingerprints."
+        context.getString(R.string.signin_error_google_developer)
     GoogleSignInStatusCodes.SIGN_IN_FAILED ->
-        "Google sign-in failed. Check that Google sign-in is enabled in Firebase."
+        context.getString(R.string.signin_error_google_failed)
     GoogleSignInStatusCodes.SIGN_IN_CURRENTLY_IN_PROGRESS ->
-        "Google sign-in is already in progress."
+        context.getString(R.string.signin_error_google_in_progress)
     else ->
-        "Google sign-in failed (code $statusCode). Please try again."
+        context.getString(R.string.signin_error_google_with_code, statusCode)
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {

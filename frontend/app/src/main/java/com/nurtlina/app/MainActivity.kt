@@ -2,7 +2,9 @@ package com.nurtlina.app
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
@@ -25,7 +27,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var ratingPromptRepository: RatingPromptRepository
@@ -37,8 +39,21 @@ class MainActivity : ComponentActivity() {
         setContent {
             val appViewModel: AppViewModel = hiltViewModel()
             val nightModeEnabled by appViewModel.nightModeEnabled.collectAsStateWithLifecycle()
+            val language by appViewModel.language.collectAsStateWithLifecycle()
             val systemDark = isSystemInDarkTheme()
             val darkTheme = systemDark || nightModeEnabled
+
+            androidx.compose.runtime.LaunchedEffect(language) {
+                val languageTag = when (val selectedLanguage = language) {
+                    "zh" -> "zh-CN"
+                    "en", "es", "de", "fr" -> selectedLanguage
+                    else -> return@LaunchedEffect
+                }
+                val locales = LocaleListCompat.forLanguageTags(languageTag)
+                if (AppCompatDelegate.getApplicationLocales() != locales) {
+                    AppCompatDelegate.setApplicationLocales(locales)
+                }
+            }
 
             NurtlinaTheme(darkTheme = darkTheme) {
                 Surface(
