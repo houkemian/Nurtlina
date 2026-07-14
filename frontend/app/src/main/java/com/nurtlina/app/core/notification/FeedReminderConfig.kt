@@ -3,5 +3,8 @@ package com.nurtlina.app.core.notification
 import java.time.Duration
 
 object FeedReminderConfig {
-    val nextFeedAttentionInterval: Duration = Duration.ofMinutes(160)
+    /** Default fallback interval; prefer [com.nurtlina.app.domain.model.UserSettings.feedReminderIntervalMinutes]. */
+    val defaultFeedIntervalMinutes: Int = 160
+    @Deprecated("Use defaultFeedIntervalMinutes or read from UserSettings", ReplaceWith("Duration.ofMinutes(defaultFeedIntervalMinutes.toLong())"))
+    val nextFeedAttentionInterval: Duration = Duration.ofMinutes(defaultFeedIntervalMinutes.toLong())
 }

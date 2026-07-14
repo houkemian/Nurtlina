@@ -34,6 +34,9 @@ class RoomFeedLogRepository @Inject constructor(
     override suspend fun getByBabyAndRange(babyId: String, from: Instant, to: Instant): List<FeedLog> =
         dao.getByBabyAndRange(babyId, from.toEpochMilli(), to.toEpochMilli()).map { it.toDomain() }
 
+    override suspend fun getRecentByBaby(babyId: String, limit: Int): List<FeedLog> =
+        dao.getRecentByBaby(babyId, limit).map { it.toDomain() }
+
     override suspend fun upsert(log: FeedLog) {
         val entity = FeedLogEntity.fromDomain(log).withSyncMetadata()
         database.withTransaction {

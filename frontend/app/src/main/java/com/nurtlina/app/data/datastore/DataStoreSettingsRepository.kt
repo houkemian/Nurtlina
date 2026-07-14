@@ -32,6 +32,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val SELECTED_BABY_ID = stringPreferencesKey("selected_baby_id")
         val PRE_EXPIRY_15MIN_ENABLED = booleanPreferencesKey("pre_expiry_15min_enabled")
         val FEEDING_REMINDER_ENABLED = booleanPreferencesKey("feeding_reminder_enabled")
+        val FEED_REMINDER_INTERVAL_MINUTES = intPreferencesKey("feed_reminder_interval_minutes")
     }
 
     override fun observe(): Flow<UserSettings> = dataStore.data.map { prefs ->
@@ -47,6 +48,7 @@ class DataStoreSettingsRepository @Inject constructor(
             selectedBabyId = prefs[Keys.SELECTED_BABY_ID],
             preExpiry15MinEnabled = prefs[Keys.PRE_EXPIRY_15MIN_ENABLED] ?: true,
             feedingReminderEnabled = prefs[Keys.FEEDING_REMINDER_ENABLED] ?: true,
+            feedReminderIntervalMinutes = prefs[Keys.FEED_REMINDER_INTERVAL_MINUTES] ?: 160,
         )
     }
 
@@ -69,6 +71,7 @@ class DataStoreSettingsRepository @Inject constructor(
             }
             prefs[Keys.PRE_EXPIRY_15MIN_ENABLED] = settings.preExpiry15MinEnabled
             prefs[Keys.FEEDING_REMINDER_ENABLED] = settings.feedingReminderEnabled
+            prefs[Keys.FEED_REMINDER_INTERVAL_MINUTES] = settings.feedReminderIntervalMinutes
         }
     }
 }

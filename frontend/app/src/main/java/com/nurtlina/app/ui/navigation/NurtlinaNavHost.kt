@@ -68,6 +68,7 @@ import com.nurtlina.app.data.billing.EntitlementManager
 import com.nurtlina.app.data.billing.ProStatus
 import com.nurtlina.app.domain.model.DiaperType
 import com.nurtlina.app.domain.model.FeedLog
+import com.nurtlina.app.domain.model.FeedingPrediction
 import com.nurtlina.app.domain.model.TodaySummary
 import com.nurtlina.app.domain.model.UnitType
 import com.nurtlina.app.domain.model.UserSettings
@@ -77,6 +78,7 @@ import com.nurtlina.app.ui.feed.NewFeedSheet
 import com.nurtlina.app.ui.feed.NewFeedUiState
 import com.nurtlina.app.ui.insights.InsightsDateRange
 import com.nurtlina.app.ui.insights.InsightsScreen
+import com.nurtlina.app.ui.insights.InsightsViewModel
 import com.nurtlina.app.domain.model.FeedType
 import com.nurtlina.app.domain.model.NursingSide
 import com.nurtlina.app.ui.logs.DiaperEditState
@@ -297,6 +299,7 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
     val babies by viewModel.babies.collectAsStateWithLifecycle()
     val selectedBaby by viewModel.selectedBaby.collectAsStateWithLifecycle()
     val latestFeed by viewModel.latestFeed.collectAsStateWithLifecycle()
+    val feedingPrediction by viewModel.feedingPrediction.collectAsStateWithLifecycle()
     val todaySummary by viewModel.todaySummary.collectAsStateWithLifecycle()
     val showRatingPrompt by viewModel.showRatingPrompt.collectAsStateWithLifecycle()
     val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
@@ -334,6 +337,7 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
             feedingStatus = buildFeedingStatus(
                 babyName = selectedBaby?.name,
                 latestFeed = latestFeed,
+                prediction = feedingPrediction,
                 summary = summary,
                 unitType = unitType,
                 now = now,
@@ -482,10 +486,12 @@ private fun LogsRoute() {
 @Composable
 private fun InsightsRoute(navController: NavController, isPro: Boolean) {
     val todayViewModel: TodayViewModel = hiltViewModel()
+    val insightsViewModel: InsightsViewModel = hiltViewModel()
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val todaySummary by todayViewModel.todaySummary.collectAsStateWithLifecycle()
+    val weeklySummary by insightsViewModel.weeklySummary.collectAsStateWithLifecycle()
+    val selectedRange by insightsViewModel.selectedRange.collectAsStateWithLifecycle()
     val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
-    var selectedRange by remember { mutableStateOf(InsightsDateRange.SEVEN) }
     val useOz = settings?.unit == UnitType.OZ
 
     InsightsScreen(
@@ -493,8 +499,9 @@ private fun InsightsRoute(navController: NavController, isPro: Boolean) {
         isPro = isPro,
         useOz = useOz,
         selectedRange = selectedRange,
-        proData = null, // Pro trend data requires date-range repository queries (future)
-        onRangeSelected = { selectedRange = it },
+        weeklyData = weeklySummary,
+        proData = null, // Extended-range Pro data (14d/30d) — future enhancement
+        onRangeSelected = { insightsViewModel.setRange(it) },
         onUpgradeTapped = { navController.navigate(NavRoutes.Paywall.route) },
     )
 }
@@ -555,8 +562,8 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
         currentUser = currentUser,
         notificationPermissionGranted = notificationPermissionGranted,
         appVersion = "1.0.0",
-        onBabyNameSaved = { name ->
-            selectedBaby?.let { viewModel.updateBabyName(it.id, name) }
+        onBabyUpdated = { name, birthDate ->
+            selectedBaby?.let { viewModel.updateBaby(it.id, name, birthDate) }
         },
         onUnitChanged = viewModel::updateUnitType,
         onGuidelineRegionChanged = viewModel::updateGuidelineRegion,
@@ -573,6 +580,7 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
             }
         },
         onReminderTimingChanged = viewModel::updateReminderBeforeExpiryMinutes,
+        onFeedIntervalChanged = viewModel::updateFeedReminderInterval,
         onNightModeToggled = viewModel::updateNightModeEnabled,
         onManageSubscription = {
             context.startActivity(
@@ -638,12 +646,10 @@ private fun emptyTodaySummary(): TodaySummary = TodaySummary(
     activeSleepStartedAt = null,
 )
 
-private val feedAttentionInterval: Duration
-    get() = FeedReminderConfig.nextFeedAttentionInterval
-
 private fun buildFeedingStatus(
     babyName: String?,
     latestFeed: FeedLog?,
+    prediction: FeedingPrediction?,
     summary: TodaySummary,
     unitType: UnitType,
     now: Instant,
@@ -652,9 +658,18 @@ private fun buildFeedingStatus(
         val elapsed = Duration.between(startedAt, now)
         if (elapsed.isNegative) Duration.ZERO else elapsed
     }
-    val nextFeedRemaining = elapsedSinceLastFeed
-        ?.takeIf { it < feedAttentionInterval }
-        ?.let { feedAttentionInterval.minus(it) }
+
+    // Build feeding window text from prediction
+    val windowStartText: String? = prediction?.windowStart?.let(::formatTime)
+    val windowEndText: String? = prediction?.windowEnd?.let(::formatTime)
+    val windowMessage: String? = when {
+        prediction == null || prediction.isLearning -> null
+        now.isBefore(prediction.windowStart) ->
+            "You may want to check feeding cues later"
+        now.isBefore(prediction.windowEnd) ->
+            "You may want to check feeding cues soon"
+        else -> prediction.reason
+    }
 
     return FeedingStatusUiState(
         babyName = babyName.orEmpty(),
@@ -663,8 +678,10 @@ private fun buildFeedingStatus(
         lastFeedAmountText = latestFeed?.amountMl?.let { formatAmount(it, unitType) },
         todayFeedCount = summary.totalFeedCount,
         todayAmountText = formatAmount(summary.totalAmountMl, unitType),
-        nextFeedInMillis = nextFeedRemaining?.toMillis(),
-        isNextFeedDue = elapsedSinceLastFeed?.let { it >= feedAttentionInterval } == true,
+        feedingWindowStartText = windowStartText,
+        feedingWindowEndText = windowEndText,
+        feedingWindowMessage = windowMessage,
+        isLearning = prediction?.isLearning == true,
     )
 }
 

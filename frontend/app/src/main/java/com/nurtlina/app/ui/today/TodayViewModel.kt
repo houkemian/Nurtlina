@@ -14,9 +14,11 @@ import com.nurtlina.app.domain.rating.RatingPromptBlockedReason
 import com.nurtlina.app.domain.rating.RatingPromptDecision
 import com.nurtlina.app.domain.rating.RatingPromptEligibility
 import com.nurtlina.app.domain.repository.BabyRepository
+import com.nurtlina.app.domain.model.FeedingPrediction
 import com.nurtlina.app.domain.repository.FeedLogRepository
 import com.nurtlina.app.domain.repository.RatingPromptRepository
 import com.nurtlina.app.domain.repository.SettingsRepository
+import com.nurtlina.app.domain.usecase.feeding.GenerateFeedingPredictionUseCase
 import com.nurtlina.app.domain.usecase.summary.GetTodaySummaryUseCase
 import com.nurtlina.app.domain.usecase.diaper.LogDiaperUseCase
 import com.nurtlina.app.domain.usecase.feed.LogFeedUseCase
@@ -28,6 +30,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -47,6 +50,7 @@ class TodayViewModel @Inject constructor(
     private val ratingPromptRepository: RatingPromptRepository,
     private val ratingPromptEligibility: RatingPromptEligibility,
     private val nextFeedNotificationScheduler: NextFeedNotificationScheduler,
+    private val generateFeedingPredictionUseCase: GenerateFeedingPredictionUseCase,
     private val analytics: Analytics,
 ) : ViewModel() {
 
@@ -102,6 +106,20 @@ class TodayViewModel @Inject constructor(
     val todaySummary: StateFlow<TodaySummary?> = selectedBaby
         .flatMapLatest { baby ->
             if (baby == null) flowOf(null) else getTodaySummaryUseCase(baby.id)
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = null,
+        )
+
+    // ── Feeding prediction ───────────────────────────────────────────────────
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val feedingPrediction: StateFlow<FeedingPrediction?> = selectedBaby
+        .flatMapLatest { baby ->
+            if (baby == null) flowOf(null)
+            else flow { emit(generateFeedingPredictionUseCase(baby.id)) }
         }
         .stateIn(
             scope = viewModelScope,
@@ -187,7 +205,15 @@ class TodayViewModel @Inject constructor(
     }
 
     fun scheduleNextFeedReminder(feedLog: FeedLog) {
-        nextFeedNotificationScheduler.schedule(feedLog.babyId, feedLog.startedAt)
+        viewModelScope.launch {
+            val prediction = generateFeedingPredictionUseCase(feedLog.babyId)
+            if (!prediction.isLearning) {
+                nextFeedNotificationScheduler.scheduleWindow(
+                    babyId = feedLog.babyId,
+                    windowStart = prediction.windowStart,
+                )
+            }
+        }
     }
 
     fun startSleep() {

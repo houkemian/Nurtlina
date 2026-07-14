@@ -45,6 +45,17 @@ class Analytics @Inject constructor(
     fun logRatingPromptBlockedNotificationSession() = log("rating_prompt_blocked_notification_session", null)
     fun logRatingPromptBlockedNegativeAction() = log("rating_prompt_blocked_negative_action", null)
 
+    // ── Feeding reminder ──────────────────────────────────────────────────────
+    fun logFeedingWindowGenerated(confidence: String, intervalMinutes: Int, sampleCount: Int) =
+        log("feeding_window_generated", bundle(
+            "confidence" to confidence,
+            "interval_minutes" to intervalMinutes.toString(),
+            "sample_count" to sampleCount.toString(),
+        ))
+    fun logFeedingReminderSent() = log("feeding_reminder_sent", null)
+    fun logFeedingReminderClicked() = log("feeding_reminder_clicked", null)
+    fun logFeedingReminderFeedback(type: String) = log("feeding_reminder_feedback", bundle("type" to type))
+
     private fun log(event: String, params: Bundle?) {
         firebase.logEvent(event, params)
     }

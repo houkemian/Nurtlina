@@ -24,6 +24,9 @@ interface FeedLogDao {
     @Query("DELETE FROM feed_logs WHERE id = :id")
     suspend fun delete(id: String)
 
+    @Query("SELECT * FROM feed_logs WHERE babyId = :babyId ORDER BY startedAt DESC LIMIT :limit")
+    suspend fun getRecentByBaby(babyId: String, limit: Int = 10): List<FeedLogEntity>
+
     @Query("SELECT * FROM feed_logs WHERE id = :id")
     suspend fun getById(id: String): FeedLogEntity?
 

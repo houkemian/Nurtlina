@@ -6,11 +6,13 @@ import com.nurtlina.app.data.rating.DataStoreRatingPromptRepository
 import com.nurtlina.app.data.repository.RoomBabyRepository
 import com.nurtlina.app.data.repository.RoomDiaperLogRepository
 import com.nurtlina.app.data.repository.RoomFeedLogRepository
+import com.nurtlina.app.data.repository.RoomFeedingFeedbackRepository
 import com.nurtlina.app.data.repository.RoomSleepLogRepository
 import com.nurtlina.app.data.sync.WorkManagerSyncManager
 import com.nurtlina.app.domain.repository.BabyRepository
 import com.nurtlina.app.domain.repository.DiaperLogRepository
 import com.nurtlina.app.domain.repository.FeedLogRepository
+import com.nurtlina.app.domain.repository.FeedingFeedbackRepository
 import com.nurtlina.app.domain.repository.RatingPromptRepository
 import com.nurtlina.app.domain.repository.SettingsRepository
 import com.nurtlina.app.domain.repository.SessionRepository
@@ -57,4 +59,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSyncManager(impl: WorkManagerSyncManager): SyncManager
+
+    @Binds
+    @Singleton
+    abstract fun bindFeedingFeedbackRepository(impl: RoomFeedingFeedbackRepository): FeedingFeedbackRepository
 }

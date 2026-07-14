@@ -192,13 +192,17 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun updateBabyName(babyId: String, name: String) {
+    fun updateBaby(babyId: String, name: String, birthDate: java.time.LocalDate?) {
         val trimmed = name.trim()
         if (trimmed.isBlank()) return
         viewModelScope.launch {
             val baby = babies.value.firstOrNull { it.id == babyId } ?: return@launch
-            babyRepository.upsert(baby.copy(name = trimmed))
+            babyRepository.upsert(baby.copy(name = trimmed, birthDate = birthDate))
         }
+    }
+
+    fun updateFeedReminderInterval(minutes: Int) {
+        updateSettings { it.copy(feedReminderIntervalMinutes = minutes) }
     }
 
     // ── FAQ state ──────────────────────────────────────────────────────────

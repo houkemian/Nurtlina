@@ -32,6 +32,7 @@ import com.nurtlina.app.R
 import com.nurtlina.app.domain.model.*
 import com.nurtlina.app.ui.NurtlinaDialog
 import com.nurtlina.app.ui.theme.NurtlinaTheme
+import java.time.LocalDate
 
 // ---------------------------------------------------------------------------
 // Screen
@@ -47,12 +48,13 @@ import com.nurtlina.app.ui.theme.NurtlinaTheme
  * @param notificationPermissionGranted Whether Android allows this app to post notifications.
  * @param appVersion              Displayed in the About section.
  * @param onEditBaby              Reserved for future navigation to a dedicated baby-profile screen.
- * @param onBabyNameSaved         User saved a new baby nickname from the inline dialog.
+ * @param onBabyUpdated           User saved baby name and/or birth date from the inline dialog.
  * @param onUnitChanged           User changed volume unit.
  * @param onGuidelineRegionChanged User changed guideline region.
  * @param onLanguageSelected      User selected a language code (e.g. "en", "zh").
  * @param onNotificationsToggled  User toggled notification enable/disable.
  * @param onReminderTimingChanged User changed reminder lead-time in minutes.
+ * @param onFeedIntervalChanged   User changed the feeding reminder interval.
  * @param onNightModeToggled      User toggled night mode.
  * @param onManageSubscription    Navigate to Play Store subscription management.
  * @param onUpgradeTapped         Navigate to paywall.
@@ -75,12 +77,13 @@ fun SettingsScreen(
     notificationPermissionGranted: Boolean = true,
     appVersion: String,
     onEditBaby: () -> Unit = {},
-    onBabyNameSaved: (String) -> Unit,
+    onBabyUpdated: (name: String, birthDate: LocalDate?) -> Unit,
     onUnitChanged: (UnitType) -> Unit,
     onGuidelineRegionChanged: (GuidelineRegion) -> Unit,
     onLanguageSelected: (String) -> Unit,
     onNotificationsToggled: (Boolean) -> Unit,
     onReminderTimingChanged: (Int) -> Unit,
+    onFeedIntervalChanged: (Int) -> Unit,
     onNightModeToggled: (Boolean) -> Unit,
     onManageSubscription: () -> Unit,
     onUpgradeTapped: () -> Unit,
@@ -105,8 +108,9 @@ fun SettingsScreen(
     if (showEditBabyDialog) {
         EditBabyDialog(
             currentName = baby?.name.orEmpty(),
-            onSave = { name ->
-                onBabyNameSaved(name)
+            currentBirthDate = baby?.birthDate,
+            onSave = { name, birthDate ->
+                onBabyUpdated(name, birthDate)
                 showEditBabyDialog = false
             },
             onDismiss = { showEditBabyDialog = false },
@@ -229,6 +233,10 @@ fun SettingsScreen(
                     currentMinutes = settings.reminderBeforeExpiryMinutes,
                     onChanged = onReminderTimingChanged,
                 )
+                FeedIntervalRow(
+                    currentMinutes = settings.feedReminderIntervalMinutes,
+                    onChanged = onFeedIntervalChanged,
+                )
             }
             SettingsToggleRow(
                 icon = Icons.Outlined.DarkMode,
@@ -350,6 +358,18 @@ private fun BabyProfileRow(baby: Baby?, onEditBaby: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                baby.birthDate?.let { bd ->
+                    Text(
+                        text = stringResource(
+                            R.string.settings_baby_birth_date_value,
+                            bd.format(java.time.format.DateTimeFormatter.ofLocalizedDate(
+                                java.time.format.FormatStyle.MEDIUM
+                            )),
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+                    )
+                }
             }
         }
         Icon(
@@ -360,20 +380,25 @@ private fun BabyProfileRow(baby: Baby?, onEditBaby: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditBabyDialog(
     currentName: String,
-    onSave: (String) -> Unit,
+    currentBirthDate: LocalDate?,
+    onSave: (name: String, birthDate: LocalDate?) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var name by remember { mutableStateOf(currentName) }
+    var birthDate by remember { mutableStateOf(currentBirthDate) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
     NurtlinaDialog(
         onDismissRequest = onDismiss,
         icon = Icons.Outlined.ChildCare,
         title = stringResource(R.string.settings_baby_name_label),
         confirmButton = {
             Button(
-                onClick = { onSave(name.trim()) },
+                onClick = { onSave(name.trim(), birthDate) },
                 enabled = name.isNotBlank(),
             ) {
                 Text(stringResource(android.R.string.ok))
@@ -385,16 +410,76 @@ private fun EditBabyDialog(
             }
         },
     ) {
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text(stringResource(R.string.settings_baby_name_label)) },
-            leadingIcon = {
-                Icon(Icons.Outlined.Edit, contentDescription = null)
-            },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text(stringResource(R.string.settings_baby_name_label)) },
+                leadingIcon = {
+                    Icon(Icons.Outlined.Edit, contentDescription = null)
+                },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            // Birth date row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showDatePicker = true },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.CalendarMonth,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(24.dp),
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = birthDate?.let { bd ->
+                        bd.format(java.time.format.DateTimeFormatter.ofLocalizedDate(
+                            java.time.format.FormatStyle.MEDIUM
+                        ))
+                    } ?: stringResource(R.string.settings_baby_birth_date_not_set),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (birthDate != null) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            }
+        }
+
+        if (showDatePicker) {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = birthDate?.atStartOfDay(java.time.ZoneId.systemDefault())
+                    ?.toInstant()?.toEpochMilli(),
+            )
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            birthDate = java.time.Instant.ofEpochMilli(millis)
+                                .atZone(java.time.ZoneId.systemDefault())
+                                .toLocalDate()
+                        }
+                        showDatePicker = false
+                    }) {
+                        Text(stringResource(android.R.string.ok))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) {
+                        Text(stringResource(android.R.string.cancel))
+                    }
+                },
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        }
     }
 }
 
@@ -549,6 +634,43 @@ private fun ReminderTimingRow(currentMinutes: Int, onChanged: (Int) -> Unit) {
             onSelect = { idx -> onChanged(options[idx].first); showDialog = false },
             onDismiss = { showDialog = false },
             icon = Icons.Outlined.Timer,
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Feed interval picker
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun FeedIntervalRow(currentMinutes: Int, onChanged: (Int) -> Unit) {
+    var showDialog by remember { mutableStateOf(false) }
+    val options = listOf(
+        120 to R.string.settings_feed_interval_120min,
+        150 to R.string.settings_feed_interval_150min,
+        160 to R.string.settings_feed_interval_160min,
+        180 to R.string.settings_feed_interval_180min,
+        210 to R.string.settings_feed_interval_210min,
+        240 to R.string.settings_feed_interval_240min,
+    )
+    val labels = options.map { stringResource(it.second) }
+    val selectedIndex = options.indexOfFirst { it.first == currentMinutes }.coerceAtLeast(0)
+
+    SettingsClickRow(
+        icon = Icons.Outlined.Schedule,
+        label = stringResource(R.string.settings_feed_interval_label),
+        value = labels[selectedIndex],
+        onClick = { showDialog = true },
+    )
+
+    if (showDialog) {
+        SingleChoiceDialog(
+            title = stringResource(R.string.settings_feed_interval_label),
+            options = labels,
+            selectedIndex = selectedIndex,
+            onSelect = { idx -> onChanged(options[idx].first); showDialog = false },
+            onDismiss = { showDialog = false },
+            icon = Icons.Outlined.Schedule,
         )
     }
 }
@@ -924,9 +1046,9 @@ private fun SettingsScreenLightPreview() {
             isPro = false,
             currentUser = null,
             appVersion = "1.0.0",
-            onBabyNameSaved = {}, onUnitChanged = {}, onGuidelineRegionChanged = {},
+            onBabyUpdated = { _, _ -> }, onUnitChanged = {}, onGuidelineRegionChanged = {},
             onLanguageSelected = {}, onNotificationsToggled = {}, onReminderTimingChanged = {},
-            onNightModeToggled = {}, onManageSubscription = {},
+            onFeedIntervalChanged = {}, onNightModeToggled = {}, onManageSubscription = {},
             onUpgradeTapped = {}, onExportCsv = {},
             onBackupClick = {}, onSignInClick = {}, onSignOutClick = {},
             onFaqClick = {}, onPrivacyPolicyClick = {},
@@ -945,9 +1067,9 @@ private fun SettingsScreenProDarkPreview() {
             isPro = true,
             currentUser = UserAccount(uid = "uid1", email = "parent@example.com", isAnonymous = false, familyId = "fam1", isProActive = true),
             appVersion = "1.0.0",
-            onBabyNameSaved = {}, onUnitChanged = {}, onGuidelineRegionChanged = {},
+            onBabyUpdated = { _, _ -> }, onUnitChanged = {}, onGuidelineRegionChanged = {},
             onLanguageSelected = {}, onNotificationsToggled = {}, onReminderTimingChanged = {},
-            onNightModeToggled = {}, onManageSubscription = {},
+            onFeedIntervalChanged = {}, onNightModeToggled = {}, onManageSubscription = {},
             onUpgradeTapped = {}, onExportCsv = {},
             onBackupClick = {}, onSignInClick = {}, onSignOutClick = {},
             onFaqClick = {}, onPrivacyPolicyClick = {},

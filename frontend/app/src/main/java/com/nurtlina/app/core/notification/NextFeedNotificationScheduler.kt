@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.time.Duration
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -16,8 +17,17 @@ class NextFeedNotificationScheduler @Inject constructor(
 ) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    fun schedule(babyId: String, lastFeedStartedAt: Instant) {
-        val triggerAt = lastFeedStartedAt.plus(FeedReminderConfig.nextFeedAttentionInterval)
+    fun schedule(babyId: String, lastFeedStartedAt: Instant, intervalMinutes: Int = FeedReminderConfig.defaultFeedIntervalMinutes) {
+        val triggerAt = lastFeedStartedAt.plus(Duration.ofMinutes(intervalMinutes.toLong()))
+        scheduleAt(babyId, triggerAt)
+    }
+
+    /** Schedule a reminder to fire at the beginning of a feeding window. */
+    fun scheduleWindow(babyId: String, windowStart: Instant) {
+        scheduleAt(babyId, windowStart)
+    }
+
+    private fun scheduleAt(babyId: String, triggerAt: Instant) {
         if (!triggerAt.isAfter(Instant.now())) return
 
         val notifId = NotificationIds.nextFeedReminderInt(babyId)

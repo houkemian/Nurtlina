@@ -72,10 +72,12 @@
     <string name="today_feed_amount_not_recorded">Amount not recorded</string>
     <string name="today_feed_today_label">Today</string>
     <string name="today_feed_today_value">%1$d feeds · %2$s</string>
-    <string name="today_next_feed_label">Next feed</string>
-    <string name="today_next_feed_watch_later">Watch from around %1$s later</string>
-    <string name="today_next_feed_now">Watch feeding now</string>
-    <string name="today_next_feed_after_first">Log a feed to start interval tracking</string>
+    <string name="today_feeding_window_label">Feeding window</string>
+    <string name="today_feeding_window_value">Around %1$s – %2$s</string>
+    <string name="today_feeding_window_learning">Log a few feeds to learn your baby\'s pattern</string>
+    <string name="today_feeding_window_approaching">You may want to check feeding cues soon</string>
+    <string name="today_feeding_window_later">You may want to check feeding cues later</string>
+    <string name="today_feeding_window_cues">%1$s · %2$s</string>
     <string name="today_active_bottle_timer_title">Active Bottle Timer</string>
     <string name="today_quick_actions_title">Quick Actions</string>
     <string name="today_summary_section_title">Today Summary</string>
@@ -233,8 +235,8 @@
     <string name="notif_feeding_45_body">Used formula should be discarded after the selected timer ends.</string>
     <string name="notif_feeding_60_title">Feeding started 60 minutes ago</string>
     <string name="notif_feeding_60_body">When in doubt, discard the milk. This app is a reminder, not medical advice.</string>
-    <string name="notif_next_feed_title">Next feed reminder</string>
-    <string name="notif_next_feed_body">The countdown ended. Check whether baby is ready to feed.</string>
+    <string name="notif_next_feed_title">Feeding window reminder</string>
+    <string name="notif_next_feed_body">You may want to check for feeding cues soon.</string>
 
     <!-- ===== Paywall ===== -->
     <string name="paywall_title">Track with less stress</string>
@@ -284,7 +286,7 @@
 
     <!-- ===== Insights ===== -->
     <string name="insights_tracking_note">This is a tracking summary, not a medical assessment. Talk to your pediatrician if you have concerns.</string>
-    <string name="insights_upgrade_banner">Upgrade to Pro for 7, 14, and 30-day trends.</string>
+    <string name="insights_upgrade_banner">Upgrade to Pro for 14 and 30-day trends.</string>
 
     <!-- ===== Errors ===== -->
     <string name="error_generic">Something went wrong. Please try again.</string>
@@ -439,8 +441,9 @@
     <string name="insights_range_30d">30 days</string>
     <string name="insights_chart_cd">Trend chart</string>
     <string name="insights_no_data">No data for this period</string>
-    <string name="insights_pro_banner_title">Unlock trend analysis</string>
-    <string name="insights_pro_banner_body">See 7, 14, and 30-day trends with a Pro subscription.</string>
+    <string name="insights_7day_trend_header">7-Day Trends</string>
+    <string name="insights_pro_banner_title">Unlock longer trends</string>
+    <string name="insights_pro_banner_body">See 14 and 30-day trends with a Pro subscription.</string>
     <string name="insights_upgrade_pro">Upgrade to Pro</string>
 
     <!-- ===== Log Edit Sheet ===== -->
@@ -534,6 +537,19 @@
     <string name="settings_reminder_15min">15 min</string>
     <string name="settings_reminder_30min">30 min</string>
     <string name="settings_reminder_timing_label">Remind me before expiry</string>
+    <string name="settings_feed_interval_label">Feed reminder interval</string>
+    <string name="settings_feed_interval_120min">2 hours</string>
+    <string name="settings_feed_interval_150min">2.5 hours</string>
+    <string name="settings_feed_interval_160min">2h 40min</string>
+    <string name="settings_feed_interval_180min">3 hours</string>
+    <string name="settings_feed_interval_210min">3.5 hours</string>
+    <string name="settings_feed_interval_240min">4 hours</string>
+    <string name="feeding_feedback_title">Was this reminder helpful?</string>
+    <string name="feeding_feedback_too_early">Too early</string>
+    <string name="feeding_feedback_just_right">Just right</string>
+    <string name="feeding_feedback_too_late">Too late</string>
+    <string name="settings_baby_birth_date_value">Born %1$s</string>
+    <string name="settings_baby_birth_date_not_set">Tap to set birth date</string>
     <string name="settings_theme_label">Theme</string>
     <string name="settings_theme_system">System default</string>
     <string name="settings_theme_light">Light</string>

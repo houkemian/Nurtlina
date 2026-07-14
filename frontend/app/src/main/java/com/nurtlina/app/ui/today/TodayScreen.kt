@@ -114,8 +114,11 @@ data class FeedingStatusUiState(
     val lastFeedAmountText: String? = null,
     val todayFeedCount: Int = 0,
     val todayAmountText: String = "",
-    val nextFeedInMillis: Long? = null,
-    val isNextFeedDue: Boolean = false,
+    // Feeding window (replaces nextFeedInMillis / isNextFeedDue)
+    val feedingWindowStartText: String? = null,
+    val feedingWindowEndText: String? = null,
+    val feedingWindowMessage: String? = null,
+    val isLearning: Boolean = false,
 )
 
 // --------------------------------------------------------------------------
@@ -153,10 +156,10 @@ fun TodayScreen(
     }
 
     LaunchedEffect(
-        state.feedingStatus.isNextFeedDue,
+        state.feedingStatus.feedingWindowStartText,
         state.feedingStatus.lastFeedTimeText,
     ) {
-        if (state.feedingStatus.isNextFeedDue) {
+        if (state.feedingStatus.feedingWindowStartText != null) {
             showFeedback(QuickLogFeedbackType.NEXT_FEED_DUE)
         }
     }
@@ -659,15 +662,18 @@ private fun FeedingStatusCard(
             Spacer(Modifier.height(16.dp))
 
             FeedingStatusBlock(
-                label = stringResource(R.string.today_next_feed_label),
+                label = stringResource(R.string.today_feeding_window_label),
                 value = when {
-                    state.isNextFeedDue -> stringResource(R.string.today_next_feed_now)
-                    state.nextFeedInMillis != null -> stringResource(
-                        R.string.today_next_feed_watch_later,
-                        state.nextFeedInMillis.formatNextFeedCountdown(),
-                    )
-                    else -> stringResource(R.string.today_next_feed_after_first)
+                    state.isLearning -> stringResource(R.string.today_feeding_window_learning)
+                    state.feedingWindowStartText != null && state.feedingWindowEndText != null ->
+                        stringResource(
+                            R.string.today_feeding_window_value,
+                            state.feedingWindowStartText,
+                            state.feedingWindowEndText,
+                        )
+                    else -> stringResource(R.string.today_feeding_window_learning)
                 },
+                detail = state.feedingWindowMessage,
             )
         }
     }
@@ -1052,14 +1058,6 @@ internal fun Double.formatAmount(unit: UnitType): String = when (unit) {
     UnitType.OZ -> "%.1f oz".format(this / ML_PER_OUNCE)
 }
 
-private fun Long.formatNextFeedCountdown(): String {
-    if (this <= 0) return "0s"
-    val seconds = TimeUnit.MILLISECONDS.toSeconds(this)
-    if (seconds <= 60) return "${seconds}s"
-    val minutes = TimeUnit.MILLISECONDS.toMinutes(this)
-    return if (minutes < 60) "${minutes}m" else formatDuration()
-}
-
 internal fun Long.formatDuration(): String {
     if (this <= 0) return "0m"
     val hours = TimeUnit.MILLISECONDS.toHours(this)
@@ -1085,7 +1083,9 @@ private fun previewFeedingStatus(
     lastFeedAgoText: String? = "2h 10m",
     lastFeedAmountText: String? = "120 ml",
     lastFeedTimeText: String? = "8:20 AM",
-    nextFeedInMillis: Long? = 30 * 60 * 1000L,
+    feedingWindowStartText: String? = "10:40 AM",
+    feedingWindowEndText: String? = "11:30 AM",
+    feedingWindowMessage: String? = "Based on recent feeding patterns",
 ) = FeedingStatusUiState(
     babyName = "Sunshine",
     lastFeedTimeText = lastFeedTimeText,
@@ -1093,7 +1093,9 @@ private fun previewFeedingStatus(
     lastFeedAmountText = lastFeedAmountText,
     todayFeedCount = 5,
     todayAmountText = "480 ml",
-    nextFeedInMillis = nextFeedInMillis,
+    feedingWindowStartText = feedingWindowStartText,
+    feedingWindowEndText = feedingWindowEndText,
+    feedingWindowMessage = feedingWindowMessage,
 )
 
 @Preview(name = "Today – Light", showBackground = true, showSystemUi = true)
@@ -1134,7 +1136,9 @@ private fun PreviewTodayEmptyDark() {
                     lastFeedAgoText = null,
                     lastFeedAmountText = null,
                     lastFeedTimeText = null,
-                    nextFeedInMillis = null,
+                    feedingWindowStartText = null,
+                    feedingWindowEndText = null,
+                    feedingWindowMessage = null,
                 ),
                 showAds = false,
             ),

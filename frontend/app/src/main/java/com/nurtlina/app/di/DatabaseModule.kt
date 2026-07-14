@@ -8,6 +8,7 @@ import com.nurtlina.app.data.local.dao.BabyDao
 import com.nurtlina.app.data.local.dao.DiaperLogDao
 import com.nurtlina.app.data.local.dao.FeedLogDao
 import com.nurtlina.app.data.local.dao.SleepLogDao
+import com.nurtlina.app.data.local.dao.FeedingReminderFeedbackDao
 import com.nurtlina.app.data.local.dao.SyncQueueDao
 import com.nurtlina.app.data.local.db.NurtlinaDatabase
 import dagger.Module
@@ -25,7 +26,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): NurtlinaDatabase =
         Room.databaseBuilder(context, NurtlinaDatabase::class.java, NurtlinaDatabase.DATABASE_NAME)
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, NurtlinaDatabase.MIGRATION_3_4)
             .build()
 
     @Provides
@@ -42,6 +43,10 @@ object DatabaseModule {
 
     @Provides
     fun provideSyncQueueDao(db: NurtlinaDatabase): SyncQueueDao = db.syncQueueDao()
+
+    @Provides
+    fun provideFeedingReminderFeedbackDao(db: NurtlinaDatabase): FeedingReminderFeedbackDao =
+        db.feedingReminderFeedbackDao()
 
     /** v1 → v2: add sync/family columns to core tables + create sync_queue table. */
     private val MIGRATION_1_2 = object : Migration(1, 2) {

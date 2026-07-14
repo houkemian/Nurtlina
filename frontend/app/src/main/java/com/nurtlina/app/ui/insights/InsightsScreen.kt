@@ -44,12 +44,15 @@ data class DailyDataPoint(
     val value: Float,
 )
 
-data class InsightsProData(
+data class InsightsTrendData(
     val feedsPerDay: List<DailyDataPoint>,
     val avgAmountMl: Double?,
     val diapersPerDay: List<DailyDataPoint>,
     val sleepHoursPerDay: List<DailyDataPoint>,
 )
+
+/** Alias kept for Pro-gated extended-range (14d/30d) trend data. */
+typealias InsightsProData = InsightsTrendData
 
 // ---------------------------------------------------------------------------
 // Screen
@@ -62,7 +65,8 @@ data class InsightsProData(
  * @param isPro          Whether the user has a Pro subscription.
  * @param useOz          Display amounts in oz (false = ml).
  * @param selectedRange  Currently selected trend date range (pro only).
- * @param proData        Pro-tier trend data; null when not loaded.
+ * @param weeklyData     7-day trend data — always shown for all users.
+ * @param proData        Extended-range trend data for Pro users (14d / 30d).
  * @param onRangeSelected Called when user selects a different date range.
  * @param onUpgradeTapped Called when the user taps the upgrade banner.
  */
@@ -73,7 +77,8 @@ fun InsightsScreen(
     isPro: Boolean,
     useOz: Boolean,
     selectedRange: InsightsDateRange,
-    proData: InsightsProData?,
+    weeklyData: InsightsTrendData?,
+    proData: InsightsTrendData?,
     onRangeSelected: (InsightsDateRange) -> Unit,
     onUpgradeTapped: () -> Unit,
     modifier: Modifier = Modifier,
@@ -106,6 +111,33 @@ fun InsightsScreen(
             // ---- Disclaimer (always visible) ----
             DisclaimerCard()
 
+            // ---- 7-Day trends (always visible for all users) ----
+            if (weeklyData != null) {
+                SectionHeader(stringResource(R.string.insights_7day_trend_header))
+
+                TrendChartCard(
+                    title = stringResource(R.string.insights_feed_trend_header),
+                    dataPoints = weeklyData.feedsPerDay,
+                    barColor = MaterialTheme.colorScheme.primary,
+                )
+
+                weeklyData.avgAmountMl?.let { avg ->
+                    AvgAmountCard(avgMl = avg, useOz = useOz)
+                }
+
+                TrendChartCard(
+                    title = stringResource(R.string.insights_diaper_trend_header),
+                    dataPoints = weeklyData.diapersPerDay,
+                    barColor = MaterialTheme.colorScheme.secondary,
+                )
+
+                TrendChartCard(
+                    title = stringResource(R.string.insights_sleep_trend_header),
+                    dataPoints = weeklyData.sleepHoursPerDay,
+                    barColor = MaterialTheme.colorScheme.tertiary,
+                )
+            }
+
             if (isPro && proData != null) {
                 // ---- Pro: range selector ----
                 DateRangeSelector(
@@ -113,30 +145,32 @@ fun InsightsScreen(
                     onSelect = onRangeSelected,
                 )
 
-                // ---- Pro: trend charts ----
-                TrendChartCard(
-                    title = stringResource(R.string.insights_feed_trend_header),
-                    dataPoints = proData.feedsPerDay,
-                    barColor = MaterialTheme.colorScheme.primary,
-                )
+                // ---- Pro: extended-range charts ----
+                if (selectedRange != InsightsDateRange.SEVEN) {
+                    TrendChartCard(
+                        title = stringResource(R.string.insights_feed_trend_header),
+                        dataPoints = proData.feedsPerDay,
+                        barColor = MaterialTheme.colorScheme.primary,
+                    )
 
-                proData.avgAmountMl?.let { avg ->
-                    AvgAmountCard(avgMl = avg, useOz = useOz)
+                    proData.avgAmountMl?.let { avg ->
+                        AvgAmountCard(avgMl = avg, useOz = useOz)
+                    }
+
+                    TrendChartCard(
+                        title = stringResource(R.string.insights_diaper_trend_header),
+                        dataPoints = proData.diapersPerDay,
+                        barColor = MaterialTheme.colorScheme.secondary,
+                    )
+
+                    TrendChartCard(
+                        title = stringResource(R.string.insights_sleep_trend_header),
+                        dataPoints = proData.sleepHoursPerDay,
+                        barColor = MaterialTheme.colorScheme.tertiary,
+                    )
                 }
-
-                TrendChartCard(
-                    title = stringResource(R.string.insights_diaper_trend_header),
-                    dataPoints = proData.diapersPerDay,
-                    barColor = MaterialTheme.colorScheme.secondary,
-                )
-
-                TrendChartCard(
-                    title = stringResource(R.string.insights_sleep_trend_header),
-                    dataPoints = proData.sleepHoursPerDay,
-                    barColor = MaterialTheme.colorScheme.tertiary,
-                )
             } else if (!isPro) {
-                // ---- Free: upgrade banner ----
+                // ---- Free: upgrade banner (below 7-day charts) ----
                 UpgradeBanner(onUpgradeTapped = onUpgradeTapped)
             }
 
@@ -144,6 +178,20 @@ fun InsightsScreen(
             Spacer(Modifier.height(8.dp))
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// Section header
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.padding(top = 4.dp),
+    )
 }
 
 // ---------------------------------------------------------------------------
@@ -529,12 +577,19 @@ private fun fakeSummary() = TodaySummary(
 @Preview(name = "Insights – free tier light", showBackground = true)
 @Composable
 private fun InsightsFreeLightPreview() {
+    val days = (1..7).map { DailyDataPoint("D$it", it.toFloat() % 8 + 3f) }
     NurtlinaTheme {
         InsightsScreen(
             todaySummary = fakeSummary(),
             isPro = false,
             useOz = false,
             selectedRange = InsightsDateRange.SEVEN,
+            weeklyData = InsightsTrendData(
+                feedsPerDay = days,
+                avgAmountMl = 115.0,
+                diapersPerDay = days.map { it.copy(value = it.value * 0.7f) },
+                sleepHoursPerDay = days.map { it.copy(value = it.value * 1.5f) },
+            ),
             proData = null,
             onRangeSelected = {},
             onUpgradeTapped = {},
@@ -545,18 +600,25 @@ private fun InsightsFreeLightPreview() {
 @Preview(name = "Insights – pro tier light", showBackground = true)
 @Composable
 private fun InsightsProLightPreview() {
-    val days = (1..7).map { DailyDataPoint("D$it", it.toFloat() % 8 + 3f) }
+    val days7 = (1..7).map { DailyDataPoint("D$it", it.toFloat() % 8 + 3f) }
+    val days14 = (1..14).map { DailyDataPoint("D$it", it.toFloat() % 8 + 3f) }
     NurtlinaTheme {
         InsightsScreen(
             todaySummary = fakeSummary(),
             isPro = true,
             useOz = false,
-            selectedRange = InsightsDateRange.SEVEN,
-            proData = InsightsProData(
-                feedsPerDay = days,
+            selectedRange = InsightsDateRange.FOURTEEN,
+            weeklyData = InsightsTrendData(
+                feedsPerDay = days7,
                 avgAmountMl = 115.0,
-                diapersPerDay = days.map { it.copy(value = it.value * 0.7f) },
-                sleepHoursPerDay = days.map { it.copy(value = it.value * 1.5f) },
+                diapersPerDay = days7.map { it.copy(value = it.value * 0.7f) },
+                sleepHoursPerDay = days7.map { it.copy(value = it.value * 1.5f) },
+            ),
+            proData = InsightsTrendData(
+                feedsPerDay = days14,
+                avgAmountMl = 120.0,
+                diapersPerDay = days14.map { it.copy(value = it.value * 0.8f) },
+                sleepHoursPerDay = days14.map { it.copy(value = it.value * 1.3f) },
             ),
             onRangeSelected = {},
             onUpgradeTapped = {},
@@ -567,12 +629,19 @@ private fun InsightsProLightPreview() {
 @Preview(name = "Insights – free tier dark", showBackground = true)
 @Composable
 private fun InsightsFreeDarkPreview() {
+    val days = (1..7).map { DailyDataPoint("D$it", it.toFloat() % 8 + 3f) }
     NurtlinaTheme(darkTheme = true) {
         InsightsScreen(
             todaySummary = fakeSummary(),
             isPro = false,
             useOz = true,
-            selectedRange = InsightsDateRange.FOURTEEN,
+            selectedRange = InsightsDateRange.SEVEN,
+            weeklyData = InsightsTrendData(
+                feedsPerDay = days,
+                avgAmountMl = 115.0,
+                diapersPerDay = days.map { it.copy(value = it.value * 0.7f) },
+                sleepHoursPerDay = days.map { it.copy(value = it.value * 1.5f) },
+            ),
             proData = null,
             onRangeSelected = {},
             onUpgradeTapped = {},
