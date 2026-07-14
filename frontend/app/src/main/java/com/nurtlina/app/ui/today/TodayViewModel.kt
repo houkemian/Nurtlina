@@ -118,8 +118,11 @@ class TodayViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val feedingPrediction: StateFlow<FeedingPrediction?> = selectedBaby
         .flatMapLatest { baby ->
-            if (baby == null) flowOf(null)
-            else flow { emit(generateFeedingPredictionUseCase(baby.id)) }
+            if (baby == null) {
+                flowOf<FeedingPrediction?>(null)
+            } else {
+                flowOf(generateFeedingPredictionUseCase(baby.id))
+            }
         }
         .stateIn(
             scope = viewModelScope,
