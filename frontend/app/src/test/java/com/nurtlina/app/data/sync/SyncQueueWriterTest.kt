@@ -1,7 +1,7 @@
 package com.nurtlina.app.data.sync
 
 import com.nurtlina.app.data.local.dao.SyncQueueDao
-import com.nurtlina.app.data.local.entity.BottleEntity
+import com.nurtlina.app.data.local.entity.FeedLogEntity
 import com.nurtlina.app.data.local.entity.SyncQueueEntity
 import com.nurtlina.app.domain.model.SessionInfo
 import com.nurtlina.app.domain.repository.SessionRepository
@@ -16,33 +16,30 @@ import java.time.Instant
 class SyncQueueWriterTest {
 
     @Test
-    fun `enqueue bottle writes a ready sync queue item`() = runTest {
+    fun `enqueue feed log writes a ready sync queue item`() = runTest {
         val dao = FakeSyncQueueDao()
         val writer = SyncQueueWriter(dao, FakeSessionRepository())
-        val bottle = BottleEntity(
-            id = "bottle-1",
+        val timestamp = Instant.parse("2024-01-01T10:00:00Z").toEpochMilli()
+        val feedLog = FeedLogEntity(
+            id = "feed-1",
             babyId = "baby-1",
-            milkType = "FORMULA",
+            bottleId = null,
+            feedType = "FORMULA",
             amountMl = 120.0,
-            preparedAt = Instant.parse("2024-01-01T10:00:00Z").toEpochMilli(),
-            feedingStartedAt = null,
-            refrigeratedAt = null,
-            status = "NOT_STARTED",
-            guidelineRegion = "US",
-            expiresAt = Instant.parse("2024-01-01T12:00:00Z").toEpochMilli(),
-            discardedAt = null,
-            fedAt = null,
+            startedAt = timestamp,
+            endedAt = timestamp,
+            side = null,
             note = null,
-            createdAt = Instant.parse("2024-01-01T10:00:00Z").toEpochMilli(),
-            updatedAt = Instant.parse("2024-01-01T10:00:00Z").toEpochMilli(),
+            createdAt = timestamp,
+            updatedAt = timestamp,
         )
 
-        writer.enqueueBottle(bottle)
+        writer.enqueueFeedLog(feedLog)
 
         val item = dao.items.single()
-        assertEquals(SyncEntityTypes.BOTTLE, item.entityType)
-        assertEquals("bottle-1", item.entityId)
-        assertEquals(SyncOperations.UPSERT_BOTTLE, item.operation)
+        assertEquals(SyncEntityTypes.FEED_LOG, item.entityType)
+        assertEquals("feed-1", item.entityId)
+        assertEquals(SyncOperations.UPSERT_FEED_LOG, item.operation)
         assertEquals(0, item.retryCount)
         assertTrue(item.payloadJson.contains("\"family_id\":\"family-1\""))
     }

@@ -3,7 +3,8 @@
 > 分析日期：2026-07-10
 > 分析范围：全部 Kotlin 源代码（约 113 个文件）、FastAPI 后端代码、Firebase Cloud Functions
 > 关联文档：[[Nurtlina_PRD_Evaluation_and_Task_Plan]]
-> **状态**：Phase 0 Bottle 清理已完成 ✅
+> **状态**：Phase 0 Bottle 清理、Phase 1 P1 关键交互均已完成 ✅
+> **同步日期**：2026-07-15
 
 ---
 
@@ -52,9 +53,9 @@
 | 时间线展示 | ✅ | — |
 | 类型筛选 | ✅ | — |
 | 日期前后切换 | ✅ | — |
-| 编辑日志 | ⚠️ | `onEntryClick = {}` 空回调 |
+| 编辑日志 | ✅ | 点击记录打开编辑 Sheet，可保存或删除 |
 | 删除日志 | ✅ | — |
-| 日期选择器 | ❌ | `onPickDate = {}` 空回调 |
+| 日期选择器 | ✅ | 已接入 Material 3 `DatePickerDialog` |
 
 ### 1.4 Insights 统计页
 
@@ -75,7 +76,7 @@
 | AdMob Banner | ✅ | 测试 ID |
 | Pro 去广告 | ✅ | — |
 | 多宝宝 Pro 门控 | ⚠️ | baby creation screen 未实现 |
-| 导出 Pro 门控 | ❌ | 回调为空 |
+| 导出 Pro 门控 | ✅ | 免费用户进入付费墙，Pro 用户导出本地 CSV 并分享 |
 | 高级统计 Pro 门控 | ⚠️ | 数据源为空 |
 | 小组件 | ❌ | 未实现 |
 
@@ -108,16 +109,16 @@
 
 ## 2. 产品功能优先级任务规划
 
-### 🟠 P1 — 补齐关键交互缺口
+### ✅ P1 — 补齐关键交互缺口（已完成）
 
-| ID | 任务 | 估时 |
-|---|---|---|
-| **FEAT-1** | Quick Feed 预设奶量按钮（60/90/120/150 ml）直接入口 | 3h |
-| **FEAT-2** | Logs 点击查看/编辑日志详情（LogEditSheet 回调实现） | 2h |
-| **FEAT-3** | Logs 日期选择器（DatePickerDialog） | 1h |
-| **FEAT-4** | Onboarding 通知权限请求实现 | 1h |
-| **FEAT-5** | CSV 导出前端实现（调用后端 API + 分享 Sheet） | 3h |
-| **FEAT-6** | FAQ 页面内容 | 2h |
+| ID | 任务 | 状态 | 实现说明 |
+|---|---|---|---|
+| **FEAT-1** | Quick Feed 预设奶量入口 | ✅ | 支持 60/90/120/150/180 ml，并按设置显示 oz |
+| **FEAT-2** | Logs 查看/编辑日志详情 | ✅ | 点击记录打开编辑 Sheet，可保存或删除 |
+| **FEAT-3** | Logs 日期选择器 | ✅ | 已接入 `DatePickerDialog` |
+| **FEAT-4** | Onboarding 通知权限请求 | ✅ | Android 13+ 请求通知权限；拒绝不阻断本地核心功能 |
+| **FEAT-5** | CSV 导出与分享 | ✅ | Pro 用户从本地 Room 数据生成 UTF-8 CSV，通过受限 `FileProvider` 分享；不依赖后端 |
+| **FEAT-6** | FAQ 页面内容 | ✅ | 设置页已接入本地化 FAQ 内容 |
 
 ### 🟡 P2 — 体验提升
 
@@ -159,5 +160,5 @@
 
 ---
 
-*文档版本：v3.0*
-*分析日期：2026-07-10*
+*文档版本：v3.1*
+*分析日期：2026-07-10；状态同步：2026-07-15*

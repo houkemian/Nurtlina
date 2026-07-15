@@ -1,6 +1,8 @@
 package com.nurtlina.app.data.startup
 
 import android.app.Activity
+import android.util.Log
+import com.nurtlina.app.data.billing.EntitlementManager
 import com.nurtlina.app.domain.model.AuthState
 import com.nurtlina.app.domain.model.AuthUser
 import com.nurtlina.app.domain.model.BackendInitResult
@@ -11,6 +13,10 @@ import com.nurtlina.app.domain.repository.AuthRepository
 import com.nurtlina.app.domain.repository.BackendRepository
 import com.nurtlina.app.domain.repository.SessionRepository
 import com.nurtlina.app.domain.repository.SyncManager
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -26,11 +32,18 @@ class AppStartupCoordinatorTest {
         val coordinator = AppStartupCoordinator(
             authRepository = FakeAuthRepository(isSignedIn = true),
             backendRepository = FailingBackendRepository(),
+            entitlementManager = mockk<EntitlementManager>(relaxed = true),
             sessionRepository = FakeSessionRepository(hasSession = true),
             syncManager = syncManager,
         )
 
-        coordinator.start()
+        mockkStatic(Log::class)
+        every { Log.i(any(), any()) } returns 0
+        try {
+            coordinator.start()
+        } finally {
+            unmockkStatic(Log::class)
+        }
 
         assertTrue(syncManager.requested)
     }

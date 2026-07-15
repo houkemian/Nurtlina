@@ -577,16 +577,16 @@ match /families/{familyId} {
 | 下次喂奶提醒 | ✅ 85% | NextFeedNotificationScheduler |
 | 尿布记录 | ✅ 85% | 完整 |
 | 睡眠记录 | ✅ 85% | 完整 + 活跃计时器 |
-| Logs 时间线 | ✅ 80% | 筛选/删除有，编辑/日期选择器空回调 |
+| Logs 时间线 | ✅ 100% | 筛选、删除、编辑与日期选择器均已接通 |
 | 今日统计 | ✅ 85% | GetTodaySummaryUseCase |
 | Onboarding | ✅ 90% | 5 步流程 |
 | Pro Paywall | ✅ 80% | RevenueCat 完整 |
 | 暗色模式 | ✅ 80% | Material 3 主题 |
 | 评分弹窗 | ✅ 90% | RatingPromptEligibility（已更新为 Feed 指标） |
 | 数据同步 | ✅ 80% | FastAPI push/pull |
-| CSV 导出 | ⚠️ 70% | 后端可用，前端空回调 |
+| CSV 导出 | ✅ 100% | 导出当前宝宝全部本地照护记录，FileProvider 安全分享 |
 | 桌面小组件 | ❌ 0% | 未实现 |
-| FAQ | ❌ 0% | 空回调 |
+| FAQ | ✅ 100% | 设置页 FAQ 内容与对话框已接通 |
 | Privacy/Terms | ❌ 0% | URL 页面未创建 |
 
 ---
@@ -597,10 +597,10 @@ match /families/{familyId} {
 |---|---|---|
 | ~~Bottle 遗留代码~~ | ~~P0~~ | ✅ **已清理**（Phase 0 完成） |
 | ~~后端 Bottle 残留~~ | ~~P0~~ | ✅ **已清理**（migration 0003 + 7 个文件修复） |
-| 硬编码英文字符串 | P1 | 待处理 |
+| ~~硬编码英文字符串~~ | ~~P1~~ | ✅ 中英文资源与运行时错误文案已本地化 |
 | FeedLog/Summary 测试不足 | P1 | 待补齐 |
 | 后端 CI/CD 未自动化 | P2 | GitHub Actions 待配置 |
-| 前端空回调（Export/FAQ/Logs edit） | P1 | 待接通 |
+| ~~前端空回调（Export/FAQ/Logs edit）~~ | ~~P1~~ | ✅ 已全部接通 |
 | 小组件未实现 | P1 | P2 任务 |
 
 ---
@@ -611,16 +611,18 @@ match /families/{familyId} {
 
 所有 15 项任务已执行，代码库中不再存在 Bottle 相关代码。详见 commit `0e42f39` + `ba00f03`。
 
-### Phase 1：交互缺口补齐
+### ✅ Phase 1：交互缺口补齐 — 已完成
 
-| ID | 任务 | 估时 |
-|---|---|---|
-| FEAT-1 | Quick Feed 预设奶量按钮直接入口 | 3h |
-| FEAT-2 | Logs 编辑日志详情 | 2h |
-| FEAT-3 | Logs 日期选择器 | 1h |
-| FEAT-4 | Onboarding 通知权限实现 | 1h |
-| FEAT-5 | CSV 导出前端实现 | 3h |
-| FEAT-6 | FAQ 页面内容 | 2h |
+| ID | 任务 | 状态 | 实现说明 |
+|---|---|---|---|
+| FEAT-1 | Quick Feed 预设奶量按钮直接入口 | ✅ 完成 | Today 提供 60/90/120/150/180 ml 一键记录，并按单位显示 oz |
+| FEAT-2 | Logs 编辑日志详情 | ✅ 完成 | Feed/Diaper/Sleep 编辑表单支持保存与删除 |
+| FEAT-3 | Logs 日期选择器 | ✅ 完成 | Material 3 DatePickerDialog 可跳转指定日期 |
+| FEAT-4 | Onboarding 通知权限实现 | ✅ 完成 | Android 13+ 请求 POST_NOTIFICATIONS；拒绝后核心记录仍可用 |
+| FEAT-5 | CSV 导出前端实现 | ✅ 完成 | Pro 用户可从本地 Room 导出当前宝宝全部 Feed/Diaper/Sleep 记录；FileProvider 分享；CSV 转义与公式注入防护；失败时非阻断提示 |
+| FEAT-6 | FAQ 页面内容 | ✅ 完成 | 设置页提供 5 组本地化 FAQ，含离线、导出、Pro 与非医疗建议说明 |
+
+**Phase 1 验收（2026-07-15）：** 核心交互均不依赖网络；导出由 Pro 用户主动触发，不上传数据或记录备注到 Analytics；通知拒绝不会阻断本地记录。`assembleDebug` 与 `testDebugUnitTest` 均通过。
 
 ### Phase 2：体验提升
 
@@ -648,7 +650,7 @@ match /families/{familyId} {
 | 里程碑 | 预计时间 | 交付物 |
 |---|---|---|
 | ~~M0: Bottle 清理~~ | ~~Week 1 Day 2~~ | ✅ 已完成 |
-| M1: 核心体验可用 | Week 2 Day 5 | 交互缺口补齐 |
+| ~~M1: 核心体验可用~~ | ~~Week 2 Day 5~~ | ✅ 交互缺口已补齐 |
 | M2: 商业化闭环 | Week 3 Day 5 | Free/Pro 完整 |
 | M3: 小组件 | Week 4 Day 5 | 桌面小组件 |
 | M4: 内测 | Week 5 Day 3 | Closed Testing |
@@ -656,6 +658,6 @@ match /families/{familyId} {
 
 ---
 
-*文档版本：v5.0*
-*更新日期：2026-07-13（新增 §4 账号体系）*
+*文档版本：v5.1*
+*更新日期：2026-07-15（完成 Phase 1 交互缺口）*
 *生成日期：2026-07-10*

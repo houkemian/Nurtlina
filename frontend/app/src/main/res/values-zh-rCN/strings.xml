@@ -604,4 +604,7 @@
     <string name="today_time_expired">计时已结束</string>
     <string name="when_in_doubt_discard">如有疑虑，请丢弃奶液。</string>
 
+    <string name="settings_export_failed_title">无法导出数据</string>
+    <string name="settings_export_failed_body">您的记录仍保存在此设备上，请稍后重试导出。</string>
+
 </resources>

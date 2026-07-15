@@ -543,6 +543,7 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
     }
 
     val showFaq by viewModel.showFaq.collectAsStateWithLifecycle()
+    val exportFailed by viewModel.exportFailed.collectAsStateWithLifecycle()
     val currentSettings = settings ?: UserSettings()
     val selectedBaby = babies.firstOrNull { it.id == currentSettings.selectedBabyId }
         ?: babies.firstOrNull()
@@ -562,6 +563,19 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
             },
             confirmButton = {
                 TextButton(onClick = { viewModel.dismissFaq() }) {
+                    Text(stringResource(R.string.common_ok))
+                }
+            },
+        )
+    }
+
+    if (exportFailed) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissExportError,
+            title = { Text(stringResource(R.string.settings_export_failed_title)) },
+            text = { Text(stringResource(R.string.settings_export_failed_body)) },
+            confirmButton = {
+                TextButton(onClick = viewModel::dismissExportError) {
                     Text(stringResource(R.string.common_ok))
                 }
             },
@@ -610,7 +624,11 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
         },
         onUpgradeTapped = { navController.navigate(NavRoutes.Paywall.route) },
         onExportCsv = {
-            viewModel.exportCsv(context)
+            if (isPro) {
+                viewModel.exportCsv(context)
+            } else {
+                navController.navigate(NavRoutes.Paywall.route)
+            }
         },
         onBackupClick = { viewModel.requestFullSync() },
         onSignInClick = { navController.navigate(NavRoutes.SignIn.route) },

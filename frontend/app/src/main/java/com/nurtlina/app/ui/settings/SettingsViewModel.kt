@@ -22,16 +22,22 @@ import com.nurtlina.app.domain.model.UserAccount
 import com.nurtlina.app.domain.model.UserSettings
 import com.nurtlina.app.domain.repository.AuthRepository
 import com.nurtlina.app.domain.repository.BabyRepository
+import com.nurtlina.app.domain.repository.DiaperLogRepository
+import com.nurtlina.app.domain.repository.FeedLogRepository
 import com.nurtlina.app.domain.repository.SettingsRepository
 import com.nurtlina.app.domain.repository.SyncRepository
+import com.nurtlina.app.domain.repository.SleepLogRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.time.Instant
 import javax.inject.Inject
 
 @HiltViewModel
@@ -39,6 +45,9 @@ class SettingsViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
     private val settingsRepository: SettingsRepository,
     private val babyRepository: BabyRepository,
+    private val feedLogRepository: FeedLogRepository,
+    private val diaperLogRepository: DiaperLogRepository,
+    private val sleepLogRepository: SleepLogRepository,
     private val authRepository: AuthRepository,
     private val syncRepository: SyncRepository,
     private val entitlementManager: EntitlementManager,
@@ -216,28 +225,50 @@ class SettingsViewModel @Inject constructor(
 
     // ── CSV export ─────────────────────────────────────────────────────────
 
+    private val _exportFailed = MutableStateFlow(false)
+    val exportFailed: StateFlow<Boolean> = _exportFailed.asStateFlow()
+
+    fun dismissExportError() {
+        _exportFailed.value = false
+    }
+
     fun exportCsv(context: Context) {
         viewModelScope.launch {
-            try {
-                val babyId = settings.value?.selectedBabyId ?: return@launch
-                val b = babies.value.firstOrNull { it.id == babyId } ?: return@launch
-                val file = java.io.File(context.cacheDir, "nurtlina_${b.name}.csv")
-                file.bufferedWriter().use { writer ->
-                    writer.write("type,time,amount_ml,note\n")
-                    writer.write("# Export Nurtlina data for ${b.name}\n")
-                    writer.write("# Sync your data first via Settings → Backup\n")
+            runCatching {
+                val babyId = settings.value?.selectedBabyId
+                    ?: babies.value.firstOrNull()?.id
+                    ?: error("No baby available for export")
+                val rangeStart = Instant.ofEpochMilli(Long.MIN_VALUE)
+                val rangeEnd = Instant.ofEpochMilli(Long.MAX_VALUE)
+                val csv = withContext(Dispatchers.IO) {
+                    val feeds = feedLogRepository.getByBabyAndRange(babyId, rangeStart, rangeEnd)
+                    val diapers = diaperLogRepository.getByBabyAndRange(babyId, rangeStart, rangeEnd)
+                    val sleeps = sleepLogRepository.getByBabyAndRange(babyId, rangeStart, rangeEnd)
+                    CareLogCsvExporter.export(feeds, diapers, sleeps)
+                }
+                val file = withContext(Dispatchers.IO) {
+                    val exportDirectory = java.io.File(context.cacheDir, "exports").apply { mkdirs() }
+                    java.io.File(exportDirectory, "nurtlina_export_${System.currentTimeMillis()}.csv")
+                        .also { it.writeText(csv) }
                 }
                 val uri = FileProvider.getUriForFile(
-                    context, "${context.packageName}.fileprovider", file
+                    context,
+                    "${context.packageName}.fileprovider",
+                    file,
                 )
                 context.startActivity(
-                    Intent(Intent.ACTION_SEND).apply {
-                        type = "text/csv"
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }.let { Intent.createChooser(it, appContext.getString(R.string.settings_export_csv)) }
+                    Intent.createChooser(
+                        Intent(Intent.ACTION_SEND).apply {
+                            type = "text/csv"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        },
+                        appContext.getString(R.string.settings_export_csv),
+                    )
                 )
-            } catch (_: Exception) { /* non-critical */ }
+            }.onFailure {
+                _exportFailed.value = true
+            }
         }
     }
 

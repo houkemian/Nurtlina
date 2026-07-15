@@ -104,8 +104,8 @@
 
 ### 阶段 2：发布前验收
 
-- Android `./gradlew :frontend:app:testDebugUnitTest` 通过。
-- `./gradlew :frontend:app:assembleDebug` 构建通过。
+- Android `bash gradlew testDebugUnitTest` 通过（2026-07-15 已验证）。
+- Android `bash gradlew assembleDebug` 构建通过（2026-07-15 已验证）。
 - 后端 `uv run pytest` 通过。
 - 后端测试不能依赖生产 secret。
 - Alembic migration 在空库可执行。

@@ -4,6 +4,8 @@
 > 评审范围：Android Kotlin/Compose、Room、本地同步队列、FastAPI 后端、Firebase/Firestore 配置、测试与现有项目文档  
 > 结论等级：MVP 主路径可继续推进，但后端 Bottle 残留与发布配置是当前最大阻塞
 
+> **状态更新（2026-07-15）**：本文保留 2026-07-10 的历史审计快照。此后 Bottle 系统与相关测试已迁移/清理，Logs 编辑和日期选择、Onboarding 通知权限、Pro 本地 CSV 导出与分享、FAQ，以及中英文文案补齐均已完成；`assembleDebug` 与 `testDebugUnitTest` 已通过。仍应以最新任务规划文档中的未完成项为准。
+
 ---
 
 ## 1. 执行摘要

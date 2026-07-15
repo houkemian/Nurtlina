@@ -638,4 +638,7 @@
     <string name="signin_error_google_in_progress">Google sign-in is already in progress.</string>
     <string name="signin_error_google_with_code">Google sign-in failed (code %1$d). Please try again.</string>
 
+    <string name="settings_export_failed_title">Unable to export data</string>
+    <string name="settings_export_failed_body">Your records are still saved on this device. Please try exporting again.</string>
+
 </resources>
