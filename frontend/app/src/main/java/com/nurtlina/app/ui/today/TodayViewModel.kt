@@ -121,7 +121,7 @@ class TodayViewModel @Inject constructor(
             if (baby == null) {
                 flowOf<FeedingPrediction?>(null)
             } else {
-                flowOf(generateFeedingPredictionUseCase(baby.id))
+                flow { emit(generateFeedingPredictionUseCase(baby.id)) }
             }
         }
         .stateIn(
@@ -167,7 +167,7 @@ class TodayViewModel @Inject constructor(
                     endedAt = startedAt,
                     note = note,
                 )
-                nextFeedNotificationScheduler.schedule(log.babyId, log.startedAt)
+                scheduleNextFeedReminder(log)
                 ratingPromptRepository.incrementPositiveAction()
                 ratingPromptRepository.incrementFeedLogged()
                 onLogged()
@@ -188,7 +188,7 @@ class TodayViewModel @Inject constructor(
                     startedAt = now,
                     endedAt = now,
                 )
-                nextFeedNotificationScheduler.schedule(log.babyId, log.startedAt)
+                scheduleNextFeedReminder(log)
                 ratingPromptRepository.incrementPositiveAction()
                 ratingPromptRepository.incrementFeedLogged()
             }.onFailure { _actionError.value = it }
