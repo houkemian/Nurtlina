@@ -153,6 +153,20 @@ class EntitlementManager @Inject constructor(
         }
     }
 
+    /**
+     * Toggles a process-local Pro override for hidden QA flows.
+     *
+     * This is deliberately unavailable in release builds and is never written to the entitlement
+     * cache or backend, so it cannot be mistaken for a purchased entitlement.
+     */
+    fun toggleTestProStatus(): Boolean? {
+        if (!BuildConfig.DEBUG) return null
+        val enabled = !isPro
+        _proStatus.value = if (enabled) ProStatus.LIFETIME else ProStatus.FREE
+        Log.i(TAG, "Debug Pro override ${if (enabled) "enabled" else "disabled"}.")
+        return enabled
+    }
+
     private suspend fun findPackageForProduct(productId: String): Package? {
         val offering = Purchases.sharedInstance.awaitOfferings().current ?: return null
         val preferredPackageIdentifier = when (productId) {

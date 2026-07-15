@@ -523,6 +523,8 @@
     <string name="settings_privacy_policy">Privacy Policy</string>
     <string name="settings_contact_support">Contact Support</string>
     <string name="settings_app_version">Version %1$s</string>
+    <string name="settings_test_pro_enabled">Test Pro enabled</string>
+    <string name="settings_test_pro_disabled">Test Pro disabled</string>
     <string name="settings_edit_baby_cd">Edit baby profile</string>
     <string name="settings_baby_name_label">Baby nickname</string>
     <string name="settings_unit_ml">mL</string>

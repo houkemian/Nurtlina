@@ -2,6 +2,7 @@ package com.nurtlina.app.ui.settings
 
 import android.content.Intent
 import android.net.Uri
+import android.os.SystemClock
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.nurtlina.app.BuildConfig
 import com.nurtlina.app.R
 import com.nurtlina.app.domain.model.*
 import com.nurtlina.app.ui.NurtlinaDialog
@@ -95,10 +97,13 @@ fun SettingsScreen(
     onPrivacyPolicyClick: () -> Unit,
     onTermsClick: () -> Unit,
     onContactSupportClick: () -> Unit,
+    onTestProToggle: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var showSourcesPage by remember { mutableStateOf(false) }
     var showEditBabyDialog by remember { mutableStateOf(false) }
+    var versionTapCount by remember { mutableIntStateOf(0) }
+    var lastVersionTapAt by remember { mutableLongStateOf(0L) }
 
     if (showSourcesPage) {
         SafeSourcesPage(onBack = { showSourcesPage = false })
@@ -279,6 +284,23 @@ fun SettingsScreen(
                 icon = Icons.Outlined.Info,
                 label = "",
                 value = stringResource(R.string.settings_app_version, appVersion),
+                onClick = if (BuildConfig.DEBUG) {
+                    {
+                        val now = SystemClock.elapsedRealtime()
+                        versionTapCount = if (now - lastVersionTapAt <= VERSION_TAP_TIMEOUT_MS) {
+                            versionTapCount + 1
+                        } else {
+                            1
+                        }
+                        lastVersionTapAt = now
+                        if (versionTapCount >= VERSION_TAPS_TO_TOGGLE_PRO) {
+                            versionTapCount = 0
+                            onTestProToggle()
+                        }
+                    }
+                } else {
+                    null
+                },
             )
 
             Spacer(Modifier.height(24.dp))
@@ -865,10 +887,12 @@ private fun SettingsInfoRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     value: String,
+    onClick: (() -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -893,6 +917,9 @@ private fun SettingsInfoRow(
         )
     }
 }
+
+private const val VERSION_TAPS_TO_TOGGLE_PRO = 8
+private const val VERSION_TAP_TIMEOUT_MS = 2_000L
 
 // ---------------------------------------------------------------------------
 // Safety Sources sub-page

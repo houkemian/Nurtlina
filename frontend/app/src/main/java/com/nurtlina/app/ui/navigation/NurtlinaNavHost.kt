@@ -7,6 +7,7 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
@@ -646,6 +647,16 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
                     data = Uri.parse("mailto:support@nurtlina.app")
                 }
             )
+        },
+        onTestProToggle = {
+            viewModel.toggleTestProStatus()?.let { enabled ->
+                val message = if (enabled) {
+                    R.string.settings_test_pro_enabled
+                } else {
+                    R.string.settings_test_pro_disabled
+                }
+                Toast.makeText(context, context.getString(message), Toast.LENGTH_SHORT).show()
+            }
         },
     )
 }

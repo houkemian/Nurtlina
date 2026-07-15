@@ -93,6 +93,8 @@ class SettingsViewModel @Inject constructor(
             initialValue = ProStatus.UNKNOWN,
         )
 
+    fun toggleTestProStatus(): Boolean? = entitlementManager.toggleTestProStatus()
+
     // ── Sync state ───────────────────────────────────────────────────────────
 
     val syncState: StateFlow<SyncState> = syncRepository

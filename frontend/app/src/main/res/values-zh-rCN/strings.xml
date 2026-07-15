@@ -441,6 +441,8 @@
 
     <!-- Settings -->
     <string name="settings_app_version">版本 %1$s</string>
+    <string name="settings_test_pro_enabled">测试 Pro 已开启</string>
+    <string name="settings_test_pro_disabled">测试 Pro 已关闭</string>
     <string name="settings_baby_birth_date_not_set">点击设置出生日期</string>
     <string name="settings_baby_birth_date_value">出生于 %1$s</string>
     <string name="settings_baby_name_label">宝宝昵称</string>
