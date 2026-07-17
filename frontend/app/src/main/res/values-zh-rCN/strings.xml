@@ -345,8 +345,8 @@
     <string name="insights_feed_trend_header">喂奶趋势</string>
     <string name="insights_feeds_label">喂奶</string>
     <string name="insights_no_data">此时段暂无数据</string>
-    <string name="insights_pro_banner_body">订阅 Pro 后可查看 14 天和 30 天趋势。</string>
-    <string name="insights_pro_banner_title">解锁更长期趋势</string>
+    <string name="insights_pro_banner_body">升级 Pro 后可查看喂奶、尿裤和睡眠趋势。</string>
+    <string name="insights_pro_banner_title">解锁 7 天趋势</string>
     <string name="insights_range_14d">14 天</string>
     <string name="insights_range_30d">30 天</string>
     <string name="insights_range_7d">7 天</string>

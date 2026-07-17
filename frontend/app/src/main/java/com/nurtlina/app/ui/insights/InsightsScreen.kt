@@ -65,7 +65,7 @@ typealias InsightsProData = InsightsTrendData
  * @param isPro          Whether the user has a Pro subscription.
  * @param useOz          Display amounts in oz (false = ml).
  * @param selectedRange  Currently selected trend date range (pro only).
- * @param weeklyData     7-day trend data — always shown for all users.
+ * @param weeklyData     7-day trend data for Pro users.
  * @param proData        Extended-range trend data for Pro users (14d / 30d).
  * @param onRangeSelected Called when user selects a different date range.
  * @param onUpgradeTapped Called when the user taps the upgrade banner.
@@ -111,8 +111,8 @@ fun InsightsScreen(
             // ---- Disclaimer (always visible) ----
             DisclaimerCard()
 
-            // ---- 7-Day trends (always visible for all users) ----
-            if (weeklyData != null) {
+            // ---- Pro: 7-Day trends ----
+            if (isPro && weeklyData != null) {
                 SectionHeader(stringResource(R.string.insights_7day_trend_header))
 
                 TrendChartCard(
@@ -170,7 +170,7 @@ fun InsightsScreen(
                     )
                 }
             } else if (!isPro) {
-                // ---- Free: upgrade banner (below 7-day charts) ----
+                // ---- Free: trend upgrade entry ----
                 UpgradeBanner(onUpgradeTapped = onUpgradeTapped)
             }
 

@@ -442,8 +442,8 @@
     <string name="insights_chart_cd">Trend chart</string>
     <string name="insights_no_data">No data for this period</string>
     <string name="insights_7day_trend_header">7-Day Trends</string>
-    <string name="insights_pro_banner_title">Unlock longer trends</string>
-    <string name="insights_pro_banner_body">See 14 and 30-day trends with a Pro subscription.</string>
+    <string name="insights_pro_banner_title">Unlock 7-day trends</string>
+    <string name="insights_pro_banner_body">See feeding, diaper, and sleep trends with Pro.</string>
     <string name="insights_upgrade_pro">Upgrade to Pro</string>
 
     <!-- ===== Log Edit Sheet ===== -->

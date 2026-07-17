@@ -112,6 +112,7 @@ fun SettingsScreen(
 
     if (showEditBabyDialog) {
         EditBabyDialog(
+            title = stringResource(R.string.settings_baby_name_label),
             currentName = baby?.name.orEmpty(),
             currentBirthDate = baby?.birthDate,
             onSave = { name, birthDate ->
@@ -404,7 +405,8 @@ private fun BabyProfileRow(baby: Baby?, onEditBaby: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EditBabyDialog(
+internal fun EditBabyDialog(
+    title: String,
     currentName: String,
     currentBirthDate: LocalDate?,
     onSave: (name: String, birthDate: LocalDate?) -> Unit,
@@ -417,7 +419,7 @@ private fun EditBabyDialog(
     NurtlinaDialog(
         onDismissRequest = onDismiss,
         icon = Icons.Outlined.ChildCare,
-        title = stringResource(R.string.settings_baby_name_label),
+        title = title,
         confirmButton = {
             Button(
                 onClick = { onSave(name.trim(), birthDate) },

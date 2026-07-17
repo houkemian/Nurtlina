@@ -22,6 +22,7 @@ import com.nurtlina.app.domain.usecase.feeding.GenerateFeedingPredictionUseCase
 import com.nurtlina.app.domain.usecase.summary.GetTodaySummaryUseCase
 import com.nurtlina.app.domain.usecase.diaper.LogDiaperUseCase
 import com.nurtlina.app.domain.usecase.feed.LogFeedUseCase
+import com.nurtlina.app.domain.usecase.baby.ManageBabyUseCase
 import com.nurtlina.app.domain.usecase.sleep.SleepUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -44,6 +45,7 @@ class TodayViewModel @Inject constructor(
     private val feedLogRepository: FeedLogRepository,
     private val getTodaySummaryUseCase: GetTodaySummaryUseCase,
     private val logFeedUseCase: LogFeedUseCase,
+    private val manageBabyUseCase: ManageBabyUseCase,
     private val logDiaperUseCase: LogDiaperUseCase,
     private val sleepUseCase: SleepUseCase,
     private val settingsRepository: SettingsRepository,
@@ -149,6 +151,23 @@ class TodayViewModel @Inject constructor(
         }
     }
 
+    fun addBaby(name: String, birthDate: java.time.LocalDate?) {
+        val trimmedName = name.trim()
+        if (trimmedName.isBlank()) return
+        viewModelScope.launch {
+            runCatching {
+                val baby = manageBabyUseCase.create(
+                    name = trimmedName,
+                    birthDate = birthDate,
+                    avatarColor = null,
+                )
+                val current = settingsRepository.get()
+                settingsRepository.update(current.copy(selectedBabyId = baby.id))
+                analytics.logBabyCreated()
+            }.onFailure { _actionError.value = it }
+        }
+    }
+
     fun logFeed(
         milkType: MilkType,
         amountMl: Double?,
@@ -213,6 +232,7 @@ class TodayViewModel @Inject constructor(
             if (!prediction.isLearning) {
                 nextFeedNotificationScheduler.scheduleWindow(
                     babyId = feedLog.babyId,
+                    lastFeedStartedAt = feedLog.startedAt,
                     windowStart = prediction.windowStart,
                 )
             }

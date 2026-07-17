@@ -303,4 +303,6 @@
     <string name="rating_prompt_maybe_later">Plus tard</string>
     <string name="rating_prompt_no_thanks">Non merci</string>
 
+    <string name="insights_pro_banner_title">Débloquez les tendances sur 7 jours</string>
+    <string name="insights_pro_banner_body">Consultez les tendances d’alimentation, de couches et de sommeil avec Pro.</string>
 </resources>

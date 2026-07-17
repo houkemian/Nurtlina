@@ -303,4 +303,6 @@
     <string name="rating_prompt_maybe_later">Vielleicht später</string>
     <string name="rating_prompt_no_thanks">Nein danke</string>
 
+    <string name="insights_pro_banner_title">7-Tage-Trends freischalten</string>
+    <string name="insights_pro_banner_body">Mit Pro siehst du Trends zu Fütterungen, Windeln und Schlaf.</string>
 </resources>

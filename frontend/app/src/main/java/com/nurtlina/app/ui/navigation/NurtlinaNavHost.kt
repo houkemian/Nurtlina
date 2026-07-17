@@ -97,6 +97,7 @@ import com.nurtlina.app.ui.paywall.PaywallScreen
 import com.nurtlina.app.ui.paywall.PaywallViewModel
 import com.nurtlina.app.ui.settings.SettingsScreen
 import com.nurtlina.app.ui.settings.SettingsViewModel
+import com.nurtlina.app.ui.settings.EditBabyDialog
 import com.nurtlina.app.ui.today.FeedingStatusUiState
 import com.nurtlina.app.ui.today.TodayScreen
 import com.nurtlina.app.ui.today.TodayUiState
@@ -318,6 +319,20 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
     val summary = todaySummary ?: emptyTodaySummary()
     val currentSettings = settings ?: UserSettings()
     val unitType = currentSettings.unit
+    var showAddBabyDialog by remember { mutableStateOf(false) }
+
+    if (showAddBabyDialog) {
+        EditBabyDialog(
+            title = stringResource(R.string.baby_add),
+            currentName = "",
+            currentBirthDate = null,
+            onSave = { name, birthDate ->
+                viewModel.addBaby(name, birthDate)
+                showAddBabyDialog = false
+            },
+            onDismiss = { showAddBabyDialog = false },
+        )
+    }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -373,7 +388,7 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
         onSelectBaby = { viewModel.selectBaby(it.id) },
         onAddBaby = {
             if (isPro) {
-                // Pro: navigate directly to baby creation (future screen)
+                showAddBabyDialog = true
             } else {
                 navController.navigate(NavRoutes.Paywall.route)
             }

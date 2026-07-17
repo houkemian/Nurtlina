@@ -14,6 +14,7 @@ import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import com.nurtlina.app.MainActivity
 import com.nurtlina.app.R
+import java.time.Instant
 
 class NotificationReceiver : BroadcastReceiver() {
 
@@ -21,6 +22,7 @@ class NotificationReceiver : BroadcastReceiver() {
         const val EXTRA_BABY_ID = "baby_id"
         const val EXTRA_NOTIF_ID = "notif_id"
         const val EXTRA_NOTIF_TYPE = "notif_type"
+        const val EXTRA_LAST_FEED_STARTED_AT = "last_feed_started_at"
 
         // v2.0: only next-feed reminders are active; bottle-timer types below are
         // kept for backward compatibility with any still-pending scheduled alarms.
@@ -39,6 +41,14 @@ class NotificationReceiver : BroadcastReceiver() {
         // v2.0: bottle-timer notification types are no longer scheduled.
         // Ignore them gracefully if they arrive from stale pending intents.
         if (notifType != TYPE_NEXT_FEED) return
+
+        val lastFeedStartedAtMillis = intent.getLongExtra(EXTRA_LAST_FEED_STARTED_AT, Long.MIN_VALUE)
+        if (lastFeedStartedAtMillis == Long.MIN_VALUE) return
+        if (!FeedReminderPolicy.isWithinReminderAge(
+                lastFeedStartedAt = Instant.ofEpochMilli(lastFeedStartedAtMillis),
+                now = Instant.now(),
+            )
+        ) return
 
         val title = context.getString(R.string.notif_next_feed_title)
         val body = context.getString(R.string.notif_next_feed_body)

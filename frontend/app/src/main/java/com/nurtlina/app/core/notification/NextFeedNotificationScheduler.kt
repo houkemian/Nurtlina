@@ -19,22 +19,28 @@ class NextFeedNotificationScheduler @Inject constructor(
 
     fun schedule(babyId: String, lastFeedStartedAt: Instant, intervalMinutes: Int = FeedReminderConfig.defaultFeedIntervalMinutes) {
         val triggerAt = lastFeedStartedAt.plus(Duration.ofMinutes(intervalMinutes.toLong()))
-        scheduleAt(babyId, triggerAt)
+        scheduleAt(babyId, lastFeedStartedAt, triggerAt)
     }
 
     /** Schedule a reminder to fire at the beginning of a feeding window. */
-    fun scheduleWindow(babyId: String, windowStart: Instant) {
-        scheduleAt(babyId, windowStart)
+    fun scheduleWindow(babyId: String, lastFeedStartedAt: Instant, windowStart: Instant) {
+        scheduleAt(babyId, lastFeedStartedAt, windowStart)
     }
 
-    private fun scheduleAt(babyId: String, triggerAt: Instant) {
-        if (!triggerAt.isAfter(Instant.now())) return
+    private fun scheduleAt(babyId: String, lastFeedStartedAt: Instant, triggerAt: Instant) {
+        val now = Instant.now()
+        if (!FeedReminderPolicy.isWithinReminderAge(lastFeedStartedAt, now)) {
+            cancel(babyId)
+            return
+        }
+        if (!triggerAt.isAfter(now)) return
 
         val notifId = NotificationIds.nextFeedReminderInt(babyId)
         val intent = Intent(context, NotificationReceiver::class.java).apply {
             putExtra(NotificationReceiver.EXTRA_BABY_ID, babyId)
             putExtra(NotificationReceiver.EXTRA_NOTIF_ID, notifId)
             putExtra(NotificationReceiver.EXTRA_NOTIF_TYPE, NotificationReceiver.TYPE_NEXT_FEED)
+            putExtra(NotificationReceiver.EXTRA_LAST_FEED_STARTED_AT, lastFeedStartedAt.toEpochMilli())
         }
         val pi = PendingIntent.getBroadcast(
             context,

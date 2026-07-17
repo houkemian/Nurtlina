@@ -43,7 +43,7 @@ class InsightsViewModel @Inject constructor(
             initialValue = null,
         )
 
-    // ── 7-Day trend data (always available) ───────────────────────────────────
+    // ── 7-Day trend data (displayed for Pro users) ────────────────────────────
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val weeklySummary: StateFlow<InsightsTrendData?> = selectedBaby
