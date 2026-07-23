@@ -305,4 +305,8 @@
 
     <string name="insights_pro_banner_title">Desbloquea las tendencias de 7 días</string>
     <string name="insights_pro_banner_body">Consulta tendencias de alimentación, pañales y sueño con Pro.</string>
+    <string name="settings_select_baby_cd">Cambiar a %1$s</string>
+    <string name="settings_edit_named_baby_cd">Editar el perfil de %1$s</string>
+    <string name="settings_current_baby">Bebé actual</string>
+    <string name="settings_baby_birth_date_empty">Fecha de nacimiento sin establecer</string>
 </resources>

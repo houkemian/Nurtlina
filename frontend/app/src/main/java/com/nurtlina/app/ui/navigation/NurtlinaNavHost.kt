@@ -65,6 +65,8 @@ import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.nurtlina.app.R
 import com.nurtlina.app.core.notification.FeedReminderConfig
+import com.nurtlina.app.core.notification.FeedingReminderLaunch
+import com.nurtlina.app.core.analytics.Analytics
 import com.nurtlina.app.data.billing.EntitlementManager
 import com.nurtlina.app.data.billing.ProStatus
 import com.nurtlina.app.domain.model.DiaperType
@@ -104,6 +106,7 @@ import com.nurtlina.app.ui.today.TodayUiState
 import com.nurtlina.app.ui.today.TodayViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -120,8 +123,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AppViewModel @Inject constructor(
-    settingsRepository: SettingsRepository,
+    private val settingsRepository: SettingsRepository,
     entitlementManager: EntitlementManager,
+    private val analytics: Analytics,
 ) : ViewModel() {
 
     val onboardingComplete: StateFlow<Boolean?> = settingsRepository
@@ -158,6 +162,14 @@ class AppViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000L),
             initialValue = null,
         )
+
+    fun openFeedingReminder(babyId: String) {
+        viewModelScope.launch {
+            val current = settingsRepository.get()
+            settingsRepository.update(current.copy(selectedBabyId = babyId))
+            analytics.logFeedingReminderClicked()
+        }
+    }
 }
 
 // ── Navigation host ──────────────────────────────────────────────────────────
@@ -171,7 +183,11 @@ private const val PLAY_STORE_APP_WEB_URL =
     "https://play.google.com/store/apps/details?id=com.nurtlina.app"
 
 @Composable
-fun NurtlinaNavHost(modifier: Modifier = Modifier) {
+fun NurtlinaNavHost(
+    modifier: Modifier = Modifier,
+    feedingReminderLaunch: FeedingReminderLaunch? = null,
+    onFeedingReminderLaunchConsumed: (FeedingReminderLaunch) -> Unit = {},
+) {
 
     val navController = rememberNavController()
     val appViewModel: AppViewModel = hiltViewModel()
@@ -192,6 +208,20 @@ fun NurtlinaNavHost(modifier: Modifier = Modifier) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val showBottomBar = currentRoute in mainTabRoutes
+
+    LaunchedEffect(feedingReminderLaunch?.token, onboardingComplete) {
+        val launch = feedingReminderLaunch ?: return@LaunchedEffect
+        if (onboardingComplete != true) return@LaunchedEffect
+        appViewModel.openFeedingReminder(launch.babyId)
+        navController.navigate(NavRoutes.Today.route) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
+        onFeedingReminderLaunchConsumed(launch)
+    }
 
     Scaffold(
         modifier = modifier,
@@ -339,10 +369,6 @@ private fun TodayRoute(navController: NavController, isPro: Boolean) {
             delay(60_000L)
             now = Instant.now()
         }
-    }
-
-    LaunchedEffect(latestFeed?.id, latestFeed?.startedAt) {
-        latestFeed?.let(viewModel::scheduleNextFeedReminder)
     }
 
     LaunchedEffect(
@@ -607,15 +633,14 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
     }
 
     SettingsScreen(
-        baby = selectedBaby,
+        babies = babies,
         settings = currentSettings,
         isPro = isPro,
         currentUser = currentUser,
         notificationPermissionGranted = notificationPermissionGranted,
         appVersion = "1.0.0",
-        onBabyUpdated = { name, birthDate ->
-            selectedBaby?.let { viewModel.updateBaby(it.id, name, birthDate) }
-        },
+        onBabySelected = viewModel::updateSelectedBaby,
+        onBabyUpdated = viewModel::updateBaby,
         onUnitChanged = viewModel::updateUnitType,
         onGuidelineRegionChanged = viewModel::updateGuidelineRegion,
         onLanguageSelected = viewModel::updateLanguage,

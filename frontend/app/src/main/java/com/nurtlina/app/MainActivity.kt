@@ -13,10 +13,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nurtlina.app.core.notification.NotificationReceiver
+import com.nurtlina.app.core.notification.FeedingReminderLaunch
 import com.nurtlina.app.domain.repository.RatingPromptRepository
 import com.nurtlina.app.ui.navigation.AppViewModel
 import com.nurtlina.app.ui.navigation.NurtlinaNavHost
@@ -32,9 +35,12 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var ratingPromptRepository: RatingPromptRepository
 
+    private var feedingReminderLaunch by mutableStateOf<FeedingReminderLaunch?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        captureFeedingReminderLaunch(intent)
         recordRatingPromptLaunchState(intent)
         setContent {
             val appViewModel: AppViewModel = hiltViewModel()
@@ -71,7 +77,14 @@ class MainActivity : AppCompatActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    NurtlinaNavHost()
+                    NurtlinaNavHost(
+                        feedingReminderLaunch = feedingReminderLaunch,
+                        onFeedingReminderLaunchConsumed = { launch ->
+                            if (feedingReminderLaunch?.token == launch.token) {
+                                feedingReminderLaunch = null
+                            }
+                        },
+                    )
                 }
             }
         }
@@ -80,7 +93,16 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        captureFeedingReminderLaunch(intent)
         recordRatingPromptLaunchState(intent)
+    }
+
+    private fun captureFeedingReminderLaunch(intent: Intent?) {
+        if (intent?.getStringExtra(NotificationReceiver.EXTRA_NOTIF_TYPE) !=
+            NotificationReceiver.TYPE_NEXT_FEED
+        ) return
+        val babyId = intent.getStringExtra(NotificationReceiver.EXTRA_BABY_ID) ?: return
+        feedingReminderLaunch = FeedingReminderLaunch(babyId = babyId)
     }
 
     private fun recordRatingPromptLaunchState(intent: Intent?) {

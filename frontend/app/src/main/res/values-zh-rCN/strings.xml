@@ -450,6 +450,10 @@
     <string name="settings_backup_label">备份与同步</string>
     <string name="settings_contact_support">联系支持</string>
     <string name="settings_edit_baby_cd">编辑宝宝资料</string>
+    <string name="settings_select_baby_cd">切换到%1$s</string>
+    <string name="settings_edit_named_baby_cd">编辑%1$s的资料</string>
+    <string name="settings_current_baby">当前宝宝</string>
+    <string name="settings_baby_birth_date_empty">未设置出生日期</string>
     <string name="settings_export_csv">导出 CSV</string>
     <string name="settings_feed_interval_120min">2 小时</string>
     <string name="settings_feed_interval_150min">2.5 小时</string>

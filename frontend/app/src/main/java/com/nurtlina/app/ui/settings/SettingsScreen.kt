@@ -43,14 +43,14 @@ import java.time.LocalDate
 /**
  * Stateless Settings screen. State hoisted to ViewModel.
  *
- * @param baby                    Currently selected baby. Null if none added yet.
+ * @param babies                  All active baby profiles.
  * @param settings                Current [UserSettings] values.
  * @param isPro                   Whether the user has an active Pro subscription.
  * @param currentUser             Currently signed-in account. Null while loading.
  * @param notificationPermissionGranted Whether Android allows this app to post notifications.
  * @param appVersion              Displayed in the About section.
- * @param onEditBaby              Reserved for future navigation to a dedicated baby-profile screen.
- * @param onBabyUpdated           User saved baby name and/or birth date from the inline dialog.
+ * @param onBabySelected          User selected the active baby.
+ * @param onBabyUpdated           User saved a baby's name and/or birth date.
  * @param onUnitChanged           User changed volume unit.
  * @param onGuidelineRegionChanged User changed guideline region.
  * @param onLanguageSelected      User selected a language code (e.g. "en", "zh").
@@ -72,14 +72,14 @@ import java.time.LocalDate
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    baby: Baby?,
+    babies: List<Baby>,
     settings: UserSettings,
     isPro: Boolean,
     currentUser: UserAccount?,
     notificationPermissionGranted: Boolean = true,
     appVersion: String,
-    onEditBaby: () -> Unit = {},
-    onBabyUpdated: (name: String, birthDate: LocalDate?) -> Unit,
+    onBabySelected: (babyId: String) -> Unit,
+    onBabyUpdated: (babyId: String, name: String, birthDate: LocalDate?) -> Unit,
     onUnitChanged: (UnitType) -> Unit,
     onGuidelineRegionChanged: (GuidelineRegion) -> Unit,
     onLanguageSelected: (String) -> Unit,
@@ -101,7 +101,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     var showSourcesPage by remember { mutableStateOf(false) }
-    var showEditBabyDialog by remember { mutableStateOf(false) }
+    var babyBeingEdited by remember { mutableStateOf<Baby?>(null) }
     var versionTapCount by remember { mutableIntStateOf(0) }
     var lastVersionTapAt by remember { mutableLongStateOf(0L) }
 
@@ -110,16 +110,16 @@ fun SettingsScreen(
         return
     }
 
-    if (showEditBabyDialog) {
+    babyBeingEdited?.let { baby ->
         EditBabyDialog(
             title = stringResource(R.string.settings_baby_name_label),
-            currentName = baby?.name.orEmpty(),
-            currentBirthDate = baby?.birthDate,
+            currentName = baby.name,
+            currentBirthDate = baby.birthDate,
             onSave = { name, birthDate ->
-                onBabyUpdated(name, birthDate)
-                showEditBabyDialog = false
+                onBabyUpdated(baby.id, name, birthDate)
+                babyBeingEdited = null
             },
-            onDismiss = { showEditBabyDialog = false },
+            onDismiss = { babyBeingEdited = null },
         )
     }
 
@@ -152,7 +152,16 @@ fun SettingsScreen(
 
             // ---- Baby profile ----
             SettingsSectionHeader(stringResource(R.string.settings_section_baby_profile))
-            BabyProfileRow(baby = baby, onEditBaby = { showEditBabyDialog = true })
+            babies.forEachIndexed { index, baby ->
+                BabyProfileRow(
+                    baby = baby,
+                    isSelected = baby.id == settings.selectedBabyId ||
+                        (settings.selectedBabyId == null && index == 0),
+                    onSelectBaby = { onBabySelected(baby.id) },
+                    onEditBaby = { babyBeingEdited = baby },
+                )
+                if (index < babies.lastIndex) SettingsDivider()
+            }
 
             SettingsDivider()
 
@@ -352,54 +361,67 @@ private fun AccountRow(
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun BabyProfileRow(baby: Baby?, onEditBaby: () -> Unit) {
-    val editCd = stringResource(R.string.settings_edit_baby_cd)
+private fun BabyProfileRow(
+    baby: Baby,
+    isSelected: Boolean,
+    onSelectBaby: () -> Unit,
+    onEditBaby: () -> Unit,
+) {
+    val selectCd = stringResource(R.string.settings_select_baby_cd, baby.name)
+    val editCd = stringResource(R.string.settings_edit_named_baby_cd, baby.name)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 48.dp)
-            .clickable(onClick = onEditBaby)
+            .defaultMinSize(minHeight = 64.dp)
+            .clickable(onClick = onSelectBaby)
             .padding(horizontal = 16.dp, vertical = 12.dp)
-            .semantics { contentDescription = editCd },
+            .semantics { contentDescription = selectCd },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = Icons.Outlined.ChildCare,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = if (isSelected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(24.dp),
         )
         Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = stringResource(R.string.settings_baby_name_label),
-                style = MaterialTheme.typography.bodyMedium,
+                text = baby.name,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
             )
-            if (baby != null) {
-                Text(
-                    text = baby.name,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                baby.birthDate?.let { bd ->
-                    Text(
-                        text = stringResource(
-                            R.string.settings_baby_birth_date_value,
-                            bd.format(java.time.format.DateTimeFormatter.ofLocalizedDate(
-                                java.time.format.FormatStyle.MEDIUM
-                            )),
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+            Text(
+                text = baby.birthDate?.let { bd ->
+                    stringResource(
+                        R.string.settings_baby_birth_date_value,
+                        bd.format(java.time.format.DateTimeFormatter.ofLocalizedDate(
+                            java.time.format.FormatStyle.MEDIUM
+                        )),
                     )
-                }
+                } ?: stringResource(R.string.settings_baby_birth_date_empty),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (isSelected) {
+                Text(
+                    text = stringResource(R.string.settings_current_baby),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
             }
         }
-        Icon(
-            imageVector = Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        IconButton(
+            onClick = onEditBaby,
+            modifier = Modifier.semantics { contentDescription = editCd },
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Edit,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -1065,17 +1087,28 @@ private fun SafeSourcesPage(onBack: () -> Unit) {
 
 private fun fakeSettings() = UserSettings()
 
+private fun fakeBaby(id: String, name: String, birthDate: LocalDate?) = Baby(
+    id = id,
+    name = name,
+    birthDate = birthDate,
+    avatarColor = null,
+    createdAt = java.time.Instant.parse("2026-01-01T00:00:00Z"),
+    updatedAt = java.time.Instant.parse("2026-01-01T00:00:00Z"),
+    archivedAt = null,
+)
+
 @Preview(name = "Settings – light", showBackground = true)
 @Composable
 private fun SettingsScreenLightPreview() {
     NurtlinaTheme {
         SettingsScreen(
-            baby = null,
+            babies = emptyList(),
             settings = fakeSettings(),
             isPro = false,
             currentUser = null,
             appVersion = "1.0.0",
-            onBabyUpdated = { _, _ -> }, onUnitChanged = {}, onGuidelineRegionChanged = {},
+            onBabySelected = {},
+            onBabyUpdated = { _, _, _ -> }, onUnitChanged = {}, onGuidelineRegionChanged = {},
             onLanguageSelected = {}, onNotificationsToggled = {}, onReminderTimingChanged = {},
             onFeedIntervalChanged = {}, onNightModeToggled = {}, onManageSubscription = {},
             onUpgradeTapped = {}, onExportCsv = {},
@@ -1091,12 +1124,19 @@ private fun SettingsScreenLightPreview() {
 private fun SettingsScreenProDarkPreview() {
     NurtlinaTheme(darkTheme = true) {
         SettingsScreen(
-            baby = null,
-            settings = fakeSettings().copy(notificationEnabled = true),
+            babies = listOf(
+                fakeBaby("baby-1", "Mia", LocalDate.of(2026, 1, 12)),
+                fakeBaby("baby-2", "Leo", null),
+            ),
+            settings = fakeSettings().copy(
+                notificationEnabled = true,
+                selectedBabyId = "baby-1",
+            ),
             isPro = true,
             currentUser = UserAccount(uid = "uid1", email = "parent@example.com", isAnonymous = false, familyId = "fam1", isProActive = true),
             appVersion = "1.0.0",
-            onBabyUpdated = { _, _ -> }, onUnitChanged = {}, onGuidelineRegionChanged = {},
+            onBabySelected = {},
+            onBabyUpdated = { _, _, _ -> }, onUnitChanged = {}, onGuidelineRegionChanged = {},
             onLanguageSelected = {}, onNotificationsToggled = {}, onReminderTimingChanged = {},
             onFeedIntervalChanged = {}, onNightModeToggled = {}, onManageSubscription = {},
             onUpgradeTapped = {}, onExportCsv = {},

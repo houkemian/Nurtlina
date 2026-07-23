@@ -2,6 +2,7 @@ package com.nurtlina.app.ui.logs
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nurtlina.app.core.notification.NextFeedReminderCoordinator
 import com.nurtlina.app.domain.model.DiaperLog
 import com.nurtlina.app.domain.model.FeedLog
 import com.nurtlina.app.domain.model.SleepLog
@@ -59,6 +60,7 @@ class LogsViewModel @Inject constructor(
     private val diaperLogRepository: DiaperLogRepository,
     private val sleepLogRepository: SleepLogRepository,
     private val settingsRepository: SettingsRepository,
+    private val nextFeedReminderCoordinator: NextFeedReminderCoordinator,
 ) : ViewModel() {
 
     // ── Date selection ───────────────────────────────────────────────────────
@@ -133,7 +135,11 @@ class LogsViewModel @Inject constructor(
     // ── Delete actions ───────────────────────────────────────────────────────
 
     fun deleteFeedLog(feedLogId: String) {
-        viewModelScope.launch { feedLogRepository.delete(feedLogId) }
+        viewModelScope.launch {
+            val babyId = currentBabyId.value
+            feedLogRepository.delete(feedLogId)
+            babyId?.let { nextFeedReminderCoordinator.refreshForBaby(it) }
+        }
     }
 
     fun deleteDiaperLog(diaperLogId: String) {
@@ -163,6 +169,7 @@ class LogsViewModel @Inject constructor(
                             note = draft.note.ifBlank { null },
                         )
                     )
+                    nextFeedReminderCoordinator.refreshForBaby(target.original.babyId)
                 }
                 is LogEditTarget.Diaper -> {
                     val draft = target.draft
@@ -191,7 +198,10 @@ class LogsViewModel @Inject constructor(
     fun deleteEntry(target: LogEditTarget) {
         viewModelScope.launch {
             when (target) {
-                is LogEditTarget.Feed -> feedLogRepository.delete(target.original.id)
+                is LogEditTarget.Feed -> {
+                    feedLogRepository.delete(target.original.id)
+                    nextFeedReminderCoordinator.refreshForBaby(target.original.babyId)
+                }
                 is LogEditTarget.Diaper -> diaperLogRepository.delete(target.original.id)
                 is LogEditTarget.Sleep -> sleepLogRepository.delete(target.original.id)
             }

@@ -14,6 +14,7 @@ import com.nurtlina.app.R
 import com.nurtlina.app.data.billing.EntitlementManager
 import com.nurtlina.app.data.billing.ProStatus
 import com.nurtlina.app.data.sync.SyncWorker
+import com.nurtlina.app.core.notification.NextFeedReminderCoordinator
 import com.nurtlina.app.domain.model.Baby
 import com.nurtlina.app.domain.model.GuidelineRegion
 import com.nurtlina.app.domain.model.SyncState
@@ -52,6 +53,7 @@ class SettingsViewModel @Inject constructor(
     private val syncRepository: SyncRepository,
     private val entitlementManager: EntitlementManager,
     private val workManager: WorkManager,
+    private val nextFeedReminderCoordinator: NextFeedReminderCoordinator,
 ) : ViewModel() {
 
     // ── Settings state ───────────────────────────────────────────────────────
@@ -174,11 +176,11 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun updateNotificationEnabled(enabled: Boolean) {
-        updateSettings { it.copy(notificationEnabled = enabled) }
+        updateSettings(refreshReminders = true) { it.copy(notificationEnabled = enabled) }
     }
 
     fun updateNightModeEnabled(enabled: Boolean) {
-        updateSettings { it.copy(nightModeEnabled = enabled) }
+        updateSettings(refreshReminders = true) { it.copy(nightModeEnabled = enabled) }
     }
 
     fun updateReminderBeforeExpiryMinutes(minutes: Int) {
@@ -194,7 +196,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun updateFeedingReminderEnabled(enabled: Boolean) {
-        updateSettings { it.copy(feedingReminderEnabled = enabled) }
+        updateSettings(refreshReminders = true) { it.copy(feedingReminderEnabled = enabled) }
     }
 
     fun updateSelectedBaby(babyId: String?) {
@@ -214,7 +216,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun updateFeedReminderInterval(minutes: Int) {
-        updateSettings { it.copy(feedReminderIntervalMinutes = minutes) }
+        updateSettings(refreshReminders = true) { it.copy(feedReminderIntervalMinutes = minutes) }
     }
 
     // ── FAQ state ──────────────────────────────────────────────────────────
@@ -276,10 +278,14 @@ class SettingsViewModel @Inject constructor(
 
     // ── Private helpers ──────────────────────────────────────────────────────
 
-    private fun updateSettings(transform: (UserSettings) -> UserSettings) {
+    private fun updateSettings(
+        refreshReminders: Boolean = false,
+        transform: (UserSettings) -> UserSettings,
+    ) {
         val current = settings.value ?: return
         viewModelScope.launch {
             settingsRepository.update(transform(current))
+            if (refreshReminders) nextFeedReminderCoordinator.refreshAll()
         }
     }
 }

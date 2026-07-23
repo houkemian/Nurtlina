@@ -3,7 +3,7 @@ package com.nurtlina.app.ui.today
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nurtlina.app.core.analytics.Analytics
-import com.nurtlina.app.core.notification.NextFeedNotificationScheduler
+import com.nurtlina.app.core.notification.NextFeedReminderCoordinator
 import com.nurtlina.app.domain.model.Baby
 import com.nurtlina.app.domain.model.DiaperType
 import com.nurtlina.app.domain.model.FeedLog
@@ -51,7 +51,7 @@ class TodayViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val ratingPromptRepository: RatingPromptRepository,
     private val ratingPromptEligibility: RatingPromptEligibility,
-    private val nextFeedNotificationScheduler: NextFeedNotificationScheduler,
+    private val nextFeedReminderCoordinator: NextFeedReminderCoordinator,
     private val generateFeedingPredictionUseCase: GenerateFeedingPredictionUseCase,
     private val analytics: Analytics,
 ) : ViewModel() {
@@ -228,14 +228,7 @@ class TodayViewModel @Inject constructor(
 
     fun scheduleNextFeedReminder(feedLog: FeedLog) {
         viewModelScope.launch {
-            val prediction = generateFeedingPredictionUseCase(feedLog.babyId)
-            if (!prediction.isLearning) {
-                nextFeedNotificationScheduler.scheduleWindow(
-                    babyId = feedLog.babyId,
-                    lastFeedStartedAt = feedLog.startedAt,
-                    windowStart = prediction.windowStart,
-                )
-            }
+            nextFeedReminderCoordinator.refreshForBaby(feedLog.babyId)
         }
     }
 

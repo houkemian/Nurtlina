@@ -526,6 +526,10 @@
     <string name="settings_test_pro_enabled">Test Pro enabled</string>
     <string name="settings_test_pro_disabled">Test Pro disabled</string>
     <string name="settings_edit_baby_cd">Edit baby profile</string>
+    <string name="settings_select_baby_cd">Switch to %1$s</string>
+    <string name="settings_edit_named_baby_cd">Edit %1$s’s profile</string>
+    <string name="settings_current_baby">Current baby</string>
+    <string name="settings_baby_birth_date_empty">Birth date not set</string>
     <string name="settings_baby_name_label">Baby nickname</string>
     <string name="settings_unit_ml">mL</string>
     <string name="settings_unit_oz">oz</string>

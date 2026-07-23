@@ -305,4 +305,8 @@
 
     <string name="insights_pro_banner_title">7-Tage-Trends freischalten</string>
     <string name="insights_pro_banner_body">Mit Pro siehst du Trends zu Fütterungen, Windeln und Schlaf.</string>
+    <string name="settings_select_baby_cd">Zu %1$s wechseln</string>
+    <string name="settings_edit_named_baby_cd">Profil von %1$s bearbeiten</string>
+    <string name="settings_current_baby">Aktuelles Baby</string>
+    <string name="settings_baby_birth_date_empty">Geburtsdatum nicht festgelegt</string>
 </resources>

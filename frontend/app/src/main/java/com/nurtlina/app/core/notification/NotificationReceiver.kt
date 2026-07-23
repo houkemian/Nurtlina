@@ -12,11 +12,17 @@ import android.media.AudioAttributes
 import android.os.Build
 import android.provider.Settings
 import androidx.core.app.NotificationCompat
+import com.nurtlina.app.core.analytics.Analytics
 import com.nurtlina.app.MainActivity
 import com.nurtlina.app.R
 import java.time.Instant
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class NotificationReceiver : BroadcastReceiver() {
+
+    @Inject lateinit var analytics: Analytics
 
     companion object {
         const val EXTRA_BABY_ID = "baby_id"
@@ -81,6 +87,7 @@ class NotificationReceiver : BroadcastReceiver() {
             .build()
 
         manager.notify(notifId, notification)
+        analytics.logFeedingReminderSent()
     }
 
     private fun canPostNotifications(context: Context): Boolean {
