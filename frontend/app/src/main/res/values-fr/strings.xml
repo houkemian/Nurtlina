@@ -163,8 +163,6 @@
     <string name="paywall_multi_baby">Suivre plusieurs bébés</string>
     <string name="paywall_full_history">Accès à l\'historique complet</string>
     <string name="paywall_export">Exporter vos données</string>
-    <string name="paywall_backup">Sauvegarde cloud</string>
-    <string name="paywall_custom_reminders">Rappels personnalisés</string>
     <string name="paywall_custom_rules">Règles de minuterie personnalisées</string>
     <string name="paywall_widget_themes">Thèmes de widget</string>
     <string name="paywall_monthly_price">2,99 € / mois</string>
@@ -230,6 +228,14 @@
     <string name="logs_filter_diapers">Couches</string>
     <string name="logs_filter_sleep">Sommeil</string>
     <string name="logs_today">Aujourd\'hui</string>
+    <string name="logs_history_limit_title">L\'historique complet est une fonction Pro</string>
+    <string name="logs_history_limit_body">Les comptes gratuits affichent les 7 derniers jours</string>
+    <string name="logs_history_limit_upgrade">Passer à Pro</string>
+    <string name="widget_description">Affiche le dernier repas de votre bébé et le prochain rappel</string>
+    <string name="widget_last_feed">Dernier repas : %1$s</string>
+    <string name="widget_next_feed">Prochain repas : %1$s</string>
+    <string name="widget_no_feeds">Aucun repas pour l\'instant – appuyez pour enregistrer</string>
+    <string name="widget_learning">Enregistrez quelques repas pour voir le prochain rappel</string>
     <string name="logs_yesterday">Hier</string>
 
     <!-- Insights Screen -->

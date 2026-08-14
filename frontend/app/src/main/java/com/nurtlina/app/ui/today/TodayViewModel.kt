@@ -24,6 +24,7 @@ import com.nurtlina.app.domain.usecase.diaper.LogDiaperUseCase
 import com.nurtlina.app.domain.usecase.feed.LogFeedUseCase
 import com.nurtlina.app.domain.usecase.baby.ManageBabyUseCase
 import com.nurtlina.app.domain.usecase.sleep.SleepUseCase
+import com.nurtlina.app.ui.widget.WidgetRefresher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,6 +54,7 @@ class TodayViewModel @Inject constructor(
     private val ratingPromptEligibility: RatingPromptEligibility,
     private val nextFeedReminderCoordinator: NextFeedReminderCoordinator,
     private val generateFeedingPredictionUseCase: GenerateFeedingPredictionUseCase,
+    private val widgetRefresher: WidgetRefresher,
     private val analytics: Analytics,
 ) : ViewModel() {
 
@@ -229,6 +231,7 @@ class TodayViewModel @Inject constructor(
     fun scheduleNextFeedReminder(feedLog: FeedLog) {
         viewModelScope.launch {
             nextFeedReminderCoordinator.refreshForBaby(feedLog.babyId)
+            widgetRefresher.refresh()
         }
     }
 

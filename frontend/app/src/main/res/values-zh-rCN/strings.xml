@@ -163,8 +163,6 @@
     <string name="paywall_multi_baby">追踪多个宝宝</string>
     <string name="paywall_full_history">完整历史记录</string>
     <string name="paywall_export">导出数据</string>
-    <string name="paywall_backup">云端备份</string>
-    <string name="paywall_custom_reminders">自定义提醒</string>
     <string name="paywall_custom_rules">自定义计时器规则</string>
     <string name="paywall_widget_themes">小组件主题</string>
     <string name="paywall_monthly_price">¥21.99 / 月</string>
@@ -230,6 +228,14 @@
     <string name="logs_filter_diapers">尿裤</string>
     <string name="logs_filter_sleep">睡眠</string>
     <string name="logs_today">今日</string>
+    <string name="logs_history_limit_title">完整历史记录是 Pro 功能</string>
+    <string name="logs_history_limit_body">免费账户仅显示最近 7 天</string>
+    <string name="logs_history_limit_upgrade">升级</string>
+    <string name="widget_description">显示宝宝上次喂奶和下次提醒</string>
+    <string name="widget_last_feed">上次喂奶：%1$s</string>
+    <string name="widget_next_feed">下次喂奶：%1$s</string>
+    <string name="widget_no_feeds">还没有喂奶记录 — 点击记录</string>
+    <string name="widget_learning">记录几次喂奶后可查看下次提醒</string>
     <string name="logs_yesterday">昨日</string>
 
     <!-- Insights Screen -->

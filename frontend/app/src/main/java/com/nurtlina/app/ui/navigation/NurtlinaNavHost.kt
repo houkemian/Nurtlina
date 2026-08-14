@@ -271,7 +271,7 @@ fun NurtlinaNavHost(
             }
 
             composable(NavRoutes.Logs.route) {
-                LogsRoute()
+                LogsRoute(navController)
             }
 
             composable(NavRoutes.Insights.route) {
@@ -478,11 +478,13 @@ private fun NewFeedRoute(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LogsRoute() {
+private fun LogsRoute(navController: NavController) {
     val viewModel: LogsViewModel = hiltViewModel()
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
     val selectedFilter by viewModel.selectedFilter.collectAsStateWithLifecycle()
     val logItems by viewModel.logItems.collectAsStateWithLifecycle()
+    val isPro by viewModel.isPro.collectAsStateWithLifecycle()
+    val earliestAllowedDate by viewModel.earliestAllowedDate.collectAsStateWithLifecycle()
     var showDatePicker by remember { mutableStateOf(false) }
     var editingTarget by remember { mutableStateOf<LogEditTarget?>(null) }
 
@@ -491,6 +493,9 @@ private fun LogsRoute() {
         entries = logItems.map { it.toLogEntry() },
         activeFilter = selectedFilter,
         useOz = false,
+        isPro = isPro,
+        earliestAllowedDate = earliestAllowedDate,
+        onUpgradeTapped = { navController.navigate(NavRoutes.Paywall.route) },
         onPrevDay = viewModel::goToPreviousDay,
         onNextDay = viewModel::goToNextDay,
         onPickDate = { showDatePicker = true },

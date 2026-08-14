@@ -3,6 +3,8 @@ package com.nurtlina.app.ui.logs
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nurtlina.app.core.notification.NextFeedReminderCoordinator
+import com.nurtlina.app.data.billing.EntitlementManager
+import com.nurtlina.app.data.billing.ProStatus
 import com.nurtlina.app.domain.model.DiaperLog
 import com.nurtlina.app.domain.model.FeedLog
 import com.nurtlina.app.domain.model.SleepLog
@@ -10,6 +12,7 @@ import com.nurtlina.app.domain.repository.DiaperLogRepository
 import com.nurtlina.app.domain.repository.FeedLogRepository
 import com.nurtlina.app.domain.repository.SettingsRepository
 import com.nurtlina.app.domain.repository.SleepLogRepository
+import com.nurtlina.app.ui.widget.WidgetRefresher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +30,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
+
+private const val FREE_HISTORY_DAYS = 7L
 
 // ── Log item model ────────────────────────────────────────────────────────────
 
@@ -61,7 +66,27 @@ class LogsViewModel @Inject constructor(
     private val sleepLogRepository: SleepLogRepository,
     private val settingsRepository: SettingsRepository,
     private val nextFeedReminderCoordinator: NextFeedReminderCoordinator,
+    private val entitlementManager: EntitlementManager,
+    private val widgetRefresher: WidgetRefresher,
 ) : ViewModel() {
+
+    // ── Pro status / history limit ─────────────────────────────────────────
+
+    val isPro: StateFlow<Boolean> = entitlementManager.proStatus
+        .map { it != ProStatus.FREE && it != ProStatus.UNKNOWN }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = false,
+        )
+
+    val earliestAllowedDate: StateFlow<LocalDate?> = isPro
+        .map { pro -> if (pro) null else LocalDate.now().minusDays(FREE_HISTORY_DAYS - 1L) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = LocalDate.now().minusDays(FREE_HISTORY_DAYS - 1L),
+        )
 
     // ── Date selection ───────────────────────────────────────────────────────
 
@@ -69,7 +94,10 @@ class LogsViewModel @Inject constructor(
     val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
 
     fun goToPreviousDay() {
-        _selectedDate.update { it.minusDays(1) }
+        val earliest = if (isPro.value) null else LocalDate.now().minusDays(FREE_HISTORY_DAYS - 1L)
+        val target = _selectedDate.value.minusDays(1)
+        if (earliest != null && target.isBefore(earliest)) return
+        _selectedDate.value = target
     }
 
     fun goToNextDay() {
@@ -139,6 +167,7 @@ class LogsViewModel @Inject constructor(
             val babyId = currentBabyId.value
             feedLogRepository.delete(feedLogId)
             babyId?.let { nextFeedReminderCoordinator.refreshForBaby(it) }
+            widgetRefresher.refresh()
         }
     }
 
@@ -151,7 +180,12 @@ class LogsViewModel @Inject constructor(
     }
 
     fun goToDate(date: LocalDate) {
-        _selectedDate.value = date
+        val earliest = if (isPro.value) null else LocalDate.now().minusDays(FREE_HISTORY_DAYS - 1L)
+        if (earliest != null && date.isBefore(earliest)) {
+            _selectedDate.value = earliest
+        } else {
+            _selectedDate.value = date
+        }
     }
 
     fun updateEntry(target: LogEditTarget) {
@@ -170,6 +204,7 @@ class LogsViewModel @Inject constructor(
                         )
                     )
                     nextFeedReminderCoordinator.refreshForBaby(target.original.babyId)
+                    widgetRefresher.refresh()
                 }
                 is LogEditTarget.Diaper -> {
                     val draft = target.draft
@@ -201,6 +236,7 @@ class LogsViewModel @Inject constructor(
                 is LogEditTarget.Feed -> {
                     feedLogRepository.delete(target.original.id)
                     nextFeedReminderCoordinator.refreshForBaby(target.original.babyId)
+                    widgetRefresher.refresh()
                 }
                 is LogEditTarget.Diaper -> diaperLogRepository.delete(target.original.id)
                 is LogEditTarget.Sleep -> sleepLogRepository.delete(target.original.id)

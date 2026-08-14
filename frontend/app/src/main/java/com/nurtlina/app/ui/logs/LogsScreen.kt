@@ -84,6 +84,9 @@ fun LogsScreen(
     entries: List<LogEntry>,
     activeFilter: LogFilter,
     useOz: Boolean,
+    isPro: Boolean = true,
+    earliestAllowedDate: LocalDate? = null,
+    onUpgradeTapped: () -> Unit = {},
     onPrevDay: () -> Unit,
     onNextDay: () -> Unit,
     onPickDate: () -> Unit,
@@ -93,6 +96,8 @@ fun LogsScreen(
     modifier: Modifier = Modifier,
 ) {
     val today = LocalDate.now()
+    val atHistoryLimit = !isPro && earliestAllowedDate != null &&
+        !selectedDate.isAfter(earliestAllowedDate)
     val filteredEntries = remember(entries, activeFilter) {
         when (activeFilter) {
             LogFilter.ALL -> entries
@@ -122,10 +127,15 @@ fun LogsScreen(
             DateNavigationBar(
                 selectedDate = selectedDate,
                 today = today,
+                canGoPrevious = !atHistoryLimit,
                 onPrevDay = onPrevDay,
                 onNextDay = onNextDay,
                 onPickDate = onPickDate,
             )
+
+            if (atHistoryLimit) {
+                HistoryLimitBanner(onUpgradeTapped = onUpgradeTapped)
+            }
 
             // ---- Filter chips ----
             FilterChipRow(
@@ -158,6 +168,7 @@ fun LogsScreen(
 private fun DateNavigationBar(
     selectedDate: LocalDate,
     today: LocalDate,
+    canGoPrevious: Boolean = true,
     onPrevDay: () -> Unit,
     onNextDay: () -> Unit,
     onPickDate: () -> Unit,
@@ -180,6 +191,7 @@ private fun DateNavigationBar(
     ) {
         IconButton(
             onClick = onPrevDay,
+            enabled = canGoPrevious,
             modifier = Modifier
                 .size(48.dp)
                 .semantics { contentDescription = prevDayDesc },
@@ -214,6 +226,46 @@ private fun DateNavigationBar(
                 .semantics { contentDescription = nextDayDesc },
         ) {
             Icon(Icons.Default.ChevronRight, contentDescription = null)
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// History limit banner (free tier)
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun HistoryLimitBanner(onUpgradeTapped: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.logs_history_limit_title),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = stringResource(R.string.logs_history_limit_body),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            Button(onClick = onUpgradeTapped) {
+                Text(stringResource(R.string.logs_history_limit_upgrade))
+            }
         }
     }
 }

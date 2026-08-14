@@ -244,8 +244,6 @@
     <string name="paywall_multi_baby">Track multiple babies</string>
     <string name="paywall_full_history">Full feeding history</string>
     <string name="paywall_export">Export to CSV</string>
-    <string name="paywall_backup">Cloud backup</string>
-    <string name="paywall_custom_reminders">Customize reminders</string>
     <string name="paywall_widget_themes">Widget themes</string>
     <string name="paywall_monthly_title">Monthly</string>
     <string name="paywall_monthly_price">$2.99 / month</string>
@@ -373,6 +371,14 @@
     <!-- ===== Logs Screen (additional spec keys) ===== -->
     <string name="logs_title">Logs</string>
     <string name="logs_today">Today</string>
+    <string name="logs_history_limit_title">Full history is a Pro feature</string>
+    <string name="logs_history_limit_body">Free accounts show the last 7 days</string>
+    <string name="logs_history_limit_upgrade">Upgrade</string>
+    <string name="widget_description">Shows your baby\'s last feed and next reminder</string>
+    <string name="widget_last_feed">Last feed: %1$s</string>
+    <string name="widget_next_feed">Next feed: %1$s</string>
+    <string name="widget_no_feeds">No feeds yet — tap to log a feed</string>
+    <string name="widget_learning">Log a few feeds to see next reminder</string>
     <string name="logs_yesterday">Yesterday</string>
 
     <!-- ===== Insights Screen (spec keys) ===== -->

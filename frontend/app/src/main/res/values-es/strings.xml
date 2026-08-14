@@ -163,8 +163,6 @@
     <string name="paywall_multi_baby">Seguimiento de varios bebés</string>
     <string name="paywall_full_history">Acceso al historial completo</string>
     <string name="paywall_export">Exportar tus datos</string>
-    <string name="paywall_backup">Copia de seguridad en la nube</string>
-    <string name="paywall_custom_reminders">Recordatorios personalizados</string>
     <string name="paywall_custom_rules">Reglas de temporizador personalizadas</string>
     <string name="paywall_widget_themes">Temas de widget</string>
     <string name="paywall_monthly_price">$2,99 / mes</string>
@@ -230,6 +228,14 @@
     <string name="logs_filter_diapers">Pañales</string>
     <string name="logs_filter_sleep">Sueño</string>
     <string name="logs_today">Hoy</string>
+    <string name="logs_history_limit_title">El historial completo es una función Pro</string>
+    <string name="logs_history_limit_body">Las cuentas gratuitas muestran los últimos 7 días</string>
+    <string name="logs_history_limit_upgrade">Mejorar</string>
+    <string name="widget_description">Muestra la última toma de tu bebé y el próximo recordatorio</string>
+    <string name="widget_last_feed">Última toma: %1$s</string>
+    <string name="widget_next_feed">Próxima toma: %1$s</string>
+    <string name="widget_no_feeds">Aún no hay tomas: toca para registrar</string>
+    <string name="widget_learning">Registra algunas tomas para ver el próximo recordatorio</string>
     <string name="logs_yesterday">Ayer</string>
 
     <!-- Insights Screen -->

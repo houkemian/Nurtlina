@@ -11,17 +11,17 @@
 
 #### 喂奶记录管理 — ✅ 已实现
 
-- `NewBottleSheet` 入口已改为直接创建 FeedLog（`NurtlinaNavHost.kt:415-429`）
+- `NewFeedSheet` 入口已改为直接创建 FeedLog（`NurtlinaNavHost.kt:415-429`）
 - `FeedingStatusCard` 展示上次喂奶状态和下次喂奶倒计时（`TodayScreen.kt:598-700`）
 - `TodayViewModel.logFeed()` / `quickLogFeed()` — 喂奶记录主路径
 - `NextFeedNotificationScheduler` — 基于间隔的喂奶提醒
 - FeedLog CRUD（Room + Repository + UseCase）完整
 
-#### Bottle 系统 — 🔶 遗留（待清理）
+#### Bottle 系统 — ✅ 已移除（Phase 0 完成）
 
-Bottle 相关组件（BottleEntity、BottleStateMachine、BottleNotificationScheduler、ActiveBottleCard 等）仍存在于代码库中。有活跃 Bottle 时 TodayScreen 仍会渲染 ActiveBottleCard，Bottle→FeedLog 桥接在 MarkFed 时自动创建 FeedLog。
+Bottle 相关组件（BottleEntity、BottleStateMachine、BottleNotificationScheduler、ActiveBottleCard 等）已从代码库中完全移除。唯一残留是后端 `feed_logs` 表的可空 legacy `bottle_id` 字段（同步透传）和 Room 的 `DROP TABLE IF EXISTS bottles` 迁移。
 
-详见 [[Nurtlina_PRD_Evaluation_and_Task_Plan]] Phase 0 清理任务（约 11h）。
+详见 [[Nurtlina_PRD_Evaluation_and_Task_Plan]] Phase 0（commit `0e42f39` + `ba00f03`）。
 
 ---
 
@@ -32,10 +32,8 @@ Bottle 相关组件（BottleEntity、BottleStateMachine、BottleNotificationSche
 │ Android App (Kotlin + Compose)                              │
 │                                                             │
 │ UI: TodayScreen (FeedingStatusCard + QuickLogRow)           │
-│     + ActiveBottleCard (遗留) + BottleDetailScreen (遗留)    │
 │ Domain: LogFeedUseCase + SleepUseCase + LogDiaperUseCase    │
-│     + BottleStateMachine/ExpiryCalculator (遗留)             │
-│ Data: Room (FeedLog + DiaperLog + SleepLog + Bottle 遗留)   │
+│ Data: Room (FeedLog + DiaperLog + SleepLog)                 │
 │     + SyncQueue + Retrofit + DataStore                      │
 │                                                             │
 │ Local-first: 所有写入先写 Room，异步同步到后端               │
@@ -59,7 +57,7 @@ Bottle 相关组件（BottleEntity、BottleStateMachine、BottleNotificationSche
 | feed_logs | ✅ 主实体 | 喂奶记录 |
 | diaper_logs | ✅ | 尿布记录 |
 | sleep_logs | ✅ | 睡眠记录 |
-| bottles | 🔶 遗留 | 待清理 |
+| bottles | ✅ 已移除 | Phase 0 已删除（仅 feed_logs.bottle_id 可空 legacy 字段保留） |
 | entitlements | ✅ | Pro 权益 |
 | sync_cursors | ✅ | 同步游标 |
 
@@ -68,8 +66,8 @@ Bottle 相关组件（BottleEntity、BottleStateMachine、BottleNotificationSche
 | 端点 | 状态 |
 |---|---|
 | `/api/v1/sync/feed-logs` / `diaper-logs` / `sleep-logs` / `babies` / `settings` | ✅ |
-| `/api/v1/sync/bottles` | 🔶 遗留 |
-| `/api/v1/sync/changes` | ✅（返回含 bottles 字段遗留） |
+| `/api/v1/sync/bottles` | ✅ 已移除 |
+| `/api/v1/sync/changes` | ✅ |
 | `/api/v1/me/init` / `/api/v1/me` | ✅ |
 | `/api/v1/billing/google-play/purchases` | ✅ |
 | `/api/v1/entitlements/me` | ✅ |

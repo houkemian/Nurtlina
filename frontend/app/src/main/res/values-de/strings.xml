@@ -163,8 +163,6 @@
     <string name="paywall_multi_baby">Mehrere Babys verfolgen</string>
     <string name="paywall_full_history">Vollständiger Verlaufszugriff</string>
     <string name="paywall_export">Daten exportieren</string>
-    <string name="paywall_backup">Cloud-Backup</string>
-    <string name="paywall_custom_reminders">Benutzerdefinierte Erinnerungen</string>
     <string name="paywall_custom_rules">Benutzerdefinierte Timer-Regeln</string>
     <string name="paywall_widget_themes">Widget-Designs</string>
     <string name="paywall_monthly_price">2,99 € / Monat</string>
@@ -230,6 +228,14 @@
     <string name="logs_filter_diapers">Windeln</string>
     <string name="logs_filter_sleep">Schlaf</string>
     <string name="logs_today">Heute</string>
+    <string name="logs_history_limit_title">Der vollständige Verlauf ist eine Pro-Funktion</string>
+    <string name="logs_history_limit_body">Kostenlose Konten zeigen die letzten 7 Tage</string>
+    <string name="logs_history_limit_upgrade">Upgraden</string>
+    <string name="widget_description">Zeigt die letzte Fütterung und die nächste Erinnerung deines Babys</string>
+    <string name="widget_last_feed">Letzte Fütterung: %1$s</string>
+    <string name="widget_next_feed">Nächste Fütterung: %1$s</string>
+    <string name="widget_no_feeds">Noch keine Fütterungen – tippe zum Eintragen</string>
+    <string name="widget_learning">Trage einige Fütterungen ein, um die nächste Erinnerung zu sehen</string>
     <string name="logs_yesterday">Gestern</string>
 
     <!-- Insights Screen -->

@@ -26,32 +26,23 @@ Primary business model:
 - Free with ads.
 - Pro unlocks no ads, multiple babies, full history, exports, backup, advanced stats, custom reminders, and widget themes.
 
-## Current Implementation State (2026-07-10)
+## Current Implementation State (2026-07-15)
 
 **Feeding record management is the primary path and is implemented:**
 
-- `NewBottleSheet` (`ui/bottle/NewBottleSheet.kt`) now creates FeedLogs directly via `TodayViewModel.logFeed()` — see `NurtlinaNavHost.kt:415-429`
-- `FeedingStatusCard` in `TodayScreen.kt:598-700` shows last feed info + next feed countdown
-- `NextFeedNotificationScheduler` handles feed interval reminders
+- `NewFeedSheet` (`ui/feed/NewFeedSheet.kt`) creates FeedLogs directly via `TodayViewModel.logFeed()` — see `NurtlinaNavHost.kt`
+- `FeedingStatusCard` in `TodayScreen.kt` shows last feed info + next feed countdown
+- `NextFeedNotificationScheduler` + `FeedingPatternAnalyzer` / `GenerateFeedingPredictionUseCase` handle personalized feed reminders
 - `TodayViewModel.logFeed()` / `quickLogFeed()` are the main feeding record methods
 
-**Bottle system is LEGACY (still present, to be removed):**
+**Bottle system is REMOVED (Phase 0 complete):**
 
-Bottle-related code still exists throughout the codebase but is no longer the primary user path:
-- Domain: `Bottle.kt`, `BottleStatus`, `BottleTransition`, `BottleStateMachine.kt`, `ExpiryCalculator.kt`
-- Data: `BottleEntity.kt`, `BottleDao.kt`, `RoomBottleRepository.kt`, `RemoteBottleDto.kt`
-- UI: `ActiveBottleCard` (TodayScreen), `BottleDetailScreen.kt`, `BottleViewModel.kt`
-- Notifications: `BottleNotificationScheduler.kt`
-- UseCases: `CreateBottleUseCase`, `TransitionBottleUseCase`, `ObserveBottlesUseCase`, `CheckAndExpireBottlesUseCase`
-- Backend: `bottles` table, `/sync/bottles` endpoint
-- Tests: `BottleStateMachineTest.kt`, `ExpiryCalculatorTest.kt`
-- Bridge: `TodayViewModel.logFeedFromBottle()` auto-creates FeedLog when bottle is marked Fed
+The Bottle timer/state-machine system has been fully removed from the codebase (see `Nurtlina_PRD_Evaluation_and_Task_Plan.md` Phase 0, commit `0e42f39` + `ba00f03`). The only remaining traces are a legacy nullable `bottle_id` column on the backend `feed_logs` table and the Room `DROP TABLE IF EXISTS bottles` migration in `DatabaseModule.kt`.
 
 **When modifying code:**
-- DO NOT add new Bottle features or extend Bottle state machine
+- DO NOT reintroduce Bottle features, the Bottle state machine, or `/sync/bottles`
 - DO add/improve FeedLog-based feeding record features
-- Bottle removal tasks are documented in `Nurtlina_PRD_Evaluation_and_Task_Plan.md` (Phase 0, ~11h)
-- Prefer removing Bottle references over adding new ones
+- Prefer removing any remaining Bottle references over adding new ones
 
 ---
 

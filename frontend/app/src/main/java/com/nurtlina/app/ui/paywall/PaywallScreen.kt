@@ -16,11 +16,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FamilyRestroom
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.Badge
@@ -180,8 +178,6 @@ private fun ProFeaturesList() {
         Icons.Default.FamilyRestroom to R.string.paywall_multi_baby,
         Icons.Default.History to R.string.paywall_full_history,
         Icons.Default.Download to R.string.paywall_export,
-        Icons.Default.Cloud to R.string.paywall_backup,
-        Icons.Default.Notifications to R.string.paywall_custom_reminders,
         Icons.Default.Widgets to R.string.paywall_widget_themes,
     )
     Card(modifier = Modifier.fillMaxWidth()) {
