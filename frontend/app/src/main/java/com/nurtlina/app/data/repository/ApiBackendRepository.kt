@@ -25,4 +25,8 @@ class ApiBackendRepository @Inject constructor(
             isNewUser = response.isNewUser,
         )
     }
+
+    override suspend fun deleteAccount(): Result<Unit> = runCatching {
+        api.deleteAccount()
+    }
 }

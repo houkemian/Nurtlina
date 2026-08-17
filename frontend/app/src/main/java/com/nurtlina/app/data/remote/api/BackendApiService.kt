@@ -34,6 +34,9 @@ interface BackendApiService {
 
     @GET("api/v1/billing/entitlements/me")
     suspend fun getEntitlement(): EntitlementResponse
+
+    @POST("api/v1/account/delete")
+    suspend fun deleteAccount(): DeleteAccountResponse
 }
 
 data class MeInitRequest(
@@ -143,4 +146,8 @@ data class EntitlementResponse(
     @SerializedName("grace_period_until") val gracePeriodUntil: String?,
     @SerializedName("source") val source: String?,
     @SerializedName("last_verified_at") val lastVerifiedAt: String?,
+)
+
+data class DeleteAccountResponse(
+    @SerializedName("status") val status: String,
 )

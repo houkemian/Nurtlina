@@ -22,8 +22,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -42,7 +40,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,7 +55,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -66,7 +62,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.nurtlina.app.R
-import com.nurtlina.app.domain.model.GuidelineRegion
 import com.nurtlina.app.ui.theme.MistBlue
 import com.nurtlina.app.ui.theme.NurtlinaTheme
 import com.nurtlina.app.ui.theme.SoftSage
@@ -83,10 +78,10 @@ private val AvatarColorOptions = listOf(
     "SAGE" to SoftSage,
 )
 
-private enum class OnboardingStep { WELCOME, CREATE_BABY, GUIDELINE, DISCLAIMER, NOTIFICATIONS }
+private enum class OnboardingStep { WELCOME, CREATE_BABY, DISCLAIMER, NOTIFICATIONS }
 
 private val OnboardingStep.displayIndex: Int get() = ordinal + 1
-private const val TOTAL_STEPS = 5
+private const val TOTAL_STEPS = 4
 
 /** Transient state for the baby creation step. */
 data class OnboardingBabyInput(
@@ -99,23 +94,22 @@ data class OnboardingBabyInput(
  * Multi-step onboarding flow.
  *
  * Stateless in terms of persistence — callers (ViewModel / NavGraph) must persist
- * [OnboardingBabyInput] and [GuidelineRegion] on completion.
+ * [OnboardingBabyInput] on completion.
  *
  * @param onComplete Called when the user finishes all steps. Receives the baby
- *   input and selected region so the caller can persist them.
+ *   input so the caller can persist it.
  * @param onRequestNotificationPermission Called when the user taps "Allow Notifications"
  *   on the final step.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OnboardingScreen(
-    onComplete: (babyInput: OnboardingBabyInput, region: GuidelineRegion) -> Unit,
+    onComplete: (babyInput: OnboardingBabyInput) -> Unit,
     onRequestNotificationPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var step by rememberSaveable { mutableStateOf(OnboardingStep.WELCOME) }
     var babyInput by remember { mutableStateOf(OnboardingBabyInput()) }
-    var selectedRegion by rememberSaveable { mutableStateOf(GuidelineRegion.US) }
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -150,25 +144,19 @@ fun OnboardingScreen(
                     OnboardingStep.CREATE_BABY -> CreateBabyStep(
                         input = babyInput,
                         onInputChange = { babyInput = it },
-                        onNext = { step = OnboardingStep.GUIDELINE },
-                        onBack = { step = OnboardingStep.WELCOME },
-                    )
-                    OnboardingStep.GUIDELINE -> GuidelineRegionStep(
-                        selected = selectedRegion,
-                        onSelect = { selectedRegion = it },
                         onNext = { step = OnboardingStep.DISCLAIMER },
-                        onBack = { step = OnboardingStep.CREATE_BABY },
+                        onBack = { step = OnboardingStep.WELCOME },
                     )
                     OnboardingStep.DISCLAIMER -> DisclaimerStep(
                         onAccept = { step = OnboardingStep.NOTIFICATIONS },
-                        onBack = { step = OnboardingStep.GUIDELINE },
+                        onBack = { step = OnboardingStep.CREATE_BABY },
                     )
                     OnboardingStep.NOTIFICATIONS -> NotificationPermissionStep(
                         onAllow = {
                             onRequestNotificationPermission()
-                            onComplete(babyInput, selectedRegion)
+                            onComplete(babyInput)
                         },
-                        onNotNow = { onComplete(babyInput, selectedRegion) },
+                        onNotNow = { onComplete(babyInput) },
                     )
                 }
             }
@@ -390,101 +378,7 @@ private fun CreateBabyStep(
 }
 
 // --------------------------------------------------------------------------
-// Step 3 – Guideline Region
-// --------------------------------------------------------------------------
-
-@Composable
-private fun GuidelineRegionStep(
-    selected: GuidelineRegion,
-    onSelect: (GuidelineRegion) -> Unit,
-    onNext: () -> Unit,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    data class RegionOption(
-        val region: GuidelineRegion,
-        val titleRes: Int,
-        val descRes: Int,
-    )
-
-    val options = remember {
-        listOf(
-            RegionOption(GuidelineRegion.US, R.string.onboarding_region_us, R.string.onboarding_region_us_desc),
-            RegionOption(GuidelineRegion.UK, R.string.onboarding_region_uk, R.string.onboarding_region_uk_desc),
-            RegionOption(GuidelineRegion.CUSTOM, R.string.onboarding_region_custom, R.string.onboarding_region_custom_desc),
-        )
-    }
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp),
-    ) {
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = stringResource(R.string.onboarding_region_title),
-            style = MaterialTheme.typography.headlineSmall,
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = stringResource(R.string.onboarding_region_subtitle),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(24.dp))
-
-        Column(
-            modifier = Modifier.selectableGroup(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            options.forEach { option ->
-                val isSelected = selected == option.region
-                ElevatedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .selectable(
-                            selected = isSelected,
-                            onClick = { onSelect(option.region) },
-                            role = Role.RadioButton,
-                        ),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = if (isSelected)
-                            MaterialTheme.colorScheme.primaryContainer
-                        else
-                            MaterialTheme.colorScheme.surface,
-                    ),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(selected = isSelected, onClick = null)
-                        Spacer(Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = stringResource(option.titleRes),
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                            Text(
-                                text = stringResource(option.descRes),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(40.dp))
-        OnboardingNavButtons(onBack = onBack, onNext = onNext)
-        Spacer(Modifier.height(24.dp))
-    }
-}
-
-// --------------------------------------------------------------------------
-// Step 4 – Disclaimer
+// Step 3 – Disclaimer
 // --------------------------------------------------------------------------
 
 @Composable
@@ -539,7 +433,7 @@ private fun DisclaimerStep(
 }
 
 // --------------------------------------------------------------------------
-// Step 5 – Notification Permission
+// Step 4 – Notification Permission
 // --------------------------------------------------------------------------
 
 @Composable
@@ -643,7 +537,7 @@ private fun OnboardingNavButtons(
 private fun PreviewOnboardingLight() {
     NurtlinaTheme {
         OnboardingScreen(
-            onComplete = { _, _ -> },
+            onComplete = { _ -> },
             onRequestNotificationPermission = {},
         )
     }
@@ -658,7 +552,7 @@ private fun PreviewOnboardingLight() {
 private fun PreviewOnboardingDark() {
     NurtlinaTheme(darkTheme = true) {
         OnboardingScreen(
-            onComplete = { _, _ -> },
+            onComplete = { _ -> },
             onRequestNotificationPermission = {},
         )
     }

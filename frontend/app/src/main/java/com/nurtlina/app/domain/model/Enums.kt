@@ -37,3 +37,11 @@ enum class ThemeType {
     LIGHT,
     DARK,
 }
+
+enum class WidgetTheme {
+    DEFAULT,
+    SAGE,
+    LAVENDER,
+    ROSE,
+    SLATE,
+}

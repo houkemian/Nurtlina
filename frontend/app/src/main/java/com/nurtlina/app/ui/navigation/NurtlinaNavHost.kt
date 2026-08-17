@@ -313,11 +313,10 @@ private fun OnboardingRoute(navController: NavController) {
     ) { /* granted or denied — either way, proceed */ }
 
     OnboardingScreen(
-        onComplete = { babyInput, region ->
+        onComplete = { babyInput ->
             viewModel.setBabyName(babyInput.name)
             viewModel.setBirthDate(babyInput.birthDate)
             viewModel.setAvatarColor(babyInput.avatarColor)
-            viewModel.setGuidelineRegion(region)
             viewModel.completeOnboarding {
                 navController.navigate(NavRoutes.Today.route) {
                     popUpTo(NavRoutes.OnboardingGraph.route) { inclusive = true }
@@ -591,6 +590,9 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
 
     val showFaq by viewModel.showFaq.collectAsStateWithLifecycle()
     val exportFailed by viewModel.exportFailed.collectAsStateWithLifecycle()
+    val showDeleteAccountDialog by viewModel.showDeleteAccountDialog.collectAsStateWithLifecycle()
+    val deleteAccountInProgress by viewModel.deleteAccountInProgress.collectAsStateWithLifecycle()
+    val deleteAccountFailed by viewModel.deleteAccountFailed.collectAsStateWithLifecycle()
     val currentSettings = settings ?: UserSettings()
     val selectedBaby = babies.firstOrNull { it.id == currentSettings.selectedBabyId }
         ?: babies.firstOrNull()
@@ -629,6 +631,53 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
         )
     }
 
+    if (deleteAccountFailed) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissDeleteAccountError,
+            title = { Text(stringResource(R.string.settings_delete_account_error_title)) },
+            text = { Text(stringResource(R.string.settings_delete_account_error_body)) },
+            confirmButton = {
+                TextButton(onClick = viewModel::dismissDeleteAccountError) {
+                    Text(stringResource(R.string.common_ok))
+                }
+            },
+        )
+    }
+
+    if (showDeleteAccountDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!deleteAccountInProgress) viewModel.dismissDeleteAccountDialog()
+            },
+            title = { Text(stringResource(R.string.settings_delete_account_title)) },
+            text = { Text(stringResource(R.string.settings_delete_account_body)) },
+            confirmButton = {
+                TextButton(
+                    onClick = viewModel::confirmDeleteAccount,
+                    enabled = !deleteAccountInProgress,
+                ) {
+                    Text(
+                        stringResource(
+                            if (deleteAccountInProgress) {
+                                R.string.settings_delete_account_in_progress
+                            } else {
+                                R.string.settings_delete_account_confirm
+                            }
+                        )
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = viewModel::dismissDeleteAccountDialog,
+                    enabled = !deleteAccountInProgress,
+                ) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            },
+        )
+    }
+
     LaunchedEffect(settings?.notificationEnabled) {
         val persistedSettings = settings ?: return@LaunchedEffect
         val hasSystemPermission = viewModel.refreshNotificationPermission()
@@ -648,6 +697,7 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
         onBabyUpdated = viewModel::updateBaby,
         onUnitChanged = viewModel::updateUnitType,
         onGuidelineRegionChanged = viewModel::updateGuidelineRegion,
+        onWidgetThemeChanged = viewModel::updateWidgetTheme,
         onLanguageSelected = viewModel::updateLanguage,
         onNotificationsToggled = { enabled ->
             if (
@@ -679,6 +729,7 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
         onBackupClick = { viewModel.requestFullSync() },
         onSignInClick = { navController.navigate(NavRoutes.SignIn.route) },
         onSignOutClick = { viewModel.signOut() },
+        onDeleteAccountClick = viewModel::showDeleteAccountDialog,
         onFaqClick = { viewModel.showFaq() },
         onPrivacyPolicyClick = {
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_URL)))

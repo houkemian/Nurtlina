@@ -71,6 +71,9 @@ class AppStartupCoordinatorTest {
     private class FailingBackendRepository : BackendRepository {
         override suspend fun initMe(clientId: String, appVersion: String): BackendInitResult =
             error("Network unavailable")
+
+        override suspend fun deleteAccount(): Result<Unit> =
+            Result.failure(NotImplementedError())
     }
 
     private class FakeSessionRepository(hasSession: Boolean) : SessionRepository {

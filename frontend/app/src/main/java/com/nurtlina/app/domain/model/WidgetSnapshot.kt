@@ -14,6 +14,7 @@ data class WidgetSnapshot(
     val lastFeedAmountMl: Double?,
     val unit: UnitType,
     val nextFeedAt: Instant?,
+    val theme: WidgetTheme = WidgetTheme.DEFAULT,
 ) {
     companion object {
         val Empty = WidgetSnapshot(

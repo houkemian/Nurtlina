@@ -82,6 +82,7 @@ fun SettingsScreen(
     onBabyUpdated: (babyId: String, name: String, birthDate: LocalDate?) -> Unit,
     onUnitChanged: (UnitType) -> Unit,
     onGuidelineRegionChanged: (GuidelineRegion) -> Unit,
+    onWidgetThemeChanged: (WidgetTheme) -> Unit,
     onLanguageSelected: (String) -> Unit,
     onNotificationsToggled: (Boolean) -> Unit,
     onReminderTimingChanged: (Int) -> Unit,
@@ -93,6 +94,7 @@ fun SettingsScreen(
     onBackupClick: () -> Unit,
     onSignInClick: () -> Unit,
     onSignOutClick: () -> Unit,
+    onDeleteAccountClick: () -> Unit,
     onFaqClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
     onTermsClick: () -> Unit,
@@ -146,6 +148,12 @@ fun SettingsScreen(
                 currentUser = currentUser,
                 onSignInClick = onSignInClick,
                 onSignOutClick = onSignOutClick,
+            )
+            SettingsClickRow(
+                icon = Icons.Outlined.DeleteForever,
+                label = stringResource(R.string.settings_account_delete),
+                labelColor = MaterialTheme.colorScheme.error,
+                onClick = onDeleteAccountClick,
             )
 
             SettingsDivider()
@@ -219,6 +227,12 @@ fun SettingsScreen(
             LanguageRow(
                 currentLanguage = settings.language,
                 onLanguageSelected = onLanguageSelected,
+            )
+            WidgetThemeRow(
+                theme = settings.widgetTheme,
+                isPro = isPro,
+                onChanged = onWidgetThemeChanged,
+                onUpgradeTapped = onUpgradeTapped,
             )
 
             SettingsDivider()
@@ -647,6 +661,50 @@ private fun LanguageRow(
             icon = Icons.Outlined.Language,
         )
     }
+}
+
+// ---------------------------------------------------------------------------
+// Widget theme picker (Pro)
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun WidgetThemeRow(
+    theme: WidgetTheme,
+    isPro: Boolean,
+    onChanged: (WidgetTheme) -> Unit,
+    onUpgradeTapped: () -> Unit,
+) {
+    var showDialog by remember { mutableStateOf(false) }
+    val entries = WidgetTheme.entries
+    val labels = entries.map { it.displayLabel() }
+    val selectedIndex = entries.indexOf(theme).coerceAtLeast(0)
+
+    SettingsClickRow(
+        icon = Icons.Outlined.Widgets,
+        label = stringResource(R.string.settings_widget_theme_label),
+        value = labels[selectedIndex],
+        onClick = { if (isPro) showDialog = true else onUpgradeTapped() },
+    )
+
+    if (showDialog) {
+        SingleChoiceDialog(
+            title = stringResource(R.string.settings_widget_theme_label),
+            options = labels,
+            selectedIndex = selectedIndex,
+            onSelect = { idx -> onChanged(entries[idx]); showDialog = false },
+            onDismiss = { showDialog = false },
+            icon = Icons.Outlined.Widgets,
+        )
+    }
+}
+
+@Composable
+private fun WidgetTheme.displayLabel() = when (this) {
+    WidgetTheme.DEFAULT -> stringResource(R.string.widget_theme_default)
+    WidgetTheme.SAGE -> stringResource(R.string.widget_theme_sage)
+    WidgetTheme.LAVENDER -> stringResource(R.string.widget_theme_lavender)
+    WidgetTheme.ROSE -> stringResource(R.string.widget_theme_rose)
+    WidgetTheme.SLATE -> stringResource(R.string.widget_theme_slate)
 }
 
 // ---------------------------------------------------------------------------
@@ -1109,10 +1167,12 @@ private fun SettingsScreenLightPreview() {
             appVersion = "1.0.0",
             onBabySelected = {},
             onBabyUpdated = { _, _, _ -> }, onUnitChanged = {}, onGuidelineRegionChanged = {},
+            onWidgetThemeChanged = {},
             onLanguageSelected = {}, onNotificationsToggled = {}, onReminderTimingChanged = {},
             onFeedIntervalChanged = {}, onNightModeToggled = {}, onManageSubscription = {},
             onUpgradeTapped = {}, onExportCsv = {},
             onBackupClick = {}, onSignInClick = {}, onSignOutClick = {},
+            onDeleteAccountClick = {},
             onFaqClick = {}, onPrivacyPolicyClick = {},
             onTermsClick = {}, onContactSupportClick = {},
         )
@@ -1137,10 +1197,12 @@ private fun SettingsScreenProDarkPreview() {
             appVersion = "1.0.0",
             onBabySelected = {},
             onBabyUpdated = { _, _, _ -> }, onUnitChanged = {}, onGuidelineRegionChanged = {},
+            onWidgetThemeChanged = {},
             onLanguageSelected = {}, onNotificationsToggled = {}, onReminderTimingChanged = {},
             onFeedIntervalChanged = {}, onNightModeToggled = {}, onManageSubscription = {},
             onUpgradeTapped = {}, onExportCsv = {},
             onBackupClick = {}, onSignInClick = {}, onSignOutClick = {},
+            onDeleteAccountClick = {},
             onFaqClick = {}, onPrivacyPolicyClick = {},
             onTermsClick = {}, onContactSupportClick = {},
         )

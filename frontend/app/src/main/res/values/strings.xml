@@ -18,15 +18,6 @@
     <string name="onboarding_birth_date_hint">Select birth date</string>
     <string name="onboarding_pick_color">Pick an avatar color</string>
 
-    <!-- Step 3: Guideline Region -->
-    <string name="onboarding_region_title">Choose guideline region</string>
-    <string name="onboarding_region_subtitle">Nurtlina uses public health guidelines to set timer durations. You can change this later in Settings.</string>
-    <string name="onboarding_region_us">United States</string>
-    <string name="onboarding_region_us_desc">Based on CDC infant formula and breast milk guidance</string>
-    <string name="onboarding_region_uk">United Kingdom</string>
-    <string name="onboarding_region_uk_desc">Based on NHS formula milk guidance</string>
-    <string name="onboarding_region_custom">Custom</string>
-    <string name="onboarding_region_custom_desc">Set your own timer durations in Settings</string>
 
     <!-- Step 4: Disclaimer -->
     <string name="onboarding_disclaimer_title">Important Notice</string>
@@ -35,20 +26,12 @@
 
     <!-- Step 5: Notifications -->
     <string name="onboarding_notification_title">Stay reminded</string>
-    <string name="onboarding_notification_body">Allow notifications so Nurtlina can remind you before a bottle timer expires. You can change this in Settings at any time.</string>
+    <string name="onboarding_notification_body">Allow notifications so Nurtlina can remind you when it\'s time for the next feed. You can change this in Settings at any time.</string>
     <string name="onboarding_allow_notifications">Allow Notifications</string>
     <string name="onboarding_not_now">Not Now</string>
     <string name="onboarding_next">Next</string>
     <string name="onboarding_back">Back</string>
 
-    <!-- ===== Bottle Status Labels ===== -->
-    <string name="bottle_status_not_started">Not Started</string>
-    <string name="bottle_status_feeding_started">Feeding Started</string>
-    <string name="bottle_status_refrigerated">Refrigerated</string>
-    <string name="bottle_status_expired">Expired</string>
-    <string name="bottle_status_fed">Fed</string>
-    <string name="bottle_status_discarded">Discarded</string>
-    <string name="bottle_status_canceled">Canceled</string>
 
     <!-- ===== Milk Type Labels ===== -->
     <string name="milk_type_formula">Formula</string>
@@ -57,12 +40,7 @@
 
     <!-- ===== Today Screen ===== -->
     <string name="today_title">Today</string>
-    <string name="today_no_active_bottle">No feed logged yet</string>
-    <string name="today_no_active_bottle_cta">Tap Add Feed to save a feeding record</string>
-    <string name="today_new_bottle">Feed</string>
     <string name="today_new_feed">Feed</string>
-    <string name="today_expires_in">Expires in</string>
-    <string name="today_time_expired">EXPIRED</string>
     <string name="today_add_baby_pro">Add</string>
     <string name="today_no_baby_selected">Baby</string>
     <string name="today_last_feed_label">Last feed</string>
@@ -78,7 +56,6 @@
     <string name="today_feeding_window_approaching">Watch for feeding cues now</string>
     <string name="today_feeding_window_later">Next window opens around %1$s</string>
     <string name="today_feeding_window_cues">%1$s · %2$s</string>
-    <string name="today_active_bottle_timer_title">Active Bottle Timer</string>
     <string name="today_quick_actions_title">Quick Actions</string>
     <string name="today_summary_section_title">Today Summary</string>
     <string name="today_quick_feed">Feed</string>
@@ -111,30 +88,15 @@
 
     <!-- ===== Rating Prompt ===== -->
     <string name="rating_prompt_title">Enjoying Nurtlina?</string>
-    <string name="rating_prompt_body">If Nurtlina has been helpful for tracking bottle timers and baby care, would you like to rate it?</string>
+    <string name="rating_prompt_body">If Nurtlina has been helpful for tracking feeds and baby care, would you like to rate it?</string>
     <string name="rating_prompt_rate">Rate Nurtlina</string>
     <string name="rating_prompt_maybe_later">Maybe later</string>
     <string name="rating_prompt_no_thanks">No thanks</string>
 
     <!-- ===== Actions ===== -->
-    <string name="action_start_feeding">Start Feeding</string>
-    <string name="action_refrigerate">Refrigerate</string>
-    <string name="action_discard">Discard</string>
-    <string name="action_mark_fed">Mark as Fed</string>
     <string name="action_cancel">Cancel</string>
-    <string name="action_create_bottle">Start Timer</string>
     <string name="action_save_feed">Save Feed</string>
-    <string name="action_edit_prepared_time">Edit Prepared Time</string>
 
-    <!-- ===== New Bottle Sheet ===== -->
-    <string name="new_bottle_title">New Bottle</string>
-    <string name="new_bottle_amount_label">Amount</string>
-    <string name="new_bottle_prepared_at_label">Prepared at</string>
-    <string name="new_bottle_prepared_just_now">Just now</string>
-    <string name="new_bottle_prepared_pick_time">Pick time</string>
-    <string name="new_bottle_note_label">Note (optional)</string>
-    <string name="new_bottle_note_hint">Add a note…</string>
-    <string name="new_bottle_disclaimer">Timers are based on your selected guideline. Not medical advice.</string>
     <string name="new_feed_title">Add Feed</string>
     <string name="new_feed_disclaimer">This saves a feeding record only. Not medical advice.</string>
     <string name="new_feed_amount_label">Amount</string>
@@ -144,36 +106,13 @@
     <string name="new_feed_note_label">Note (optional)</string>
     <string name="new_feed_note_hint">Add a note…</string>
 
-    <!-- ===== Bottle Detail Screen ===== -->
-    <string name="bottle_detail_title">Bottle</string>
-    <string name="bottle_detail_time_remaining">Time remaining</string>
-    <string name="bottle_detail_time_elapsed">Time elapsed</string>
-    <string name="bottle_detail_guideline_source">Based on: %1$s</string>
-    <string name="bottle_detail_disclaimer">This app is a reminder tool. Not medical advice.</string>
-    <string name="bottle_detail_discard_warning">When in doubt, discard the milk.</string>
-    <string name="bottle_detail_timeline_title">Timeline</string>
-    <string name="bottle_detail_event_prepared">Prepared</string>
-    <string name="bottle_detail_event_feeding_started">Feeding started</string>
-    <string name="bottle_detail_event_refrigerated">Refrigerated</string>
-    <string name="bottle_detail_event_timer_expired">Timer expired</string>
-    <string name="bottle_detail_event_fed">Fed</string>
-    <string name="bottle_detail_event_discarded">Discarded</string>
-    <string name="bottle_detail_event_canceled">Canceled</string>
 
-    <!-- ===== Guideline Regions ===== -->
-    <string name="guideline_region_us">United States (CDC)</string>
-    <string name="guideline_region_uk">United Kingdom (NHS)</string>
-    <string name="guideline_region_custom">Custom</string>
 
     <!-- ===== Shared Disclaimer / Compliance ===== -->
     <string name="disclaimer_reminder_not_advice">This app is a reminder tool, not medical advice.</string>
     <string name="when_in_doubt_discard">When in doubt, discard the milk.</string>
-    <string name="based_on_selected_guideline">Based on your selected guideline</string>
 
     <!-- ===== Accessibility Content Descriptions ===== -->
-    <string name="cd_bottle_status">Bottle status: %1$s</string>
-    <string name="cd_countdown_timer">Time remaining: %1$s</string>
-    <string name="cd_new_bottle_fab">Add feed record</string>
     <string name="cd_new_feed_fab">Add feed record</string>
     <string name="cd_select_baby">Select baby: %1$s</string>
     <string name="cd_add_baby">Add another baby</string>
@@ -195,7 +134,6 @@
     <string name="nav_settings">Settings</string>
 
     <!-- ===== Action aliases ===== -->
-    <string name="action_new_bottle">New Bottle</string>
     <string name="action_close">Close</string>
     <string name="action_start_sleep">Start Sleep</string>
     <string name="action_end_sleep">End Sleep</string>
@@ -214,27 +152,12 @@
     <string name="summary_amount">Amount</string>
     <string name="summary_diapers">Diapers</string>
     <string name="summary_sleep">Sleep</string>
-    <string name="safety_note_short">Reminders based on selected guideline. Not medical advice.</string>
-    <string name="empty_no_bottle_title">No active bottle yet</string>
-    <string name="empty_no_bottle_body">Start a bottle timer to track freshness and reminders.</string>
     <string name="empty_no_logs">No logs for this day\nQuickly add a feed, diaper, or sleep record.</string>
     <string name="empty_insights">Track for a few days to see trends.</string>
 
     <!-- ===== Notifications ===== -->
-    <string name="notif_channel_bottle_name">Bottle Timer</string>
-    <string name="notif_channel_bottle_desc">Reminders when your bottle timer is about to expire or has expired</string>
-    <string name="notif_channel_feeding_name">Feeding Reminder</string>
-    <string name="notif_channel_feeding_desc">Reminders during active feeding sessions</string>
     <string name="notif_channel_next_feed_name">Gentle next feed reminder</string>
     <string name="notif_channel_next_feed_desc">A soft reminder when the next feed countdown ends</string>
-    <string name="notif_before_expiry_title">Bottle expires soon</string>
-    <string name="notif_before_expiry_body">Use it soon or discard it based on your selected guideline.</string>
-    <string name="notif_expired_title">Bottle timer expired</string>
-    <string name="notif_expired_body">When in doubt, discard the milk. This app is a reminder, not medical advice.</string>
-    <string name="notif_feeding_45_title">Feeding started 45 minutes ago</string>
-    <string name="notif_feeding_45_body">Used formula should be discarded after the selected timer ends.</string>
-    <string name="notif_feeding_60_title">Feeding started 60 minutes ago</string>
-    <string name="notif_feeding_60_body">When in doubt, discard the milk. This app is a reminder, not medical advice.</string>
     <string name="notif_next_feed_title">Feeding window reminder</string>
     <string name="notif_next_feed_body">You may want to check for feeding cues soon.</string>
 
@@ -260,7 +183,6 @@
     <string name="settings_title">Settings</string>
     <string name="settings_baby_profile">Baby Profile</string>
     <string name="settings_units">Units</string>
-    <string name="settings_guideline_region">Guideline Region</string>
     <string name="settings_language">Language</string>
     <string name="settings_notifications">Notifications</string>
     <string name="settings_night_mode">Night Mode</string>
@@ -288,33 +210,13 @@
 
     <!-- ===== Errors ===== -->
     <string name="error_generic">Something went wrong. Please try again.</string>
-    <string name="error_transition">This action is not allowed at this stage.</string>
     <string name="error_load_failed">Failed to load data. Please restart the app.</string>
 
-    <!-- ===== Bottle Status (spec keys) ===== -->
-    <string name="status_not_started">Not Started</string>
-    <string name="status_feeding_started">Feeding Started</string>
-    <string name="status_refrigerated">Refrigerated</string>
-    <string name="status_expired">Expired</string>
-    <string name="status_fed">Fed</string>
-    <string name="status_discarded">Discarded</string>
-    <string name="status_canceled">Canceled</string>
 
-    <!-- ===== Timer ===== -->
-    <string name="timer_expires_in">Expires in %1$s</string>
-    <string name="timer_expired_label">Timer Expired</string>
-    <string name="timer_minutes">%1$d min</string>
-    <string name="timer_hours">%1$d hr %2$d min</string>
-    <string name="timer_preparing">Preparing&#x2026;</string>
-    <string name="timer_prepared_at">Prepared at %1$s</string>
-    <string name="timer_feeding_started_at">Feeding started at %1$s</string>
-    <string name="timer_refrigerated_at">Refrigerated at %1$s</string>
-    <string name="timer_expired_at">Expired at %1$s</string>
 
     <!-- ===== Disclaimer / Safety (spec keys) ===== -->
     <string name="disclaimer_full">This app provides reminders and tracking tools based on selected public guidelines. It does not provide medical advice and cannot determine whether milk is safe. Always follow your formula label, local health guidance, and your pediatrician\'s advice. When in doubt, discard the milk.</string>
     <string name="disclaimer_short">This app is a reminder tool, not medical advice.</string>
-    <string name="safety_note_guideline">Based on your selected guideline</string>
     <string name="safety_when_in_doubt">When in doubt, discard the milk.</string>
     <string name="safety_not_medical_advice">Not medical advice. Follow your formula label and pediatrician\'s guidance.</string>
 
@@ -339,7 +241,6 @@
 
     <!-- ===== Paywall (additional spec keys) ===== -->
     <string name="paywall_subtitle">Support Nurtlina and unlock everything</string>
-    <string name="paywall_custom_rules">Custom timer rules</string>
     <string name="paywall_monthly_label">Monthly</string>
     <string name="paywall_yearly_label">Yearly</string>
     <string name="paywall_lifetime_label">Lifetime</string>
@@ -352,10 +253,6 @@
     <string name="settings_delete_data">Delete All Data</string>
     <string name="settings_delete_data_confirm">Are you sure you want to delete all data? This cannot be undone.</string>
 
-    <!-- ===== Guideline Regions (spec keys) ===== -->
-    <string name="region_us">United States (CDC)</string>
-    <string name="region_uk">United Kingdom (NHS)</string>
-    <string name="region_custom">Custom</string>
 
     <!-- ===== Safety Sources ===== -->
     <string name="source_cdc_formula">CDC: Infant Formula Preparation and Storage</string>
@@ -366,7 +263,6 @@
     <string name="source_disclaimer">These sources are referenced for informational purposes only. Nurtlina is not endorsed by or affiliated with CDC, AAP, NHS, or any health authority.</string>
 
     <!-- ===== Empty States (spec keys) ===== -->
-    <string name="empty_no_bottle">No active bottle.\nTap \'New Bottle\' to start a timer.</string>
 
     <!-- ===== Logs Screen (additional spec keys) ===== -->
     <string name="logs_title">Logs</string>
@@ -401,20 +297,14 @@
     <string name="unit_oz_label">Ounces (oz)</string>
 
     <!-- ===== Accessibility (spec keys) ===== -->
-    <string name="cd_bottle_status_icon">Bottle status: %1$s</string>
-    <string name="cd_timer_countdown">Time remaining: %1$s</string>
-    <string name="cd_new_bottle_button">Create a new bottle timer</string>
     <string name="cd_quick_feed_button">Log a quick feed</string>
     <string name="cd_quick_diaper_button">Log a quick diaper change</string>
     <string name="cd_quick_sleep_button">Start or stop sleep tracking</string>
 
     <!-- ===== Onboarding (additional spec keys) ===== -->
     <string name="onboarding_welcome_title">Welcome to Nurtlina</string>
-    <string name="onboarding_welcome_body">Track bottle timers and feeding logs, all in one place. Simple, calm, and offline-first.</string>
     <string name="onboarding_create_baby_body">Give your little one a nickname to get started. You can always change it later.</string>
     <string name="onboarding_baby_name_hint">Nickname (e.g. Bean, Sunshine)</string>
-    <string name="onboarding_select_guideline_title">Choose a Guideline</string>
-    <string name="onboarding_select_guideline_body">Select the public guideline used for bottle timer reminders. Based on your selected guideline &#x2014; not medical advice.</string>
     <string name="onboarding_notification_allow">Allow Notifications</string>
     <string name="onboarding_notification_skip">Maybe Later</string>
     <string name="onboarding_finish">Start Tracking</string>
@@ -492,13 +382,6 @@
     <string name="logs_confirm_delete">Delete</string>
     <string name="logs_empty_title">No logs for this day</string>
     <string name="logs_empty_body">Add a feed, diaper, or sleep record.</string>
-    <string name="log_bottle_status_not_started">Not Started</string>
-    <string name="log_bottle_status_feeding_started">Feeding Started</string>
-    <string name="log_bottle_status_refrigerated">Refrigerated</string>
-    <string name="log_bottle_status_expired">Expired</string>
-    <string name="log_bottle_status_fed">Fed</string>
-    <string name="log_bottle_status_discarded">Discarded</string>
-    <string name="log_bottle_status_canceled">Canceled</string>
 
     <!-- ===== Navigation Content Descriptions ===== -->
     <string name="nav_today_cd">Today tab</string>
@@ -567,7 +450,7 @@
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_sources_title">Guideline Sources</string>
-    <string name="settings_sources_intro">Nurtlina\'s timer rules are based on the following public guidelines:</string>
+    <string name="settings_sources_intro">Nurtlina\'s feeding reminders are based on the following public guidelines:</string>
     <string name="settings_sources_disclaimer">These sources are referenced for informational purposes only. Nurtlina is not endorsed by or affiliated with CDC, AAP, NHS, or any health authority.</string>
     <string name="settings_source_cdc_label">CDC: Infant Formula Preparation and Storage</string>
     <string name="settings_source_cdc_url" translatable="false">https://www.cdc.gov/nutrition/infantandtoddlernutrition/formula-feeding/infant-formula-preparation-and-storage.html</string>
@@ -653,4 +536,19 @@
     <string name="settings_export_failed_title">Unable to export data</string>
     <string name="settings_export_failed_body">Your records are still saved on this device. Please try exporting again.</string>
 
+    <!-- ===== Account deletion (GDPR / Data Safety) ===== -->
+    <string name="settings_account_delete">Delete account &amp; data</string>
+    <string name="settings_delete_account_title">Delete account and data?</string>
+    <string name="settings_delete_account_body">This permanently deletes your cloud account and synced data, then signs you out. Records stored only on this device stay until you uninstall the app.</string>
+    <string name="settings_delete_account_confirm">Delete</string>
+    <string name="settings_delete_account_in_progress">Deleting…</string>
+    <string name="settings_delete_account_error_title">Unable to delete account</string>
+    <string name="settings_delete_account_error_body">Please check your connection and try again.</string>
+    <!-- ===== Widget themes (Pro) ===== -->
+    <string name="settings_widget_theme_label">Widget theme</string>
+    <string name="widget_theme_default">Default</string>
+    <string name="widget_theme_sage">Sage</string>
+    <string name="widget_theme_lavender">Lavender</string>
+    <string name="widget_theme_rose">Rose</string>
+    <string name="widget_theme_slate">Slate</string>
 </resources>

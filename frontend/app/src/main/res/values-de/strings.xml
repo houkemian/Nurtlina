@@ -6,36 +6,19 @@
 
     <!-- Onboarding -->
     <string name="onboarding_welcome_title">Willkommen bei Nurtlina</string>
-    <string name="onboarding_welcome_body">Verfolge Flaschentimer und Fütterungsprotokolle an einem Ort. Einfach, ruhig und offline nutzbar.</string>
     <string name="onboarding_get_started">Loslegen</string>
     <string name="onboarding_create_baby_title">Dein Baby hinzufügen</string>
     <string name="onboarding_create_baby_body">Gib deinem Kleinen einen Spitznamen zum Starten. Du kannst ihn jederzeit ändern.</string>
     <string name="onboarding_baby_name_hint">Spitzname (z. B. Maus, Sonne)</string>
-    <string name="onboarding_select_guideline_title">Richtlinie auswählen</string>
-    <string name="onboarding_select_guideline_body">Wähle die öffentliche Richtlinie für die Flaschentimer-Erinnerungen. Basierend auf der gewählten Richtlinie — kein medizinischer Rat.</string>
     <string name="onboarding_notification_title">Immer pünktlich</string>
-    <string name="onboarding_notification_body">Erlaube Benachrichtigungen, damit Nurtlina dich erinnern kann, bevor ein Flaschentimer abläuft.</string>
+    <string name="onboarding_notification_body">Erlaube Benachrichtigungen, damit Nurtlina dich erinnern kann, wenn die nächste Fütterung ansteht.</string>
     <string name="onboarding_notification_allow">Benachrichtigungen erlauben</string>
     <string name="onboarding_notification_skip">Vielleicht später</string>
     <string name="onboarding_finish">Tracking starten</string>
     <string name="onboarding_step_of">Schritt %1$d von %2$d</string>
 
-    <!-- Bottle Statuses -->
-    <string name="status_not_started">Nicht gestartet</string>
-    <string name="status_feeding_started">Fütterung gestartet</string>
-    <string name="status_refrigerated">Gekühlt</string>
-    <string name="status_expired">Abgelaufen</string>
-    <string name="status_fed">Gefüttert</string>
-    <string name="status_discarded">Entsorgt</string>
-    <string name="status_canceled">Abgebrochen</string>
 
-    <!-- Bottle Actions -->
-    <string name="action_start_feeding">Fütterung starten</string>
-    <string name="action_refrigerate">Kühlen</string>
-    <string name="action_mark_fed">Als gefüttert markieren</string>
-    <string name="action_discard">Entsorgen</string>
     <string name="action_cancel">Abbrechen</string>
-    <string name="action_new_bottle">Neue Flasche</string>
     <string name="action_edit">Bearbeiten</string>
     <string name="action_save">Speichern</string>
     <string name="action_done">Fertig</string>
@@ -43,41 +26,18 @@
     <string name="action_close">Schließen</string>
     <string name="action_back">Zurück</string>
 
-    <!-- Timer Strings -->
-    <string name="timer_expires_in">Läuft ab in %1$s</string>
-    <string name="timer_expired_label">Timer abgelaufen</string>
-    <string name="timer_minutes">%1$d Min.</string>
-    <string name="timer_hours">%1$d Std. %2$d Min.</string>
-    <string name="timer_preparing">Wird vorbereitet…</string>
-    <string name="timer_prepared_at">Zubereitet um %1$s</string>
-    <string name="timer_feeding_started_at">Fütterung gestartet um %1$s</string>
-    <string name="timer_refrigerated_at">Gekühlt um %1$s</string>
-    <string name="timer_expired_at">Abgelaufen um %1$s</string>
 
     <!-- Notification Channels -->
-    <string name="notif_channel_bottle_name">Flaschenerinnerungen</string>
-    <string name="notif_channel_bottle_desc">Erinnerungen vor und beim Ablauf des Flaschentimers</string>
-    <string name="notif_channel_feeding_name">Fütterungserinnerungen</string>
-    <string name="notif_channel_feeding_desc">Erinnerungen während aktiver Fütterungssitzungen</string>
     <string name="notif_channel_next_feed_name">Sanfte Erinnerung an die nächste Fütterung</string>
     <string name="notif_channel_next_feed_desc">Eine sanfte Erinnerung, wenn der Countdown zur nächsten Fütterung endet</string>
 
     <!-- Notification Content -->
-    <string name="notif_before_expiry_title">Flaschentimer läuft bald ab</string>
-    <string name="notif_before_expiry_body">Die Flasche von %1$s läuft in etwa 15 Minuten ab. Basierend auf der gewählten Richtlinie.</string>
-    <string name="notif_expired_title">Flaschentimer abgelaufen</string>
-    <string name="notif_expired_body">Der Flaschentimer von %1$s ist abgelaufen. Im Zweifelsfall die Milch wegschütten.</string>
-    <string name="notif_feeding_45_title">Fütterungserinnerung</string>
-    <string name="notif_feeding_45_body">Die Fütterung von %1$s dauert bereits 45 Minuten.</string>
-    <string name="notif_feeding_60_title">Fütterungszeitlimit erreicht</string>
-    <string name="notif_feeding_60_body">Der Flaschentimer von %1$s läuft bald ab. Basierend auf der gewählten Richtlinie.</string>
     <string name="notif_next_feed_title">Erinnerung an die nächste Fütterung</string>
     <string name="notif_next_feed_body">Der Countdown ist beendet. Schau, ob das Baby bereit zum Füttern ist.</string>
 
     <!-- Disclaimer and Safety -->
     <string name="disclaimer_full">Diese App stellt Erinnerungs- und Tracking-Werkzeuge bereit, die auf ausgewählten öffentlichen Richtlinien basieren. Sie bietet keine medizinischen Ratschläge und kann nicht feststellen, ob Milch sicher ist. Bitte folge immer den Anweisungen auf der Verpackung der Säuglingsnahrung, den örtlichen Gesundheitsempfehlungen und dem Rat deines Kinderarztes. Im Zweifelsfall die Milch wegschütten.</string>
     <string name="disclaimer_short">Diese App ist ein Erinnerungswerkzeug, kein medizinischer Rat.</string>
-    <string name="safety_note_guideline">Basierend auf der gewählten Richtlinie</string>
     <string name="safety_when_in_doubt">Im Zweifelsfall die Milch wegschütten.</string>
     <string name="safety_not_medical_advice">Kein medizinischer Rat. Bitte folge der Verpackungsanleitung und dem Rat deines Kinderarztes.</string>
 
@@ -115,7 +75,6 @@
     <string name="today_next_feed_watch_later">Ab etwa %1$s später beobachten</string>
     <string name="today_next_feed_now">Fütterung jetzt im Blick behalten</string>
     <string name="today_next_feed_after_first">Erfasse eine Fütterung, um Intervalle zu verfolgen</string>
-    <string name="today_active_bottle_timer_title">Aktiver Flaschentimer</string>
     <string name="today_quick_actions_title">Schnellaktionen</string>
     <string name="today_summary_section_title">Heutige Übersicht</string>
     <string name="today_quick_feed">Füttern</string>
@@ -163,7 +122,6 @@
     <string name="paywall_multi_baby">Mehrere Babys verfolgen</string>
     <string name="paywall_full_history">Vollständiger Verlaufszugriff</string>
     <string name="paywall_export">Daten exportieren</string>
-    <string name="paywall_custom_rules">Benutzerdefinierte Timer-Regeln</string>
     <string name="paywall_widget_themes">Widget-Designs</string>
     <string name="paywall_monthly_price">2,99 € / Monat</string>
     <string name="paywall_yearly_price">19,99 € / Jahr</string>
@@ -180,7 +138,6 @@
     <string name="settings_title">Einstellungen</string>
     <string name="settings_baby_profile">Baby-Profil</string>
     <string name="settings_units">Einheiten</string>
-    <string name="settings_guideline_region">Richtlinienregion</string>
     <string name="settings_language">Sprache</string>
     <string name="settings_notifications">Benachrichtigungen</string>
     <string name="settings_night_mode">Nachtmodus</string>
@@ -198,10 +155,6 @@
     <string name="settings_delete_data">Alle Daten löschen</string>
     <string name="settings_delete_data_confirm">Bist du sicher, dass du alle Daten löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.</string>
 
-    <!-- Guideline Regions -->
-    <string name="region_us">Vereinigte Staaten (CDC)</string>
-    <string name="region_uk">Vereinigtes Königreich (NHS)</string>
-    <string name="region_custom">Benutzerdefiniert</string>
 
     <!-- Safety Sources -->
     <string name="source_cdc_formula">CDC: Zubereitung und Aufbewahrung von Säuglingsnahrung</string>
@@ -212,12 +165,10 @@
     <string name="source_disclaimer">Diese Quellen werden nur zu Informationszwecken genannt. Nurtlina wird nicht von CDC, AAP, NHS oder einer anderen Gesundheitsbehörde empfohlen oder ist mit diesen verbunden.</string>
 
     <!-- Empty States -->
-    <string name="empty_no_bottle">Keine aktive Flasche.\nTippe auf \'Neue Flasche\', um einen Timer zu starten.</string>
     <string name="empty_no_logs">Noch keine Einträge.\nErfasse oben schnell eine Fütterung, Windel oder Schlaf.</string>
     <string name="empty_insights">Noch nicht genug Daten.\nMache weiter mit dem Erfassen, um Statistiken zu sehen.</string>
 
     <!-- Errors -->
-    <string name="error_transition">Der Flaschenstatus konnte nicht aktualisiert werden. Bitte versuche es erneut.</string>
     <string name="error_generic">Etwas ist schiefgelaufen. Bitte versuche es erneut.</string>
     <string name="error_load_failed">Daten konnten nicht geladen werden. Bitte starte die App neu.</string>
 
@@ -258,9 +209,6 @@
     <string name="unit_oz_label">Unzen (oz)</string>
 
     <!-- Accessibility -->
-    <string name="cd_bottle_status_icon">Flaschenstatus: %1$s</string>
-    <string name="cd_timer_countdown">Verbleibende Zeit: %1$s</string>
-    <string name="cd_new_bottle_button">Neuen Flaschentimer erstellen</string>
     <string name="cd_quick_feed_button">Schnelle Fütterung erfassen</string>
     <string name="cd_quick_diaper_button">Schnellen Windelwechsel erfassen</string>
     <string name="cd_quick_sleep_button">Schlaftracking starten oder stoppen</string>
@@ -293,18 +241,16 @@
     <string name="signin_forgot_password">Passwort vergessen?</string>
     <string name="signin_show_password_cd">Passwort anzeigen</string>
     <string name="signin_hide_password_cd">Passwort ausblenden</string>
-    <string name="signin_disclaimer">Deine Flaschentimer-Daten werden immer lokal gespeichert. Durch die Anmeldung wird ein optionales Cloud-Backup aktiviert.</string>
+    <string name="signin_disclaimer">Deine Fütterungsdaten werden immer lokal gespeichert. Durch die Anmeldung wird ein optionales Cloud-Backup aktiviert.</string>
 
-    <string name="today_new_bottle">Fütterung</string>
     <string name="today_add_baby_pro">Hinzufügen</string>
     <string name="action_save_feed">Fütterung speichern</string>
     <string name="new_feed_title">Fütterung eintragen</string>
     <string name="new_feed_disclaimer">Dies speichert nur einen Fütterungseintrag. Kein medizinischer Rat.</string>
 
-    <string name="cd_new_bottle_fab">Fütterungseintrag hinzufügen</string>
     <!-- ===== Rating Prompt ===== -->
     <string name="rating_prompt_title">Gefällt dir Nurtlina?</string>
-    <string name="rating_prompt_body">Wenn Nurtlina dir beim Erfassen von Flaschen-Timern und Babypflege hilft, möchtest du die App bewerten?</string>
+    <string name="rating_prompt_body">Wenn Nurtlina dir beim Erfassen von Fütterungen und Babypflege hilft, möchtest du die App bewerten?</string>
     <string name="rating_prompt_rate">Nurtlina bewerten</string>
     <string name="rating_prompt_maybe_later">Vielleicht später</string>
     <string name="rating_prompt_no_thanks">Nein danke</string>
@@ -315,4 +261,19 @@
     <string name="settings_edit_named_baby_cd">Profil von %1$s bearbeiten</string>
     <string name="settings_current_baby">Aktuelles Baby</string>
     <string name="settings_baby_birth_date_empty">Geburtsdatum nicht festgelegt</string>
+    <!-- ===== Kontolöschung (DSGVO / Datensicherheit) ===== -->
+    <string name="settings_account_delete">Konto und Daten löschen</string>
+    <string name="settings_delete_account_title">Konto und Daten löschen?</string>
+    <string name="settings_delete_account_body">Dadurch werden dein Cloud-Konto und die synchronisierten Daten dauerhaft gelöscht und du wirst abgemeldet. Nur auf diesem Gerät gespeicherte Einträge bleiben, bis du die App deinstallierst.</string>
+    <string name="settings_delete_account_confirm">Löschen</string>
+    <string name="settings_delete_account_in_progress">Wird gelöscht…</string>
+    <string name="settings_delete_account_error_title">Konto konnte nicht gelöscht werden</string>
+    <string name="settings_delete_account_error_body">Bitte prüfe deine Verbindung und versuche es erneut.</string>
+    <!-- ===== Widget-Designs (Pro) ===== -->
+    <string name="settings_widget_theme_label">Widget-Design</string>
+    <string name="widget_theme_default">Standard</string>
+    <string name="widget_theme_sage">Salbei</string>
+    <string name="widget_theme_lavender">Lavendel</string>
+    <string name="widget_theme_rose">Rose</string>
+    <string name="widget_theme_slate">Schiefer</string>
 </resources>

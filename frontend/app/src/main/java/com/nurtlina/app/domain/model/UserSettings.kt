@@ -13,6 +13,7 @@ data class UserSettings(
     val preExpiry15MinEnabled: Boolean = true,
     val nightModeEnabled: Boolean = false,
     val theme: ThemeType = ThemeType.SYSTEM,
+    val widgetTheme: WidgetTheme = WidgetTheme.DEFAULT,
     val onboardingCompleted: Boolean = false,
     val selectedBabyId: String? = null,
 )

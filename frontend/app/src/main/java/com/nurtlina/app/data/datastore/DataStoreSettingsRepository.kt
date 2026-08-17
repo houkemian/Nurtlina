@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.nurtlina.app.domain.model.GuidelineRegion
 import com.nurtlina.app.domain.model.ThemeType
 import com.nurtlina.app.domain.model.UnitType
+import com.nurtlina.app.domain.model.WidgetTheme
 import com.nurtlina.app.domain.model.UserSettings
 import com.nurtlina.app.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +29,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val REMINDER_BEFORE_EXPIRY_MINUTES = intPreferencesKey("reminder_before_expiry_minutes")
         val NIGHT_MODE_ENABLED = booleanPreferencesKey("night_mode_enabled")
         val THEME = stringPreferencesKey("theme")
+        val WIDGET_THEME = stringPreferencesKey("widget_theme")
         val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
         val SELECTED_BABY_ID = stringPreferencesKey("selected_baby_id")
         val PRE_EXPIRY_15MIN_ENABLED = booleanPreferencesKey("pre_expiry_15min_enabled")
@@ -44,6 +46,7 @@ class DataStoreSettingsRepository @Inject constructor(
             reminderBeforeExpiryMinutes = prefs[Keys.REMINDER_BEFORE_EXPIRY_MINUTES] ?: 15,
             nightModeEnabled = prefs[Keys.NIGHT_MODE_ENABLED] ?: false,
             theme = prefs[Keys.THEME]?.let { ThemeType.valueOf(it) } ?: ThemeType.SYSTEM,
+            widgetTheme = prefs[Keys.WIDGET_THEME]?.let { WidgetTheme.valueOf(it) } ?: WidgetTheme.DEFAULT,
             onboardingCompleted = prefs[Keys.ONBOARDING_COMPLETED] ?: false,
             selectedBabyId = prefs[Keys.SELECTED_BABY_ID],
             preExpiry15MinEnabled = prefs[Keys.PRE_EXPIRY_15MIN_ENABLED] ?: true,
@@ -63,6 +66,7 @@ class DataStoreSettingsRepository @Inject constructor(
             prefs[Keys.REMINDER_BEFORE_EXPIRY_MINUTES] = settings.reminderBeforeExpiryMinutes
             prefs[Keys.NIGHT_MODE_ENABLED] = settings.nightModeEnabled
             prefs[Keys.THEME] = settings.theme.name
+            prefs[Keys.WIDGET_THEME] = settings.widgetTheme.name
             prefs[Keys.ONBOARDING_COMPLETED] = settings.onboardingCompleted
             if (settings.selectedBabyId != null) {
                 prefs[Keys.SELECTED_BABY_ID] = settings.selectedBabyId

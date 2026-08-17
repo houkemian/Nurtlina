@@ -21,7 +21,9 @@ import com.nurtlina.app.domain.model.SyncState
 import com.nurtlina.app.domain.model.UnitType
 import com.nurtlina.app.domain.model.UserAccount
 import com.nurtlina.app.domain.model.UserSettings
+import com.nurtlina.app.domain.model.WidgetTheme
 import com.nurtlina.app.domain.repository.AuthRepository
+import com.nurtlina.app.domain.repository.BackendRepository
 import com.nurtlina.app.domain.repository.BabyRepository
 import com.nurtlina.app.domain.repository.DiaperLogRepository
 import com.nurtlina.app.domain.repository.FeedLogRepository
@@ -50,6 +52,7 @@ class SettingsViewModel @Inject constructor(
     private val diaperLogRepository: DiaperLogRepository,
     private val sleepLogRepository: SleepLogRepository,
     private val authRepository: AuthRepository,
+    private val backendRepository: BackendRepository,
     private val syncRepository: SyncRepository,
     private val entitlementManager: EntitlementManager,
     private val workManager: WorkManager,
@@ -135,6 +138,38 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    // ── Account deletion (GDPR / Google Play Data Safety) ─────────────────────
+
+    private val _showDeleteAccountDialog = MutableStateFlow(false)
+    val showDeleteAccountDialog: StateFlow<Boolean> = _showDeleteAccountDialog.asStateFlow()
+
+    private val _deleteAccountInProgress = MutableStateFlow(false)
+    val deleteAccountInProgress: StateFlow<Boolean> = _deleteAccountInProgress.asStateFlow()
+
+    private val _deleteAccountFailed = MutableStateFlow(false)
+    val deleteAccountFailed: StateFlow<Boolean> = _deleteAccountFailed.asStateFlow()
+
+    fun showDeleteAccountDialog() { _showDeleteAccountDialog.value = true }
+    fun dismissDeleteAccountDialog() { _showDeleteAccountDialog.value = false }
+    fun dismissDeleteAccountError() { _deleteAccountFailed.value = false }
+
+    fun confirmDeleteAccount() {
+        viewModelScope.launch {
+            _deleteAccountInProgress.value = true
+            val result = backendRepository.deleteAccount()
+            _deleteAccountInProgress.value = false
+            if (result.isSuccess) {
+                // Cloud data deleted + Firebase credentials revoked server-side.
+                // Sign out locally so the app returns to a fresh, signed-out state.
+                SyncWorker.cancel(workManager)
+                authRepository.signOut()
+                _showDeleteAccountDialog.value = false
+            } else {
+                _deleteAccountFailed.value = true
+            }
+        }
+    }
+
     fun signInWithGoogle(idToken: String) {
         viewModelScope.launch {
             authRepository.signInWithGoogle(idToken)
@@ -169,6 +204,10 @@ class SettingsViewModel @Inject constructor(
 
     fun updateGuidelineRegion(region: GuidelineRegion) {
         updateSettings { it.copy(guidelineRegion = region) }
+    }
+
+    fun updateWidgetTheme(theme: WidgetTheme) {
+        updateSettings { it.copy(widgetTheme = theme) }
     }
 
     fun updateUnitType(unitType: UnitType) {
