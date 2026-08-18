@@ -18,8 +18,8 @@ before release, otherwise no real ads will serve and AdMob policy will reject th
 
 | Location | Current value | What it is |
 |---|---|---|
-| `frontend/app/src/main/res/values/strings.xml` → `admob_app_id` | `ca-app-pub-3940256099942544~3347511713` | AdMob **App ID** |
-| `frontend/app/src/main/java/com/nurtlina/app/ui/today/TodayScreen.kt` → `TodayScreen(adUnitId = ...)` default | `ca-app-pub-3940256099942544/6300978111` | **Banner ad unit ID** |
+| `frontend/app/src/main/res/values/strings.xml` → `admob_app_id` | `ca-app-pub-2777583989705415~1390589355` | AdMob **App ID** |
+| `frontend/app/src/main/java/com/nurtlina/app/ui/today/TodayScreen.kt` → `TodayScreen(adUnitId = ...)` default | `ca-app-pub-2777583989705415/2546195256` | **Banner ad unit ID** |
 
 ### Steps
 
@@ -87,7 +87,7 @@ The app and RevenueCat both expect these product IDs:
 
 ## 3. Pre-submit checklist
 
-- [ ] Real AdMob App ID + banner unit ID in place (no `3940256099942544` anywhere).
+- [x] Real AdMob App ID + banner unit ID in place in the production app configuration.
 - [ ] Three Play products created and **active**.
 - [ ] RevenueCat `pro` entitlement attaches all three products; offering has the three packages.
 - [ ] `REVENUECAT_API_KEY` configured via `~/.gradle/gradle.properties` (not committed).

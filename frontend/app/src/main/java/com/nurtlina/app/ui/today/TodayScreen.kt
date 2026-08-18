@@ -139,7 +139,7 @@ fun TodayScreen(
     onRatingPromptMaybeLater: () -> Unit,
     onRatingPromptNoThanks: () -> Unit,
     modifier: Modifier = Modifier,
-    adUnitId: String = "ca-app-pub-3940256099942544/6300978111",
+    adUnitId: String = "ca-app-pub-2777583989705415/2546195256",
 ) {
     var quickLogFeedback by remember { mutableStateOf<QuickLogFeedback?>(null) }
     var isQuickLogFeedbackVisible by remember { mutableStateOf(false) }

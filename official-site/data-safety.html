@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Data safety overview — Nurtlina</title><meta name="description" content="Plain-language overview of Nurtlina data practices."><link rel="stylesheet" href="styles.css"></head>
+<body>
+  <header><nav><a class="brand" href="index.html">Nurtlina</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="data-deletion.html">Delete data</a><a href="support.html">Support</a></nav></header>
+  <main>
+    <p class="eyebrow">Nurtlina: Baby Feeding Tracker</p><h1>Data safety overview</h1><p class="updated">Last updated: 18 August 2026</p><p class="language-links"><a href="#中文">查看中文</a></p>
+    <div class="notice">This page is a plain-language transparency summary. The current production build and third-party SDK behavior must also be reflected accurately in the Google Play Data safety form.</div>
+    <table><thead><tr><th>Data category</th><th>When</th><th>Purpose</th></tr></thead><tbody>
+      <tr><td>Baby and care records</td><td>Entered locally; sent off-device when backup/sync is used</td><td>App functionality, backup, sync, export</td></tr>
+      <tr><td>Email, display name, account ID</td><td>Google sign-in</td><td>Authentication, account and family management</td></tr>
+      <tr><td>App interactions and coarse usage metrics</td><td>Firebase Analytics</td><td>Analytics and product improvement</td></tr>
+      <tr><td>Crash and device/app diagnostics</td><td>Firebase Crashlytics</td><td>Reliability and troubleshooting</td></tr>
+      <tr><td>Purchase and entitlement information</td><td>Google Play / RevenueCat</td><td>Payments, Pro access, restore purchases, fraud prevention</td></tr>
+      <tr><td>Device or advertising identifiers, IP address, ad interactions</td><td>AdMob for eligible Free users</td><td>Advertising, measurement, fraud prevention</td></tr>
+    </tbody></table>
+    <h2>Key practices</h2><ul><li>Core care logging works locally and does not require the network.</li><li>Data is encrypted in transit when sent to connected services.</li><li>Baby names and note text are not sent as analytics events.</li><li>Synced baby care records are not used for advertising targeting.</li><li>Account deletion is available in-app and through an external request.</li><li>Nurtlina requests no location, contacts, camera, or microphone permission.</li></ul>
+    <h2>User controls</h2><p>You can deny notification permission, disable reminders, sign out, delete individual records, export supported records, or delete your account and associated data. See the <a href="privacy.html">Privacy Policy</a> for details.</p>
+    <section class="zh" id="中文" lang="zh-CN"><p class="eyebrow">Nurtlina：宝宝喂养记录</p><h1>数据安全概览</h1><p class="updated">最后更新：2026 年 8 月 18 日</p><div class="notice">本页是便于理解的透明度摘要。Google Play“数据安全”表单还必须准确反映正式版本和第三方 SDK 的实际行为。</div>
+      <table><thead><tr><th>数据类别</th><th>处理场景</th><th>目的</th></tr></thead><tbody><tr><td>宝宝及照护记录</td><td>本地输入；使用备份/同步时传出设备</td><td>应用功能、备份、同步、导出</td></tr><tr><td>邮箱、显示名称、账号 ID</td><td>Google 登录</td><td>认证、账号及家庭管理</td></tr><tr><td>应用互动和粗略使用指标</td><td>Firebase Analytics</td><td>分析和产品改进</td></tr><tr><td>崩溃及设备/应用诊断</td><td>Firebase Crashlytics</td><td>可靠性和排错</td></tr><tr><td>购买及权益信息</td><td>Google Play / RevenueCat</td><td>付款、Pro 权益、恢复购买、防欺诈</td></tr><tr><td>设备或广告标识符、IP、广告互动</td><td>面向符合条件免费用户的 AdMob</td><td>广告、衡量、防欺诈</td></tr></tbody></table>
+      <h2>关键做法</h2><ul><li>核心照护记录离线可用。</li><li>联网传输使用加密连接。</li><li>宝宝姓名和备注文本不作为分析事件发送。</li><li>同步的宝宝照护记录不用于广告定向。</li><li>应用内和外部均提供账号删除入口。</li><li>不申请位置、通讯录、相机或麦克风权限。</li></ul><h2>用户控制</h2><p>您可以拒绝通知、关闭提醒、退出登录、删除单条记录、导出支持的数据，或删除账号及关联数据。详情参见<a href="privacy.html#中文">隐私政策</a>。</p>
+    </section>
+  </main><footer>© 2026 Nurtlina</footer>
+</body></html>

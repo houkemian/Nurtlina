@@ -119,8 +119,8 @@
     <string name="cd_avatar_color">Avatar color: %1$s</string>
     <string name="cd_timeline_event">Timeline event: %1$s at %2$s</string>
 
-    <!-- ===== AdMob (test ID — replace before release) ===== -->
-    <string name="admob_app_id" translatable="false">ca-app-pub-3940256099942544~3347511713</string>
+    <!-- ===== AdMob production configuration ===== -->
+    <string name="admob_app_id" translatable="false">ca-app-pub-2777583989705415~1390589355</string>
 
     <!-- ===== Milk type aliases ===== -->
     <string name="milk_formula">Formula</string>
