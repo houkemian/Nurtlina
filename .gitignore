@@ -5,6 +5,8 @@
 .idea/
 build/
 **/build/
+*.aab
+release-artifacts/
 
 local.properties
 *.iml

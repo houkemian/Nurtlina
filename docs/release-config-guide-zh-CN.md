@@ -92,7 +92,27 @@
 
 ---
 
-## 3. 提交前检查清单
+## 3. 配置 Firebase Android 证书指纹
+
+Firebase Auth 的 Microsoft OAuth 登录需要 Firebase 项目登记安装包所使用的 Android
+签名证书。否则登录会返回 `ERROR_INVALID_CERT_HASH`。
+
+在 Firebase Console → Project settings → General → Your apps 中分别配置：
+
+- `com.nurtlina.app.debug`
+  - SHA-1：`2B:82:5E:97:18:7B:3E:77:3A:34:6C:17:67:F0:AD:C5:B1:43:18:E3`
+  - SHA-256：`60:BE:D2:35:70:14:84:8E:48:91:8F:9E:4F:16:76:E1:DC:DA:B5:14:FC:C5:98:F8:03:44:CA:33:EE:4E:92:3B`
+- `com.nurtlina.app`（本地 release/upload key）
+  - SHA-1：`04:AA:2E:53:14:83:74:9A:0F:AE:C4:0A:0E:5B:6F:45:AB:2F:6A:92`
+  - SHA-256：`8F:AB:60:DA:CC:E7:09:0F:EE:03:01:1C:CF:D4:3C:EC:D6:06:D5:F4:FA:A8:BD:FE:14:C7:9F:E3:4D:29:39:84`
+
+如果应用由 Google Play 安装，还必须把 Play Console → App integrity 中的
+**App signing key certificate** SHA-1 和 SHA-256 添加到 `com.nurtlina.app`。保存后重新下载
+`google-services.json` 并替换 `frontend/app/google-services.json`，然后重新构建应用。
+
+---
+
+## 4. 提交前检查清单
 
 - [x] 已在正式应用配置中写入 AdMob 应用 ID 和横幅广告单元 ID。
 - [ ] 三个 Google Play 商品均已创建并处于**已激活**状态。
@@ -100,6 +120,7 @@
 - [ ] 已通过 `~/.gradle/gradle.properties` 配置 `REVENUECAT_API_KEY`，且未提交到
       版本库。
 - [ ] `frontend/app/google-services.json` 指向正式 Firebase 项目。
+- [ ] Firebase 中已登记 debug、upload/release 和 Google Play App Signing 证书指纹。
 - [ ] 隐私政策（`https://nurtlina.app/privacy`）和服务条款
       （`https://nurtlina.app/terms`）页面已创建并可正常访问。
 - [ ] 已上传应用图标、置顶大图和应用截图。

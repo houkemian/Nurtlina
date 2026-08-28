@@ -26,7 +26,7 @@ android {
         applicationId = "com.nurtlina.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
+        versionCode = 2
         versionName = "1.0.0"
         buildConfigField("String", "API_BASE_URL", "\"https://nurtlina-api.dothings.one/\"")
         buildConfigField("String", "REVENUECAT_API_KEY", "\"$revenueCatApiKey\"")

@@ -1,27 +1,158 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Nurtlina — Official information</title>
-  <meta name="description" content="Official privacy, terms, data deletion, data safety, and support information for Nurtlina: Baby Feeding Tracker.">
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f1e8">
+  <title>Nurtlina — Calm baby care tracking</title>
+  <meta name="description" content="Log feeds, diapers, and sleep with less friction. Nurtlina is a calm, local-first baby care tracker for Android.">
+  <meta property="og:title" content="Nurtlina — Calm baby care tracking">
+  <meta property="og:description" content="Quick logs, gentle reminders, and a clearer view of today—for tired parents and caregivers.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nurtlina.app/">
+  <link rel="stylesheet" href="./styles.css">
 </head>
-<body>
-  <header><nav><a class="brand" href="index.html">Nurtlina</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="data-deletion.html">Delete data</a><a href="support.html">Support</a></nav></header>
+<body class="home">
+  <header class="site-header">
+    <nav aria-label="Main navigation">
+      <a class="brand" href="./index.html" aria-label="Nurtlina home">
+        <span class="brand-mark" aria-hidden="true">N</span>
+        <span>Nurtlina</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#privacy">Privacy</a>
+        <a href="./support.html">Support</a>
+        <a class="nav-pill" href="./data-deletion.html">Manage data</a>
+      </div>
+    </nav>
+  </header>
+
   <main>
-    <p class="eyebrow">Nurtlina: Baby Feeding Tracker</p>
-    <h1>Official information</h1>
-    <p>Clear information about how Nurtlina works, how your information is handled, and how to contact us.</p>
-    <div class="notice"><strong>Tracking, not medical advice.</strong> Nurtlina provides tracking and reminder tools based on public guidelines. It cannot determine whether milk is safe. Follow your formula label, local health guidance, and your pediatrician’s advice. When in doubt, discard the milk.</div>
-    <h2>Policies and help</h2>
-    <ul>
-      <li><a href="privacy.html">Privacy Policy / 隐私政策</a></li>
-      <li><a href="terms.html">Terms of Use / 使用条款</a></li>
-      <li><a href="data-deletion.html">Account and data deletion / 账号与数据删除</a></li>
-      <li><a href="data-safety.html">Data safety overview / 数据安全概览</a></li>
-      <li><a href="support.html">Support / 支持</a></li>
-    </ul>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="kicker"><span aria-hidden="true"></span> Baby care, made calmer</p>
+        <h1 id="hero-title">The day is busy.<br><em>Your tracker shouldn’t be.</em></h1>
+        <p class="hero-lede">Log feeds, diapers, and sleep in a few taps. See what happened today, keep gentle reminders close, and carry on—even when the internet is not available.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#features">See how it works</a>
+          <a class="button button-secondary" href="./privacy.html">Read our privacy policy</a>
+        </div>
+        <div class="availability" aria-label="Platform availability">
+          <span class="android-dot" aria-hidden="true"></span>
+          <span><strong>Made for Android</strong><small>Designed for one-handed, night-time use</small></span>
+        </div>
+      </div>
+
+      <div class="product-stage" aria-label="Illustration of Nurtlina's Today screen">
+        <div class="orbit orbit-one" aria-hidden="true"></div>
+        <div class="orbit orbit-two" aria-hidden="true"></div>
+        <div class="phone">
+          <div class="phone-top"><span>9:41</span><span class="phone-sensors" aria-hidden="true"></span></div>
+          <div class="app-heading"><div><small>Good morning</small><strong>Today with Momo</strong></div><span class="avatar">M</span></div>
+          <div class="status-card">
+            <div class="status-icon" aria-hidden="true">♡</div>
+            <div><small>Last feeding</small><strong>42 min ago</strong><span>120 ml · Formula</span></div>
+          </div>
+          <div class="reminder-row"><span><small>Next feed reminder</small><strong>In about 2 hr</strong></span><span class="soft-badge">On</span></div>
+          <p class="phone-label">Quick log</p>
+          <div class="quick-grid">
+            <div><span aria-hidden="true">＋</span><strong>Feed</strong></div>
+            <div><span aria-hidden="true">◌</span><strong>Diaper</strong></div>
+            <div><span aria-hidden="true">☾</span><strong>Sleep</strong></div>
+          </div>
+          <div class="today-line"><span>Today</span><span>4 feeds · 3 diapers</span></div>
+        </div>
+        <div class="float-card float-feed"><span aria-hidden="true">✓</span><div><strong>Feed logged</strong><small>Saved on your device</small></div></div>
+        <div class="float-card float-offline"><span aria-hidden="true">⌁</span><div><strong>Works offline</strong><small>Sync can wait</small></div></div>
+      </div>
+    </section>
+
+    <section class="trust-row" aria-label="Product principles">
+      <div><strong>1–2 taps</strong><span>for common logs</span></div>
+      <div><strong>Local-first</strong><span>core care records</span></div>
+      <div><strong>Calm reminders</strong><span>on your schedule</span></div>
+      <div><strong>Tracking only</strong><span>calm, factual records</span></div>
+    </section>
+
+    <section class="features-section" id="features" aria-labelledby="features-title">
+      <div class="section-heading">
+        <p class="kicker"><span aria-hidden="true"></span> Less tapping, more caring</p>
+        <h2 id="features-title">Everything important, without the clutter.</h2>
+        <p>Nurtlina keeps the daily essentials together and makes the next action obvious—even at 3 a.m.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card feature-large warm-card">
+          <div class="feature-icon" aria-hidden="true">＋</div>
+          <p class="feature-number">01</p>
+          <h3>Log a feed in seconds</h3>
+          <p>Record formula, breast milk, mixed feeding, nursing, or another feed without starting a complicated timer.</p>
+          <div class="mini-log"><span>Quick feed</span><strong>120 ml</strong><span class="mini-action">Log now</span></div>
+        </article>
+        <article class="feature-card blue-card">
+          <div class="feature-icon" aria-hidden="true">⌁</div>
+          <p class="feature-number">02</p>
+          <h3>Keep going offline</h3>
+          <p>Care logs are saved locally first. A slow connection or unavailable backend never blocks the moment.</p>
+        </article>
+        <article class="feature-card sage-card">
+          <div class="feature-icon" aria-hidden="true">◷</div>
+          <p class="feature-number">03</p>
+          <h3>Gentle next-feed reminders</h3>
+          <p>Optional, calm notifications help you keep an eye on the interval you choose—without urgent or fear-based language.</p>
+        </article>
+        <article class="feature-card feature-wide cream-card">
+          <div>
+            <div class="feature-icon" aria-hidden="true">☾</div>
+            <p class="feature-number">04</p>
+            <h3>A quieter screen at night</h3>
+            <p>Large tap targets, low-stimulation colors, and no disruptive advertising in night mode help tired caregivers stay focused.</p>
+          </div>
+          <div class="night-preview" aria-hidden="true"><span>Night mode</span><strong>Quick log</strong><div><i>Feed</i><i>Diaper</i><i>Sleep</i></div></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="daily-flow" aria-labelledby="flow-title">
+      <div class="section-heading compact">
+        <p class="kicker"><span aria-hidden="true"></span> One clear daily rhythm</p>
+        <h2 id="flow-title">Log. Glance. Continue.</h2>
+      </div>
+      <ol class="flow-list">
+        <li><span>1</span><div><strong>Capture the moment</strong><p>Use Quick Feed, Quick Diaper, or Quick Sleep while the details are fresh.</p></div></li>
+        <li><span>2</span><div><strong>See today at a glance</strong><p>Review the latest feeding, daily totals, and current sleep status in one place.</p></div></li>
+        <li><span>3</span><div><strong>Let reminders stay gentle</strong><p>Choose whether notifications fit your routine. The app still works when they are off.</p></div></li>
+      </ol>
+    </section>
+
+    <section class="privacy-section" id="privacy" aria-labelledby="privacy-title">
+      <div class="privacy-copy">
+        <p class="kicker light"><span aria-hidden="true"></span> Your family’s data deserves care</p>
+        <h2 id="privacy-title">Local first.<br>Transparent by design.</h2>
+        <p>Core records stay useful on your device. Cloud backup is tied to your account, analytics exclude baby names and note contents, and synced care records are not used for advertising targeting.</p>
+        <div class="privacy-actions"><a href="./privacy.html">Privacy Policy</a><a href="./data-safety.html">Data Safety</a><a href="./data-deletion.html">Delete account &amp; data</a></div>
+      </div>
+      <div class="privacy-points">
+        <div><span aria-hidden="true">✓</span><p><strong>No location, contacts, camera, or microphone permission</strong><small>Only permissions tied to clear app functions.</small></p></div>
+        <div><span aria-hidden="true">✓</span><p><strong>Delete from the app or the web</strong><small>You stay in control even after uninstalling.</small></p></div>
+        <div><span aria-hidden="true">✓</span><p><strong>Tracking, not medical advice</strong><small>Calm records and reminders without clinical conclusions.</small></p></div>
+      </div>
+    </section>
+
+    <section class="closing-section">
+      <div class="closing-mark" aria-hidden="true">N</div>
+      <p class="kicker centered"><span aria-hidden="true"></span> Built for real caregiving</p>
+      <h2>Small moments, clearly remembered.</h2>
+      <p>Nurtlina helps adult parents and caregivers record the day with less friction and more confidence in what was logged.</p>
+      <a class="button button-primary" href="./support.html">Contact support</a>
+      <div class="medical-note"><strong>A reminder tool, not medical advice.</strong> Follow your formula label, local guidance, and your pediatrician’s advice. When in doubt, discard the milk.</div>
+    </section>
   </main>
-  <footer>© 2026 Nurtlina · For adult parents and caregivers.</footer>
+
+  <footer class="home-footer">
+    <div><a class="brand footer-brand" href="./index.html"><span class="brand-mark" aria-hidden="true">N</span><span>Nurtlina</span></a><p>Calm baby care tracking for Android.</p></div>
+    <div class="footer-links"><div><strong>Product</strong><a href="#features">Features</a><a href="./support.html">Support</a></div><div><strong>Legal</strong><a href="./privacy.html">Privacy</a><a href="./terms.html">Terms</a><a href="./data-deletion.html">Data deletion</a></div></div>
+    <p class="copyright">© 2026 Nurtlina · For adult parents and caregivers.</p>
+  </footer>
 </body>
 </html>

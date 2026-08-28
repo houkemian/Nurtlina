@@ -85,13 +85,35 @@ The app and RevenueCat both expect these product IDs:
 
 ---
 
-## 3. Pre-submit checklist
+## 3. Configure Firebase Android certificate fingerprints
+
+Firebase Auth's Microsoft OAuth flow requires the signing certificate used by the installed
+Android build to be registered in Firebase. Missing fingerprints cause
+`ERROR_INVALID_CERT_HASH`.
+
+In Firebase Console → Project settings → General → Your apps, register:
+
+- `com.nurtlina.app.debug`
+  - SHA-1: `2B:82:5E:97:18:7B:3E:77:3A:34:6C:17:67:F0:AD:C5:B1:43:18:E3`
+  - SHA-256: `60:BE:D2:35:70:14:84:8E:48:91:8F:9E:4F:16:76:E1:DC:DA:B5:14:FC:C5:98:F8:03:44:CA:33:EE:4E:92:3B`
+- `com.nurtlina.app` (local release/upload key)
+  - SHA-1: `04:AA:2E:53:14:83:74:9A:0F:AE:C4:0A:0E:5B:6F:45:AB:2F:6A:92`
+  - SHA-256: `8F:AB:60:DA:CC:E7:09:0F:EE:03:01:1C:CF:D4:3C:EC:D6:06:D5:F4:FA:A8:BD:FE:14:C7:9F:E3:4D:29:39:84`
+
+For installs delivered by Google Play, also add the **App signing key certificate** SHA-1 and
+SHA-256 shown in Play Console → App integrity to `com.nurtlina.app`. After saving, download a
+fresh `google-services.json`, replace `frontend/app/google-services.json`, and rebuild the app.
+
+---
+
+## 4. Pre-submit checklist
 
 - [x] Real AdMob App ID + banner unit ID in place in the production app configuration.
 - [ ] Three Play products created and **active**.
 - [ ] RevenueCat `pro` entitlement attaches all three products; offering has the three packages.
 - [ ] `REVENUECAT_API_KEY` configured via `~/.gradle/gradle.properties` (not committed).
 - [ ] `frontend/app/google-services.json` points at the production Firebase project.
+- [ ] Firebase contains the debug, upload/release, and Google Play App Signing certificate fingerprints.
 - [ ] Privacy Policy (`https://nurtlina.app/privacy`) and Terms (`https://nurtlina.app/terms`)
       pages exist and are reachable.
 - [ ] App icon, feature graphic, and screenshots are uploaded.

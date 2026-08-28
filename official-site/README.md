@@ -1,6 +1,6 @@
 # Nurtlina official and legal pages
 
-Static, dependency-free pages prepared for `https://nurtlina.app`.
+Static, dependency-free English pages prepared for `https://nurtlina.app`.
 
 ## Routes
 
