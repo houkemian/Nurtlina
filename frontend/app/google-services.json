@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "225993962515-3h630aaf0nm98rbrdedjol7mhigr35mm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nurtlina.app",
+            "certificate_hash": "41dc27f2eb9a705ed9c2ea4d87b2301b76591709"
+          }
+        },
+        {
+          "client_id": "225993962515-jh2lqekpo6b3dovf2ok38aomjcivb3lg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nurtlina.app",
+            "certificate_hash": "04aa2e531483749a0faec40a0e5b6f45ab2f6a92"
+          }
+        },
+        {
           "client_id": "225993962515-8pn0agaia8r04kqatkksmgan4n2jmppu.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -42,6 +58,22 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "225993962515-k3osn1pk880bdb9ll2dulhjg8l1ok4ak.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nurtlina.app.debug",
+            "certificate_hash": "2b825e97187b3e773a346c1767f0adc5b14318e3"
+          }
+        },
+        {
+          "client_id": "225993962515-vidu6e94t780unffvk5emgh6gsdce7kk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nurtlina.app.debug",
+            "certificate_hash": "41dc27f2eb9a705ed9c2ea4d87b2301b76591709"
+          }
+        },
         {
           "client_id": "225993962515-8pn0agaia8r04kqatkksmgan4n2jmppu.apps.googleusercontent.com",
           "client_type": 3

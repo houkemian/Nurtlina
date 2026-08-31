@@ -33,6 +33,11 @@ sealed class NavRoutes(val route: String) {
     // ── Sign-in ──────────────────────────────────────────────────────────────
 
     object SignIn : NavRoutes("auth/sign_in")
+
+    // ── Legal documents ────────────────────────────────────────────────────
+
+    object PrivacyPolicy : NavRoutes("legal/privacy")
+    object TermsOfUse : NavRoutes("legal/terms")
 }
 
 /** Routes that render with the bottom navigation bar visible. */

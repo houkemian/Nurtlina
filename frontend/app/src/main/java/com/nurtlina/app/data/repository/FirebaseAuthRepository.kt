@@ -69,12 +69,7 @@ class FirebaseAuthRepository @Inject constructor(
         ensureSignedIn()
 
     override suspend fun signInWithMicrosoft(activity: Activity): Result<UserAccount> = runCatching {
-        val account = if (authSource.isSignedIn()) {
-            runCatching { authSource.linkAnonymousWithMicrosoft(activity) }
-                .getOrElse { authSource.signInWithMicrosoft(activity) }
-        } else {
-            authSource.signInWithMicrosoft(activity)
-        }
+        val account = authSource.signInWithMicrosoft(activity)
         enrichWithFamilyAndEntitlement(account)
     }
 

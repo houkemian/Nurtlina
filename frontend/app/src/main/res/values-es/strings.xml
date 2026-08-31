@@ -271,6 +271,8 @@
     <string name="settings_delete_account_error_body">Comprueba tu conexión e inténtalo de nuevo.</string>
     <!-- ===== Temas del widget (Pro) ===== -->
     <string name="settings_widget_theme_label">Tema del widget</string>
+    <string name="signin_error_microsoft_configuration">El inicio de sesión con Microsoft no está disponible temporalmente porque no se pudo verificar la configuración de la aplicación. Inténtalo de nuevo más tarde.</string>
+    <string name="signin_error_web_context_in_progress">Ya hay una ventana de inicio de sesión de Microsoft abierta. Complétala o espera un momento e inténtalo de nuevo.</string>
     <string name="widget_theme_default">Predeterminado</string>
     <string name="widget_theme_sage">Salvia</string>
     <string name="widget_theme_lavender">Lavanda</string>

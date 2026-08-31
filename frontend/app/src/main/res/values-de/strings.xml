@@ -271,6 +271,8 @@
     <string name="settings_delete_account_error_body">Bitte prüfe deine Verbindung und versuche es erneut.</string>
     <!-- ===== Widget-Designs (Pro) ===== -->
     <string name="settings_widget_theme_label">Widget-Design</string>
+    <string name="signin_error_microsoft_configuration">Die Microsoft-Anmeldung ist vorübergehend nicht verfügbar, weil die App-Konfiguration nicht verifiziert werden konnte. Bitte versuche es später erneut.</string>
+    <string name="signin_error_web_context_in_progress">Ein Microsoft-Anmeldefenster ist bereits geöffnet. Schließe die Anmeldung ab oder versuche es gleich noch einmal.</string>
     <string name="widget_theme_default">Standard</string>
     <string name="widget_theme_sage">Salbei</string>
     <string name="widget_theme_lavender">Lavendel</string>

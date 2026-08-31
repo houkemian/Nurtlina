@@ -93,6 +93,7 @@ import com.nurtlina.app.ui.logs.LogItem
 import com.nurtlina.app.ui.logs.LogsScreen
 import com.nurtlina.app.ui.logs.LogsViewModel
 import com.nurtlina.app.ui.logs.SleepEditState
+import com.nurtlina.app.ui.legal.LegalDocumentScreen
 import com.nurtlina.app.ui.onboarding.OnboardingScreen
 import com.nurtlina.app.ui.onboarding.OnboardingViewModel
 import com.nurtlina.app.ui.paywall.PaywallScreen
@@ -174,8 +175,6 @@ class AppViewModel @Inject constructor(
 
 // ── Navigation host ──────────────────────────────────────────────────────────
 
-private const val PRIVACY_URL = "https://nurtlina.app/privacy"
-private const val TERMS_URL = "https://nurtlina.app/terms"
 private const val PLAY_STORE_SUBS_URL =
     "https://play.google.com/store/account/subscriptions?package=com.nurtlina.app"
 private const val PLAY_STORE_APP_URL = "market://details?id=com.nurtlina.app"
@@ -298,6 +297,22 @@ fun NurtlinaNavHost(
                 SignInScreen(
                     onBack = { navController.popBackStack() },
                     onSignInSuccess = { navController.popBackStack() },
+                )
+            }
+
+            // ── Legal documents ─────────────────────────────────────────
+            composable(NavRoutes.PrivacyPolicy.route) {
+                LegalDocumentScreen(
+                    assetFileName = "privacy.html",
+                    fallbackTitle = stringResource(R.string.settings_privacy_policy),
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable(NavRoutes.TermsOfUse.route) {
+                LegalDocumentScreen(
+                    assetFileName = "terms.html",
+                    fallbackTitle = stringResource(R.string.settings_terms),
+                    onBack = { navController.popBackStack() },
                 )
             }
         }
@@ -732,15 +747,17 @@ private fun SettingsRoute(navController: NavController, isPro: Boolean) {
         onDeleteAccountClick = viewModel::showDeleteAccountDialog,
         onFaqClick = { viewModel.showFaq() },
         onPrivacyPolicyClick = {
-            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_URL)))
+            navController.navigate(NavRoutes.PrivacyPolicy.route)
         },
         onTermsClick = {
-            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(TERMS_URL)))
+            navController.navigate(NavRoutes.TermsOfUse.route)
         },
         onContactSupportClick = {
             context.startActivity(
                 Intent(Intent.ACTION_SENDTO).apply {
-                    data = Uri.parse("mailto:support@nurtlina.app")
+                    data = Uri.parse(
+                        "mailto:support@muyestudio.net?subject=Nurtlina%20Support"
+                    )
                 }
             )
         },
@@ -770,10 +787,10 @@ private fun PaywallRoute(navController: NavController) {
         onBuyLifetime = { activity?.let { act: Activity -> viewModel.subscribe(act, "lifetime") } },
         onRestorePurchases = { viewModel.restorePurchases() },
         onPrivacyPolicy = {
-            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_URL)))
+            navController.navigate(NavRoutes.PrivacyPolicy.route)
         },
         onTerms = {
-            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(TERMS_URL)))
+            navController.navigate(NavRoutes.TermsOfUse.route)
         },
     )
 }

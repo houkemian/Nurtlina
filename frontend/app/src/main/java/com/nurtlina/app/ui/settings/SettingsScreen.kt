@@ -65,8 +65,8 @@ import java.time.LocalDate
  * @param onSignInClick           Navigate to sign-in screen.
  * @param onSignOutClick          Sign out the current user.
  * @param onFaqClick              Navigate to FAQ.
- * @param onPrivacyPolicyClick    Open privacy policy URL.
- * @param onTermsClick            Open terms URL.
+ * @param onPrivacyPolicyClick    Open the in-app privacy policy.
+ * @param onTermsClick            Open the in-app terms of use.
  * @param onContactSupportClick   Open support email/form.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -148,12 +148,6 @@ fun SettingsScreen(
                 currentUser = currentUser,
                 onSignInClick = onSignInClick,
                 onSignOutClick = onSignOutClick,
-            )
-            SettingsClickRow(
-                icon = Icons.Outlined.DeleteForever,
-                label = stringResource(R.string.settings_account_delete),
-                labelColor = MaterialTheme.colorScheme.error,
-                onClick = onDeleteAccountClick,
             )
 
             SettingsDivider()
@@ -325,6 +319,15 @@ fun SettingsScreen(
                 } else {
                     null
                 },
+            )
+
+            SettingsDivider()
+
+            SettingsClickRow(
+                icon = Icons.Outlined.DeleteForever,
+                label = stringResource(R.string.settings_account_delete),
+                labelColor = MaterialTheme.colorScheme.error,
+                onClick = onDeleteAccountClick,
             )
 
             Spacer(Modifier.height(24.dp))

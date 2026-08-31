@@ -271,6 +271,8 @@
     <string name="settings_delete_account_error_body">Veuillez vérifier votre connexion et réessayer.</string>
     <!-- ===== Thèmes du widget (Pro) ===== -->
     <string name="settings_widget_theme_label">Thème du widget</string>
+    <string name="signin_error_microsoft_configuration">La connexion Microsoft est temporairement indisponible, car la configuration de l’application n’a pas pu être vérifiée. Réessayez plus tard.</string>
+    <string name="signin_error_web_context_in_progress">Une fenêtre de connexion Microsoft est déjà ouverte. Terminez la connexion ou patientez un instant avant de réessayer.</string>
     <string name="widget_theme_default">Défaut</string>
     <string name="widget_theme_sage">Sauge</string>
     <string name="widget_theme_lavender">Lavande</string>

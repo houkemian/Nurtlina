@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.OAuthProvider
 import com.google.firebase.functions.FirebaseFunctions
@@ -71,22 +72,10 @@ class FirebaseAuthSource @Inject constructor(
             .setScopes(listOf("openid", "profile", "email"))
             .build()
         Log.i(TAG, "Starting Microsoft sign-in with Firebase OAuthProvider")
-        val result = startMicrosoftSignIn(activity, provider)
+        val result = startMicrosoftAuthentication(activity, provider)
         Log.i(TAG, "Microsoft sign-in returned user=${result.user?.uid}")
         return result.user?.toUserAccount()
             ?: error("Microsoft sign-in returned null user")
-    }
-
-    suspend fun linkAnonymousWithMicrosoft(activity: Activity): UserAccount {
-        val currentUser = auth.currentUser ?: error("No signed-in user to link")
-        val provider = OAuthProvider.newBuilder("microsoft.com")
-            .setScopes(listOf("openid", "profile", "email"))
-            .build()
-        Log.i(TAG, "Starting Microsoft link with Firebase OAuthProvider for uid=${currentUser.uid}")
-        val result = currentUser.startActivityForLinkWithProvider(activity, provider).await()
-        Log.i(TAG, "Microsoft link returned user=${result.user?.uid}")
-        return result.user?.toUserAccount()
-            ?: error("Microsoft account linking returned null user")
     }
 
     // ── Email / Password ──────────────────────────────────────────────────────
@@ -115,18 +104,45 @@ class FirebaseAuthSource @Inject constructor(
         auth.sendPasswordResetEmail(email).await()
     }
 
-    private suspend fun startMicrosoftSignIn(
+    private suspend fun startMicrosoftAuthentication(
         activity: Activity,
         provider: OAuthProvider,
     ): AuthResult {
         val pendingResult = auth.pendingAuthResult
-        return if (pendingResult != null) {
+        if (pendingResult != null) {
             Log.i(TAG, "Using pending Microsoft auth result")
-            pendingResult.await()
+            return try {
+                pendingResult.await()
+            } catch (error: FirebaseAuthUserCollisionException) {
+                recoverMicrosoftAccountCollision(error)
+            }
+        }
+
+        val currentUser = auth.currentUser
+        return if (currentUser?.isAnonymous == true) {
+            Log.i(TAG, "Linking Microsoft provider to anonymous uid=${currentUser.uid}")
+            try {
+                currentUser.startActivityForLinkWithProvider(activity, provider).await()
+            } catch (error: FirebaseAuthUserCollisionException) {
+                recoverMicrosoftAccountCollision(error)
+            }
         } else {
-            Log.i(TAG, "No pending Microsoft auth result; launching provider activity")
+            Log.i(TAG, "Launching Microsoft provider sign-in")
             auth.startActivityForSignInWithProvider(activity, provider).await()
         }
+    }
+
+    /**
+     * A Microsoft account can already belong to another Firebase user while the
+     * current device is anonymous. Reuse Firebase's returned credential instead
+     * of launching a second web flow before the first one has been dismissed.
+     */
+    private suspend fun recoverMicrosoftAccountCollision(
+        error: FirebaseAuthUserCollisionException,
+    ): AuthResult {
+        val credential = error.updatedCredential ?: throw error
+        Log.i(TAG, "Microsoft credential belongs to an existing account; signing in directly")
+        return auth.signInWithCredential(credential).await()
     }
 
     // ── Sign out ──────────────────────────────────────────────────────────────

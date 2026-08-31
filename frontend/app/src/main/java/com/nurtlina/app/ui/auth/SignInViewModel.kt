@@ -134,8 +134,12 @@ class SignInViewModel @Inject constructor(
         timeoutMillis: Long? = null,
         block: suspend () -> Result<UserAccount>,
     ) {
+        if (_uiState.value.isLoading) {
+            Log.i(TAG, "$providerName sign-in ignored because another request is active")
+            return
+        }
+        _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
             val result = try {
                 if (timeoutMillis == null) {
                     block()
@@ -173,7 +177,13 @@ class SignInViewModel @Inject constructor(
 
     private fun Throwable.toUserMessage(): String {
         if (this is FirebaseAuthException) {
-            return appContext.getString(R.string.signin_error_with_code, errorCode)
+            return when (errorCode) {
+                "ERROR_INVALID_CERT_HASH" ->
+                    appContext.getString(R.string.signin_error_microsoft_configuration)
+                "ERROR_WEB_CONTEXT_ALREADY_PRESENTED" ->
+                    appContext.getString(R.string.signin_error_web_context_in_progress)
+                else -> appContext.getString(R.string.signin_error_with_code, errorCode)
+            }
         }
 
         val msg = message ?: return appContext.getString(R.string.signin_error_generic)

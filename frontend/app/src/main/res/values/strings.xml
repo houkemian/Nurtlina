@@ -513,6 +513,8 @@
     <string name="today_next_feed_after_first">Log a feed to start tracking the interval</string>
     <string name="today_feeding_window_recent_pattern">Based on recent feeding patterns</string>
     <string name="signin_error_microsoft_unavailable">Microsoft sign-in could not start. Please try again.</string>
+    <string name="signin_error_microsoft_configuration">Microsoft sign-in is temporarily unavailable because the app configuration could not be verified. Please try again later.</string>
+    <string name="signin_error_web_context_in_progress">A Microsoft sign-in window is already open. Complete it, or wait a moment and try again.</string>
     <string name="signin_error_email_required">Enter your email address first.</string>
     <string name="signin_password_reset_sent">Password reset email sent. Check your inbox.</string>
     <string name="signin_error_timeout">%1$s sign-in did not respond. Check your connection and try again.</string>
