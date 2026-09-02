@@ -20,14 +20,14 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.nurtlina.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.nurtlina.app"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 3
-        versionName = "1.0.0"
+        targetSdk = 36
+        versionCode = 4
+        versionName = "1.0.1"
         buildConfigField("String", "API_BASE_URL", "\"https://nurtlina-api.dothings.one/\"")
         buildConfigField("String", "REVENUECAT_API_KEY", "\"$revenueCatApiKey\"")
 
